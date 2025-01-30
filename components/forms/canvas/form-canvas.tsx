@@ -37,6 +37,7 @@ interface Pages {
   id: string;
   title: string;
   elements: Elements[];
+  condition?: Condition;
   styles?: {};
   background?: string;
 }
@@ -51,6 +52,15 @@ interface Elements {
   };
   type: string;
   required: boolean;
+  value?: string;
+}
+
+interface Condition {
+  id: string;
+  elementId: string;
+  operator: string;
+  value: string;
+  targetPageId: string;
 }
 
 export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, setCurrentPageIndex, setSelectedElement }: FormEditorProps) {
@@ -59,9 +69,45 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
   // Only show page navigation if multi-page is enabled
   const showPageNavigation = form.isMultiPage !== false;
 
-  // Navigate between pages
+  // Get the value of the condition element from user input
+  const getElementValue = (elementId: string) => {
+    const foundElement = currentPage.elements.find((element) => element.id === elementId);
+    return foundElement?.value || "";
+  };
+
+  // Check if condition is met
+  const isConditionMet = (condition: Condition) => {
+    if (!condition || !condition.elementId) return false;
+    const elementValue = getElementValue(condition.elementId);
+
+    switch (condition.operator) {
+      case "equals":
+        return elementValue === condition.value;
+      case "not_equals":
+        return elementValue !== condition.value;
+      case "contains":
+        return elementValue.includes(condition.value);
+      case "greater_than":
+        return parseFloat(elementValue) > parseFloat(condition.value);
+      case "less_than":
+        return parseFloat(elementValue) < parseFloat(condition.value);
+      default:
+        return false;
+    }
+  };
+
+  // Navigate between pages based on condition
   const navigatePages = (direction: number) => {
     const newIndex = currentPageIndex + direction;
+
+    if (currentPage.condition && isConditionMet(currentPage.condition)) {
+      const targetPageIndex = form.pages.findIndex((page) => page.id === currentPage.condition?.targetPageId);
+      if (targetPageIndex !== -1) {
+        setCurrentPageIndex(targetPageIndex);
+        return;
+      }
+    }
+
     if (newIndex >= 0 && newIndex < form.pages.length) {
       setCurrentPageIndex(newIndex);
     }

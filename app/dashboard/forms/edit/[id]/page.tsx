@@ -12,6 +12,8 @@ import { FormEditor } from "@/components/forms/form-editor";
 import { FormStyles } from "@/components/forms/form-styles";
 import { ConditionBuilder } from "@/components/forms/conditions/condition-builder";
 import { FormCanvas } from "@/components/forms/canvas/form-canvas";
+import { PreviewForm } from "@/components/forms/form-preview";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 interface EditFormPageProps {
   params: Promise<{ id: string }>;
 }
@@ -59,6 +61,7 @@ export default function EditFormPage({ params }: EditFormPageProps) {
   const [formId, setFormId] = useState(id);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedElement, setSelectedElement] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [form, setForm] = useState<Form>({
     title: "New Form",
     description: "Form description",
@@ -102,7 +105,8 @@ export default function EditFormPage({ params }: EditFormPageProps) {
     const formPayload = {
       user_id: userId,
     };
-    console.log("payload", formPayload);
+    console.log("payload", form);
+    /*
     if (formId === "new") {
       const response = await fetch(`/api/forms`, {
         method: "POST",
@@ -123,7 +127,7 @@ export default function EditFormPage({ params }: EditFormPageProps) {
       const updatedForm = await response.json();
       console.log("put req", updatedForm);
       toast.success("page saved successfully!");
-    }
+    }*/
   }
 
   return (
@@ -143,6 +147,13 @@ export default function EditFormPage({ params }: EditFormPageProps) {
                   className="border rounded-md px-2 py-1 text-sm w-64"
                 />
               </div>
+              <Button
+                variant="outline"
+                className="flex items-center space-x-2"
+                onClick={() => setIsPreviewOpen(true)}>
+                <Eye className="h-5 w-5" />
+                <span>Preview</span>
+              </Button>
               <Button
                 onClick={saveForm}
                 className="flex items-center space-x-2">
@@ -222,6 +233,18 @@ export default function EditFormPage({ params }: EditFormPageProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Preview Modal */}
+      <Dialog
+        open={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Form Preview</DialogTitle>
+          </DialogHeader>
+          <PreviewForm form={form} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
