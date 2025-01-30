@@ -1,0 +1,17 @@
+
+{
+  "extends": [
+    "next/core-web-vitals", "next/typescript"
+  ],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@next/next/no-img-element": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "react/no-unescaped-entities": "off",
+    "jsx-a11y/alt-text": "warn",
+    "no-unused-vars": ["warn"],
+   
+    "react/jsx-no-undef": "off"
+  }
+}
