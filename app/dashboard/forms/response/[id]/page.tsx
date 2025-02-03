@@ -10,12 +10,13 @@ interface ViewFormPageProps {
   params: Promise<{ id: string }>; // Props passed to the component containing the form ID.
 }
 
-export default function FormView({ params }: ViewFormPageProps) {
+export default function FormResponseView({ params }: ViewFormPageProps) {
   const unwrappedParams = React.use(params); // Resolving the promise for the parameters.
   const { id } = unwrappedParams; // Extracting the form ID.
   const [loading, setLoading] = useState(true); // State to indicate whether the form data is being loaded.
   const [totalSubmissions, setTotalSubmissions] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("responses");
+  const [submissions, setSubmissions] = useState<any[]>([]); // State to store the form submissions.
   useEffect(() => {
     // useEffect hook to fetch form data when the component mounts.
     async function fetchFormData() {
@@ -28,6 +29,7 @@ export default function FormView({ params }: ViewFormPageProps) {
         const data = await response.json(); // Parse the response as JSON.
         console.log("response data", data);
         // Calculate total submissions based on the provided data structure.
+        setSubmissions(data.submissions || []);
         const totalSubmissionsCount = data.submissions ? data.submissions.length : 0;
         setTotalSubmissions(totalSubmissionsCount);
       } catch (error) {
@@ -128,7 +130,7 @@ export default function FormView({ params }: ViewFormPageProps) {
         </TabsList>
 
         <TabsContent value="responses">
-          <ResponsesList />
+          <ResponsesList submissions={submissions} />
         </TabsContent>
 
         <TabsContent value="analytics">
@@ -140,7 +142,7 @@ export default function FormView({ params }: ViewFormPageProps) {
         </TabsContent>
 
         <TabsContent value="export">
-          <ExportPanel />
+          <ExportPanel submissions={submissions} />
         </TabsContent>
       </Tabs>
     </div>

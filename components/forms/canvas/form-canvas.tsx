@@ -29,7 +29,7 @@ interface Form {
     height?: string;
     columns?: number;
   };
-
+  isActive?: boolean;
   isMultiPage?: boolean;
 }
 

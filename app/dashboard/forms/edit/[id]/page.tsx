@@ -14,6 +14,8 @@ import { ConditionBuilder } from "@/components/forms/conditions/condition-builde
 import { FormCanvas } from "@/components/forms/canvas/form-canvas";
 import { PreviewForm } from "@/components/forms/form-preview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConditionTabs } from "@/components/forms/conditions/condition-tabs";
+import { title } from "process";
 interface EditFormPageProps {
   params: Promise<{ id: string }>;
 }
@@ -29,7 +31,7 @@ interface Form {
     height?: string;
     columns?: number;
   };
-
+  isActive?: boolean;
   isMultiPage?: boolean;
 }
 
@@ -104,9 +106,14 @@ export default function EditFormPage({ params }: EditFormPageProps) {
     toast.success("page saved successfully!");
     const formPayload = {
       user_id: userId,
+      title: form.title,
+      isMultiPage: form.isMultiPage,
+      isActive: form.isActive,
+      pages: form.pages,
+      styles: form.styles,
     };
     console.log("payload", form);
-    /*
+
     if (formId === "new") {
       const response = await fetch(`/api/forms`, {
         method: "POST",
@@ -122,12 +129,13 @@ export default function EditFormPage({ params }: EditFormPageProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: formId,
+          ...formPayload,
         }),
       });
       const updatedForm = await response.json();
       console.log("put req", updatedForm);
       toast.success("page saved successfully!");
-    }*/
+    }
   }
 
   return (
@@ -225,7 +233,7 @@ export default function EditFormPage({ params }: EditFormPageProps) {
           <TabsContent
             value="Logic"
             className="p-4 overflow-y-auto h-full">
-            <ConditionBuilder
+            <ConditionTabs
               form={form}
               setForm={setForm}
               currentPageIndex={currentPageIndex}

@@ -2,22 +2,38 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/lib/supabaseClient";
 import { UUID } from "crypto";
 
-interface FormData {
+interface Form {
   title: string;
-  user_id: UUID;
-  question?: Question[];
+  description: string;
+  pages: Pages[];
+  background?: string;
+  user_id: string;
+  styles?: {
+    width?: string;
+    height?: string;
+    columns?: number;
+  };
+  isActive?: boolean;
+  isMultiPage?: boolean;
 }
 
-interface Question {
+interface Pages {
   id: string;
   title: string;
-  type: string;
-  imageUrl?: string;
-  imageAlignment?: string;
-  style?: {
-    backgroundColor: "#ffffff";
-    textColor: "#000000";
+  elements: Elements[];
+  background?: string;
+}
+
+interface Elements {
+  id: string;
+  title: string;
+  styles: {
+    backgroundColor?: string;
+    width?: string;
+    height?: string;
   };
+  type: string;
+  required: boolean;
 }
 
 // Function to fetch all forms
@@ -36,12 +52,14 @@ export async function GET() {
 // Function to create a new form
 export async function POST(req: NextRequest) {
   try {
-    const formData: FormData = await req.json();
-    console.log("API CREATE formal form", formData);
+    const form: Form = await req.json();
+    console.log("API CREATE formal form", form.isMultiPage);
 
     const { data, error } = await supabase
       .from("forms")
-      .insert([{ user_id: formData.user_id, title: formData.title, question: formData.question }])
+      .insert([
+        { user_id: form.user_id, title: form.title, pages: form.pages, styles: form.styles, isMultiPage: form.isMultiPage, isActive: form.isActive },
+      ])
       .select();
 
     console.log("api response", data);
@@ -55,10 +73,13 @@ export async function POST(req: NextRequest) {
 // Function to update a form
 export async function PUT(req: NextRequest) {
   try {
-    const { id, ...formData }: { id: string } & FormData = await req.json();
-    console.log("API UPDATE formal form", id, formData);
-    const { data, error } = await supabase.from("forms").update(formData).eq("id", id).single();
+    const { id, ...form }: { id: string } & Form = await req.json();
+    console.log("API UPDATE formal form", id, "data", form);
+
+    const { data, error } = await supabase.from("forms").update(form).eq("id", id).select().single(); // Ensures only one record is fetched
+
     if (error) throw new Error(error.message);
+
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

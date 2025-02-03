@@ -9,38 +9,23 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, MoreVertical, Star, Flag, Trash2 } from "lucide-react";
 
-const mockResponses = [
-  {
-    id: "1",
-    submittedAt: "2024-03-15T10:30:00",
-    email: "john@example.com",
-    completionTime: "2m 15s",
-    status: "complete",
-    answers: {
-      "What type of customer are you?": "Business",
-      "What's your company name?": "Acme Inc",
-      "How satisfied are you with our service?": "4",
-      "Any additional feedback?": "Great service overall!",
-    },
-  },
-  {
-    id: "2",
-    submittedAt: "2024-03-15T09:45:00",
-    email: "jane@example.com",
-    completionTime: "1m 45s",
-    status: "partial",
-    answers: {
-      "What type of customer are you?": "Individual",
-      "How satisfied are you with our service?": "5",
-    },
-  },
-];
+interface Submission {
+  id: number;
+  created_at: string;
+  form_id: string;
+  response: Record<string, string>;
+  meta: string; // JSON string, needs parsing
+}
 
-export function ResponsesList() {
+interface ResponsesListProps {
+  submissions: Submission[];
+}
+
+export function ResponsesList({ submissions }: ResponsesListProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedResponse, setSelectedResponse] = useState<any>(null);
+  const [selectedResponse, setSelectedResponse] = useState<Submission | null>(null);
 
-  const handleViewResponse = (response: any) => {
+  const handleViewResponse = (response: Submission) => {
     setSelectedResponse(response);
   };
 
@@ -66,52 +51,59 @@ export function ResponsesList() {
           <TableHeader>
             <TableRow>
               <TableHead>Submitted</TableHead>
-              <TableHead>Email</TableHead>
               <TableHead>Completion Time</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockResponses.map((response) => (
-              <TableRow key={response.id}>
-                <TableCell>{new Date(response.submittedAt).toLocaleDateString()}</TableCell>
-                <TableCell>{response.email}</TableCell>
-                <TableCell>{response.completionTime}</TableCell>
-                <TableCell>
-                  <Badge variant={response.status === "complete" ? "success" : "warning"}>{response.status}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewResponse(response)}>
-                        <Search className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Star className="mr-2 h-4 w-4" />
-                        Mark as Important
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Flag className="mr-2 h-4 w-4" />
-                        Flag Response
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {submissions.length > 0 ? (
+              submissions.map((submission) => {
+                const meta = JSON.parse(submission.meta); // Parse JSON string
+                return (
+                  <TableRow key={submission.id}>
+                    <TableCell>{new Date(submission.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{meta.completionTime ?? "N/A"}</TableCell>
+                    <TableCell>
+                      <Badge variant={meta.status === "complete" ? "success" : "warning"}>{meta.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewResponse(submission)}>
+                            <Search className="mr-2 h-4 w-4" /> View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Star className="mr-2 h-4 w-4" /> Mark as Important
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Flag className="mr-2 h-4 w-4" /> Flag Response
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-center text-muted-foreground">
+                  No responses yet
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
@@ -123,39 +115,20 @@ export function ResponsesList() {
           <DialogHeader>
             <DialogTitle>Response Details</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Submitted At</p>
-                <p className="font-medium">{selectedResponse && new Date(selectedResponse.submittedAt).toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Email</p>
-                <p className="font-medium">{selectedResponse?.email}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Completion Time</p>
-                <p className="font-medium">{selectedResponse?.completionTime}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Status</p>
-                <Badge variant={selectedResponse?.status === "complete" ? "success" : "warning"}>{selectedResponse?.status}</Badge>
-              </div>
-            </div>
-
+          {selectedResponse && (
             <div className="space-y-4">
-              <h3 className="font-semibold">Answers</h3>
-              {selectedResponse &&
-                Object.entries(selectedResponse.answers).map(([question, answer]) => (
-                  <div
-                    key={question}
-                    className="space-y-1">
-                    <p className="text-sm text-muted-foreground">{question}</p>
-                    <p className="font-medium">{answer as string}</p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Submitted At</p>
+                  <p className="font-medium">{new Date(selectedResponse.created_at).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Completion Time</p>
+                  <p className="font-medium">{JSON.parse(selectedResponse.meta).completionTime ?? "N/A"}</p>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

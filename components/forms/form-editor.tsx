@@ -21,6 +21,7 @@ interface Form {
   };
   // A simple boolean to track if the form is multi-page
   isMultiPage?: boolean;
+  isActive?: boolean;
 }
 
 interface Pages {
@@ -56,6 +57,7 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
   const [height, setHeight] = useState(form.styles?.height || "auto");
   const [columns, setColumns] = useState<number>(form.styles?.columns || 1);
   const [isMultiPage, setIsMultiPage] = useState(form.isMultiPage !== undefined ? form.isMultiPage : true);
+  const [isActive, setIsActive] = useState(form.isActive !== undefined ? form.isActive : true);
 
   // Whenever form changes externally, make sure our local states stay in sync
   useEffect(() => {
@@ -63,6 +65,7 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
     setHeight(form.styles?.height || "auto");
     setColumns(form.styles?.columns || 1);
     setIsMultiPage(form.isMultiPage !== undefined ? form.isMultiPage : true);
+    setIsActive(form.isActive !== undefined ? form.isActive : true);
   }, [form]);
 
   // Apply any changes back to the main form state
@@ -79,6 +82,7 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
     const updatedForm: Form = {
       ...form,
       isMultiPage,
+      isActive,
       styles: {
         ...form.styles,
         width,
@@ -132,6 +136,14 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
           id="multiPageSwitch"
         />
         <Label htmlFor="multiPageSwitch">Multi-Page</Label>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch
+          checked={isActive}
+          onCheckedChange={setIsActive}
+          id="activeSwitch"
+        />
+        <Label htmlFor="activeSwitch">Active</Label>
       </div>
 
       <Button onClick={handleApplyChanges}>Apply Changes</Button>

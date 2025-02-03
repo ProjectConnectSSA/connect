@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2, FileText } from "lucide-react";
 import { DataTable } from "@/components/forms/data-table";
 import { setFormToEdit, clearFormToEdit } from "@/services/formService";
 import { useEffect, useState } from "react";
-
+import { Badge } from "@/components/ui/badge";
 // Function to format date as DD/MM/YYYY
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -57,6 +57,13 @@ export default function FormsPage() {
       render: (item: any) => formatDate(item.created_at),
     },
     {
+      key: "status",
+      label: "Status",
+      render: (item: any) => (
+        <Badge variant={item.isActive === true ? "success" : "secondary"}>{item.isActive === true ? "Active" : "Inactive"}</Badge>
+      ),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (item: any) => (
@@ -72,6 +79,10 @@ export default function FormsPage() {
           <DropdownMenuContent
             align="end"
             className="shadow-md rounded-lg bg-white">
+            <DropdownMenuItem onClick={() => handleEditForm(item)}>
+              <Pencil className="mr-2 h-4 w-4 text-orange-500" />
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuItem>
               <Share2 className="mr-2 h-4 w-4 text-orange-500" />
               Share
@@ -81,13 +92,10 @@ export default function FormsPage() {
               View
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleViewFormSubmision(item)}>
-              <Eye className="mr-2 h-4 w-4 text-orange-500" />
-              View Submissions
+              <FileText className="mr-2 h-4 w-4 text-orange-500" />
+              Submissions
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleEditForm(item)}>
-              <Pencil className="mr-2 h-4 w-4 text-orange-500" />
-              Edit
-            </DropdownMenuItem>
+
             <DropdownMenuItem
               onClick={() => deleteForm(item.id)}
               className="text-red-500 hover:bg-red-100">
