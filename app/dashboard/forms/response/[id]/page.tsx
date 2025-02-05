@@ -6,6 +6,8 @@ import { FileText, BarChart2, Link2, Download } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResponsesList } from "@/components/forms/response/response-list";
 import { ExportPanel } from "@/components/forms/response/export-panel";
+import { ResponsesAnalytics } from "@/components/forms/response/response-analytics";
+import { IntegrationPanel } from "@/components/forms/response/integration-panel";
 interface ViewFormPageProps {
   params: Promise<{ id: string }>; // Props passed to the component containing the form ID.
 }
@@ -57,17 +59,16 @@ export default function FormResponseView({ params }: ViewFormPageProps) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="bg-orange-100 bg-opacity-50 backdrop-blur-md shadow-lg">
+        <Card className=" backdrop-blur-md shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalSubmissions !== null ? totalSubmissions : "N/A"}</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
           </CardContent>
         </Card>
-        <Card className="bg-orange-100 bg-opacity-50 backdrop-blur-md shadow-lg">
+        <Card className=" backdrop-blur-md shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
             <BarChart2 className="h-4 w-4 text-muted-foreground" />
@@ -77,7 +78,7 @@ export default function FormResponseView({ params }: ViewFormPageProps) {
             <p className="text-xs text-muted-foreground">+5.2% from last month</p>
           </CardContent>
         </Card>
-        <Card className="bg-orange-100 bg-opacity-50 backdrop-blur-md shadow-lg">
+        <Card className=" backdrop-blur-md shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. Time</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -87,7 +88,7 @@ export default function FormResponseView({ params }: ViewFormPageProps) {
             <p className="text-xs text-muted-foreground">-10s from last month</p>
           </CardContent>
         </Card>
-        <Card className="bg-orange-100 bg-opacity-50 backdrop-blur-md shadow-lg">
+        <Card className=" backdrop-blur-md shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Integrations</CardTitle>
             <Link2 className="h-4 w-4 text-muted-foreground" />
@@ -134,11 +135,14 @@ export default function FormResponseView({ params }: ViewFormPageProps) {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <h1>Analytics</h1>
+          <ResponsesAnalytics
+            submissions={submissions}
+            totalSubmissions={totalSubmissions ?? 0}
+          />
         </TabsContent>
 
         <TabsContent value="integrations">
-          <h1>Integrations</h1>
+          <IntegrationPanel submissions={submissions} />
         </TabsContent>
 
         <TabsContent value="export">
