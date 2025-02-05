@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,15 +9,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2, FileText, Copy, QrCode } from "lucide-react";
 import { DataTable } from "@/components/forms/data-table";
 import { setFormToEdit, clearFormToEdit } from "@/services/formService";
-import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
-import { QRCodeSVG } from "qrcode.react"; // Using QRCodeSVG for QR generation
+import { QRCodeSVG } from "qrcode.react";
+import { TemplateSelector } from "@/components/forms/templates/templateSelecter";
 
-// Function to format date as DD/MM/YYYY
+// Utility function: format date.
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-GB"); // "en-GB" formats to DD/MM/YYYY
+  return date.toLocaleDateString("en-GB");
 };
 
 const filters = [
@@ -52,24 +53,22 @@ export default function FormsPage() {
   const [shareLink, setShareLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
-
-  // Ref for the QR code container
   const qrCodeRef = useRef<HTMLDivElement>(null);
+
+  // State for the Template Dialog
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchFormData();
     clearFormToEdit();
   }, []);
 
-  // Function to open the share dialog for a specific form
   const handleShareForm = (form: any) => {
-    // Create the shareable link (adjust as needed)
     const link = `${window.location.origin}/dashboard/forms/view/${form.id}`;
     setShareLink(link);
     setShareDialogOpen(true);
   };
 
-  // Function to copy the share link to the clipboard
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareLink);
@@ -80,7 +79,6 @@ export default function FormsPage() {
     }
   };
 
-  // Function to download the QR code as an SVG file
   const downloadQRCode = () => {
     if (qrCodeRef.current) {
       const svgElement = qrCodeRef.current.querySelector("svg");
@@ -110,9 +108,7 @@ export default function FormsPage() {
     {
       key: "status",
       label: "Status",
-      render: (item: any) => (
-        <Badge variant={item.isActive === true ? "success" : "secondary"}>{item.isActive === true ? "Active" : "Inactive"}</Badge>
-      ),
+      render: (item: any) => <Badge variant={item.isActive ? "success" : "secondary"}>{item.isActive ? "Active" : "Inactive"}</Badge>,
     },
     {
       key: "actions",
@@ -123,27 +119,27 @@ export default function FormsPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="hover:bg-orange-100 transition">
-              <MoreVertical className="h-4 w-4 text-orange-600" />
+              className="hover:bg-gray-100 transition">
+              <MoreVertical className="h-4 w-4 text-gray-600" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
             className="shadow-md rounded-lg bg-white">
             <DropdownMenuItem onClick={() => handleEditForm(item)}>
-              <Pencil className="mr-2 h-4 w-4 text-orange-500" />
+              <Pencil className="mr-2 h-4 w-4 text-gray-500" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleShareForm(item)}>
-              <Share2 className="mr-2 h-4 w-4 text-orange-500" />
+              <Share2 className="mr-2 h-4 w-4 text-gray-500" />
               Share
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleViewForm(item)}>
-              <Eye className="mr-2 h-4 w-4 text-orange-500" />
+              <Eye className="mr-2 h-4 w-4 text-gray-500" />
               View
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleViewFormSubmision(item)}>
-              <FileText className="mr-2 h-4 w-4 text-orange-500" />
+              <FileText className="mr-2 h-4 w-4 text-gray-500" />
               Submissions
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -165,11 +161,9 @@ export default function FormsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-
       if (!response.ok) {
         throw new Error("Failed to delete form");
       }
-
       setForms((prevForms) => prevForms.filter((form) => form.id !== id));
     } catch (error) {
       console.error("Failed to delete form:", error);
@@ -203,40 +197,55 @@ export default function FormsPage() {
     }
   }
 
+  // Template selection handler
+  const handleSelectTemplate = (template: any) => {
+    setFormToEdit(template);
+    setTemplateDialogOpen(false);
+    router.push("/dashboard/forms/edit/new");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-orange-700">Forms</h1>
-          <p className="text-orange-500">Create and manage your forms efficiently.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Forms</h1>
+          <p className="text-gray-600">Create and manage your forms efficiently.</p>
         </div>
-        <Button
-          onClick={() => router.push("/dashboard/forms/edit/new")}
-          className="bg-orange-600 hover:bg-orange-700 text-white shadow-md">
-          <Plus className="mr-2 h-4 w-4" />
-          Create Form
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => router.push("/dashboard/forms/edit/new")}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Form
+          </Button>
+          <Button
+            onClick={() => setTemplateDialogOpen(true)}
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            Templates
+          </Button>
+        </div>
       </div>
 
       {/* Usage Card */}
-      <Card className="bg-orange-50 border-none shadow-sm rounded-lg p-6">
+      <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-4 max-w-sm">
         <CardHeader>
-          <CardTitle className="text-orange-800">Usage</CardTitle>
-          <CardDescription className="text-orange-600">
+          <CardTitle className="text-gray-900 text-lg">Usage</CardTitle>
+          <CardDescription className="text-gray-600">
             {usedLinks} of {totalLinksAllowed} forms used
           </CardDescription>
           <Progress
             value={progressValue}
-            className="mt-2 bg-orange-300"
+            className="mt-2 bg-gray-300"
           />
         </CardHeader>
       </Card>
 
       {/* Forms List */}
-      <Card className="bg-white border-none shadow-sm rounded-lg p-6">
+      <Card className="bg-white border-none shadow-sm rounded-lg p-4">
         <CardHeader>
-          <CardTitle className="text-orange-800">Your Forms</CardTitle>
+          <CardTitle className="text-gray-900 text-xl">Your Forms</CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
@@ -304,6 +313,13 @@ export default function FormsPage() {
           </DialogClose>
         </DialogContent>
       </Dialog>
+
+      {/* Template Selection Dialog */}
+      <TemplateSelector
+        open={templateDialogOpen}
+        onClose={() => setTemplateDialogOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
     </div>
   );
 }

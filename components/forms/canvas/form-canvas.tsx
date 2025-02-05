@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ElementToolbar } from "./element-toolbar";
+import { motion } from "framer-motion";
 
 // Interfaces
 interface FormEditorProps {
@@ -53,6 +54,7 @@ interface Elements {
   type: string;
   required: boolean;
   value?: string;
+  column?: "left" | "right";
 }
 
 interface Condition {
@@ -66,8 +68,13 @@ interface Condition {
 export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, setCurrentPageIndex, setSelectedElement }: FormEditorProps) {
   const [draggedOver, setDraggedOver] = useState(false);
   const currentPage = form.pages[currentPageIndex];
-  // Only show page navigation if multi-page is enabled
   const showPageNavigation = form.isMultiPage !== false;
+
+  // Framer Motion variants for element animations.
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  };
 
   // Get the value of the condition element from user input
   const getElementValue = (elementId: string) => {
@@ -125,8 +132,8 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
     setCurrentPageIndex(form.pages.length);
   };
 
-  // Handle element drop
-  const handleElementDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  // Handle element drop with optional column assignment
+  const handleElementDrop = (e: React.DragEvent<HTMLDivElement>, column?: "left" | "right") => {
     e.preventDefault();
     const elementType = e.dataTransfer.getData("elementType");
 
@@ -137,10 +144,11 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
         title: `New ${elementType.charAt(0).toUpperCase() + elementType.slice(1)}`,
         required: true,
         styles: {
-          width: "400",
-          height: "100",
+          width: "400px",
+          height: "100px",
           backgroundColor: "#ffffff",
         },
+        ...(column ? { column } : {}),
       };
 
       const updatedPages = [...form.pages];
@@ -158,75 +166,125 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
     setForm({ ...form, pages: updatedPages });
   };
 
-  // Render elements
-  const renderElements = () => {
-    return currentPage.elements.map((element) => {
-      let renderedElement;
-      switch (element.type) {
-        case "text":
-          renderedElement = <Input placeholder="Enter text" />;
-          break;
-        case "checkbox":
-          renderedElement = <input type="checkbox" />;
-          break;
-        case "date":
-          renderedElement = <input type="date" />;
-          break;
-        case "rating":
-          renderedElement = <div>⭐ Rating Field</div>;
-          break;
-        case "select":
-          renderedElement = (
-            <select>
-              <option>Option 1</option>
-              <option>Option 2</option>
-            </select>
-          );
-          break;
-        case "phone":
-          renderedElement = (
-            <Input
-              type="tel"
-              placeholder="Enter phone number"
-            />
-          );
-          break;
-        case "email":
-          renderedElement = (
-            <Input
-              type="email"
-              placeholder="Enter email"
-            />
-          );
-          break;
-        case "image":
-          renderedElement = (
-            <input
-              type="file"
-              accept="image/*"
-            />
-          );
-          break;
-        default:
-          renderedElement = <div>Unsupported element</div>;
-      }
+  // Render a single element wrapped in a motion.div for animation
+  const renderElement = (element: Elements) => (
+    <motion.div
+      key={element.id}
+      variants={itemVariants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      onClick={() => setSelectedElement({ element, pageIndex: currentPageIndex })}
+      className={cn(
+        "p-4 rounded-lg border transition-all cursor-pointer hover:border-blue-500",
+        selectedElement?.element.id === element.id && "ring-2 ring-blue-500"
+      )}
+      style={element.styles}>
+      <div className="flex flex-col gap-2">
+        <Label>{element.type}</Label>
+        {(() => {
+          switch (element.type) {
+            case "text":
+              return <Input placeholder="Enter text" />;
+            case "checkbox":
+              return <input type="checkbox" />;
+            case "date":
+              return <input type="date" />;
+            case "rating":
+              return <div>⭐ Rating Field</div>;
+            case "select":
+              return (
+                <select>
+                  <option>Option 1</option>
+                  <option>Option 2</option>
+                </select>
+              );
+            case "phone":
+              return (
+                <Input
+                  type="tel"
+                  placeholder="Enter phone number"
+                />
+              );
+            case "email":
+              return (
+                <Input
+                  type="email"
+                  placeholder="Enter email"
+                />
+              );
+            case "image":
+              return (
+                <input
+                  type="file"
+                  accept="image/*"
+                />
+              );
+            default:
+              return <div>Unsupported element</div>;
+          }
+        })()}
+      </div>
+    </motion.div>
+  );
 
+  // Render elements differently based on number of columns.
+  const renderElements = () => {
+    if (form.styles?.columns === 2) {
+      const leftElements = currentPage.elements.filter((el) => !el.column || el.column === "left");
+      const rightElements = currentPage.elements.filter((el) => el.column === "right");
       return (
-        <div
-          key={element.id}
-          onClick={() => setSelectedElement({ element, pageIndex: currentPageIndex })}
-          className={cn(
-            "p-4 rounded-lg border transition-all cursor-pointer hover:border-primary",
-            selectedElement?.element.id === element.id && "ring-2 ring-primary"
-          )}
-          style={element.styles}>
-          <div className="flex flex-col gap-2">
-            <Label>{element.type}</Label>
-            {renderedElement}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Left Drop Zone */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDraggedOver(true);
+            }}
+            onDragLeave={() => setDraggedOver(false)}
+            onDrop={(e) => handleElementDrop(e, "left")}
+            className={cn("min-h-[200px] border-2 border-dashed rounded-lg p-4 transition-all", draggedOver && "ring-2 ring-blue-500")}>
+            {leftElements.length === 0 ? (
+              <div className="text-center text-gray-500">Drop element here (Left Column)</div>
+            ) : (
+              leftElements.map(renderElement)
+            )}
+          </div>
+          {/* Right Drop Zone */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDraggedOver(true);
+            }}
+            onDragLeave={() => setDraggedOver(false)}
+            onDrop={(e) => handleElementDrop(e, "right")}
+            className={cn("min-h-[200px] border-2 border-dashed rounded-lg p-4 transition-all", draggedOver && "ring-2 ring-blue-500")}>
+            {rightElements.length === 0 ? (
+              <div className="text-center text-gray-500">Drop element here (Right Column)</div>
+            ) : (
+              rightElements.map(renderElement)
+            )}
           </div>
         </div>
       );
-    });
+    }
+    // Single column layout
+    return (
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDraggedOver(true);
+        }}
+        onDragLeave={() => setDraggedOver(false)}
+        onDrop={(e) => handleElementDrop(e)}
+        className={cn("min-h-[400px] border-2 border-dashed rounded-lg p-6 transition-all", draggedOver && "ring-2 ring-blue-500")}>
+        {currentPage.elements.length === 0 ? (
+          <div className="h-32 flex items-center justify-center text-gray-500">Drag elements here</div>
+        ) : (
+          currentPage.elements.map(renderElement)
+        )}
+      </div>
+    );
   };
 
   return (
@@ -273,15 +331,9 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
             width: form.styles?.width || "100%",
             height: form.styles?.height || "auto",
           }}>
-          <div className={`grid gap-4 ${form.styles?.columns === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+          <div className={`${form.styles?.columns === 2 ? "" : "grid-cols-1"}`}>
             <Card
-              className={cn("min-h-[400px] transition-all", draggedOver && "ring-2 ring-primary ring-dashed")}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDraggedOver(true);
-              }}
-              onDragLeave={() => setDraggedOver(false)}
-              onDrop={handleElementDrop}
+              className={cn("min-h-[400px] transition-all")}
               style={{
                 ...currentPage.styles,
                 backgroundColor: currentPage.background || "#ffffff",
@@ -292,14 +344,7 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
                   onChange={(e) => updatePageTitle(e.target.value)}
                   className="text-xl font-semibold"
                 />
-
                 {renderElements()}
-
-                {currentPage.elements.length === 0 && (
-                  <div className="h-32 flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
-                    Drag elements here
-                  </div>
-                )}
               </div>
             </Card>
           </div>
