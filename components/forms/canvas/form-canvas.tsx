@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, ArrowLeft, ArrowRight } from "lucide-react";
+import { Plus, ArrowLeft, ArrowRight, Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ElementToolbar } from "./element-toolbar";
 import { motion } from "framer-motion";
@@ -39,7 +39,7 @@ interface Pages {
   title: string;
   elements: Elements[];
   condition?: Condition;
-  styles?: {};
+  styles?: Record<string, any>;
   background?: string;
 }
 
@@ -65,78 +65,213 @@ interface Condition {
   targetPageId: string;
 }
 
+// Motion variants for animations.
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+};
+
+// Editable element component with a drag handle icon and thicker dashed border when selected.
+const EditableElement = ({
+  element,
+  selectedElement,
+  updateElement,
+  deleteElement,
+  reorderElements,
+  setSelectedElement,
+  currentPageIndex,
+}: {
+  element: Elements;
+  selectedElement: any;
+  updateElement: (id: string, changes: Partial<Elements>) => void;
+  deleteElement: (id: string) => void;
+  reorderElements: (draggedId: string, targetId: string) => void;
+  setSelectedElement: (sel: any) => void;
+  currentPageIndex: number;
+}) => {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData("text/plain", element.id);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData("text/plain");
+    if (draggedId && draggedId !== element.id) {
+      reorderElements(draggedId, element.id);
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedElement?.element?.id !== element.id) {
+      setSelectedElement({ element, pageIndex: currentPageIndex });
+    }
+  };
+
+  return (
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onClick={handleClick}>
+      <motion.div
+        variants={itemVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        className={cn(
+          "mb-4 p-3 rounded-md shadow-sm bg-white flex items-start cursor-move",
+          selectedElement?.element?.id === element.id && "border-4 border-dashed border-blue-500"
+        )}>
+        {/* Drag Handle Icon */}
+        <div className="mr-2 flex-shrink-0">
+          <GripVertical className="h-5 w-5 text-gray-500" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <Input
+              value={element.title}
+              onChange={(e) => updateElement(element.id, { title: e.target.value })}
+              placeholder="Element Label"
+              className="flex-1 mr-2"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => deleteElement(element.id)}>
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+          <div>
+            {(() => {
+              switch (element.type) {
+                case "text":
+                  return (
+                    <Input
+                      placeholder="Enter text"
+                      style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}
+                    />
+                  );
+                case "checkbox":
+                  return <input type="checkbox" />;
+                case "date":
+                  return <input type="date" />;
+                case "rating":
+                  return <div>⭐ Rating Field</div>;
+                case "select":
+                  return (
+                    <select style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}>
+                      <option>Option 1</option>
+                      <option>Option 2</option>
+                    </select>
+                  );
+                case "phone":
+                  return (
+                    <Input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}
+                    />
+                  );
+                case "email":
+                  return (
+                    <Input
+                      type="email"
+                      placeholder="Enter email"
+                      style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}
+                    />
+                  );
+                case "image":
+                  return (
+                    <input
+                      type="file"
+                      accept="image/*"
+                    />
+                  );
+                default:
+                  return <div>Unsupported element</div>;
+              }
+            })()}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, setCurrentPageIndex, setSelectedElement }: FormEditorProps) {
   const [draggedOver, setDraggedOver] = useState(false);
   const currentPage = form.pages[currentPageIndex];
   const showPageNavigation = form.isMultiPage !== false;
 
-  // Framer Motion variants for element animations.
-  const itemVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  const updateElement = useCallback(
+    (elementId: string, changes: Partial<Elements>) => {
+      const updatedElements = currentPage.elements.map((el) => (el.id === elementId ? { ...el, ...changes } : el));
+      const updatedPages = form.pages.map((page, index) => (index === currentPageIndex ? { ...page, elements: updatedElements } : page));
+      setForm({ ...form, pages: updatedPages });
+    },
+    [currentPage, currentPageIndex, form, setForm]
+  );
+
+  const deleteElement = useCallback(
+    (elementId: string) => {
+      const updatedElements = currentPage.elements.filter((el) => el.id !== elementId);
+      const updatedPages = form.pages.map((page, index) => (index === currentPageIndex ? { ...page, elements: updatedElements } : page));
+      setForm({ ...form, pages: updatedPages });
+    },
+    [currentPage, currentPageIndex, form, setForm]
+  );
+
+  const reorderElements = useCallback(
+    (draggedId: string, targetId: string) => {
+      const elements = [...currentPage.elements];
+      const draggedIndex = elements.findIndex((el) => el.id === draggedId);
+      const targetIndex = elements.findIndex((el) => el.id === targetId);
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      const [draggedItem] = elements.splice(draggedIndex, 1);
+      elements.splice(targetIndex, 0, draggedItem);
+      const updatedPages = form.pages.map((page, index) => (index === currentPageIndex ? { ...page, elements } : page));
+      setForm({ ...form, pages: updatedPages });
+    },
+    [currentPage, currentPageIndex, form, setForm]
+  );
+
+  const updatePageTitle = (title: string) => {
+    const updatedPages = form.pages.map((page, index) => (index === currentPageIndex ? { ...page, title } : page));
+    setForm({ ...form, pages: updatedPages });
   };
 
-  // Get the value of the condition element from user input
-  const getElementValue = (elementId: string) => {
-    const foundElement = currentPage.elements.find((element) => element.id === elementId);
-    return foundElement?.value || "";
+  const renderElements = () => {
+    return (
+      <div className="flex flex-col gap-4">
+        {currentPage.elements.length === 0 ? (
+          <div className="h-32 flex items-center justify-center text-gray-500">Drag elements here</div>
+        ) : (
+          currentPage.elements.map((el) => (
+            <EditableElement
+              key={el.id}
+              element={el}
+              selectedElement={selectedElement}
+              updateElement={updateElement}
+              deleteElement={deleteElement}
+              reorderElements={reorderElements}
+              setSelectedElement={setSelectedElement}
+              currentPageIndex={currentPageIndex}
+            />
+          ))
+        )}
+      </div>
+    );
   };
 
-  // Check if condition is met
-  const isConditionMet = (condition: Condition) => {
-    if (!condition || !condition.elementId) return false;
-    const elementValue = getElementValue(condition.elementId);
-
-    switch (condition.operator) {
-      case "equals":
-        return elementValue === condition.value;
-      case "not_equals":
-        return elementValue !== condition.value;
-      case "contains":
-        return elementValue.includes(condition.value);
-      case "greater_than":
-        return parseFloat(elementValue) > parseFloat(condition.value);
-      case "less_than":
-        return parseFloat(elementValue) < parseFloat(condition.value);
-      default:
-        return false;
-    }
-  };
-
-  // Navigate between pages based on condition
-  const navigatePages = (direction: number) => {
-    const newIndex = currentPageIndex + direction;
-
-    if (currentPage.condition && isConditionMet(currentPage.condition)) {
-      const targetPageIndex = form.pages.findIndex((page) => page.id === currentPage.condition?.targetPageId);
-      if (targetPageIndex !== -1) {
-        setCurrentPageIndex(targetPageIndex);
-        return;
-      }
-    }
-
-    if (newIndex >= 0 && newIndex < form.pages.length) {
-      setCurrentPageIndex(newIndex);
-    }
-  };
-
-  // Add a new page
-  const addNewPage = () => {
-    const newPage: Pages = {
-      id: Date.now().toString(),
-      title: `Page ${form.pages.length + 1}`,
-      elements: [],
-    };
-
-    setForm({ ...form, pages: [...form.pages, newPage] });
-    setCurrentPageIndex(form.pages.length);
-  };
-
-  // Handle element drop with optional column assignment
-  const handleElementDrop = (e: React.DragEvent<HTMLDivElement>, column?: "left" | "right") => {
+  const handleNewElementDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const elementType = e.dataTransfer.getData("elementType");
-
     if (elementType) {
       const newElement: Elements = {
         id: Date.now().toString(),
@@ -144,147 +279,33 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
         title: `New ${elementType.charAt(0).toUpperCase() + elementType.slice(1)}`,
         required: true,
         styles: {
-          width: "400px",
-          height: "100px",
-          backgroundColor: "#ffffff",
+          width: "100%",
+          height: "40px",
+          backgroundColor: "#f0f0f0",
         },
-        ...(column ? { column } : {}),
       };
-
-      const updatedPages = [...form.pages];
-      updatedPages[currentPageIndex].elements.push(newElement);
+      const updatedPages = form.pages.map((page, index) =>
+        index === currentPageIndex ? { ...page, elements: [...page.elements, newElement] } : page
+      );
       setForm({ ...form, pages: updatedPages });
     }
     setDraggedOver(false);
-    console.log("Element dropped", form);
   };
 
-  // Handle page title change
-  const updatePageTitle = (title: string) => {
-    const updatedPages = [...form.pages];
-    updatedPages[currentPageIndex].title = title;
-    setForm({ ...form, pages: updatedPages });
+  const addNewPage = () => {
+    const newPage: Pages = {
+      id: Date.now().toString(),
+      title: `Page ${form.pages.length + 1}`,
+      elements: [],
+    };
+    setForm({ ...form, pages: [...form.pages, newPage] });
   };
 
-  // Render a single element wrapped in a motion.div for animation
-  const renderElement = (element: Elements) => (
-    <motion.div
-      key={element.id}
-      variants={itemVariants}
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      onClick={() => setSelectedElement({ element, pageIndex: currentPageIndex })}
-      className={cn(
-        "p-4 rounded-lg border transition-all cursor-pointer hover:border-blue-500",
-        selectedElement?.element.id === element.id && "ring-2 ring-blue-500"
-      )}
-      style={element.styles}>
-      <div className="flex flex-col gap-2">
-        <Label>{element.type}</Label>
-        {(() => {
-          switch (element.type) {
-            case "text":
-              return <Input placeholder="Enter text" />;
-            case "checkbox":
-              return <input type="checkbox" />;
-            case "date":
-              return <input type="date" />;
-            case "rating":
-              return <div>⭐ Rating Field</div>;
-            case "select":
-              return (
-                <select>
-                  <option>Option 1</option>
-                  <option>Option 2</option>
-                </select>
-              );
-            case "phone":
-              return (
-                <Input
-                  type="tel"
-                  placeholder="Enter phone number"
-                />
-              );
-            case "email":
-              return (
-                <Input
-                  type="email"
-                  placeholder="Enter email"
-                />
-              );
-            case "image":
-              return (
-                <input
-                  type="file"
-                  accept="image/*"
-                />
-              );
-            default:
-              return <div>Unsupported element</div>;
-          }
-        })()}
-      </div>
-    </motion.div>
-  );
-
-  // Render elements differently based on number of columns.
-  const renderElements = () => {
-    if (form.styles?.columns === 2) {
-      const leftElements = currentPage.elements.filter((el) => !el.column || el.column === "left");
-      const rightElements = currentPage.elements.filter((el) => el.column === "right");
-      return (
-        <div className="grid grid-cols-2 gap-4">
-          {/* Left Drop Zone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDraggedOver(true);
-            }}
-            onDragLeave={() => setDraggedOver(false)}
-            onDrop={(e) => handleElementDrop(e, "left")}
-            className={cn("min-h-[200px] border-2 border-dashed rounded-lg p-4 transition-all", draggedOver && "ring-2 ring-blue-500")}>
-            {leftElements.length === 0 ? (
-              <div className="text-center text-gray-500">Drop element here (Left Column)</div>
-            ) : (
-              leftElements.map(renderElement)
-            )}
-          </div>
-          {/* Right Drop Zone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDraggedOver(true);
-            }}
-            onDragLeave={() => setDraggedOver(false)}
-            onDrop={(e) => handleElementDrop(e, "right")}
-            className={cn("min-h-[200px] border-2 border-dashed rounded-lg p-4 transition-all", draggedOver && "ring-2 ring-blue-500")}>
-            {rightElements.length === 0 ? (
-              <div className="text-center text-gray-500">Drop element here (Right Column)</div>
-            ) : (
-              rightElements.map(renderElement)
-            )}
-          </div>
-        </div>
-      );
+  const navigatePages = (direction: number) => {
+    const newIndex = currentPageIndex + direction;
+    if (newIndex >= 0 && newIndex < form.pages.length) {
+      setCurrentPageIndex(newIndex);
     }
-    // Single column layout
-    return (
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDraggedOver(true);
-        }}
-        onDragLeave={() => setDraggedOver(false)}
-        onDrop={(e) => handleElementDrop(e)}
-        className={cn("min-h-[400px] border-2 border-dashed rounded-lg p-6 transition-all", draggedOver && "ring-2 ring-blue-500")}>
-        {currentPage.elements.length === 0 ? (
-          <div className="h-32 flex items-center justify-center text-gray-500">Drag elements here</div>
-        ) : (
-          currentPage.elements.map(renderElement)
-        )}
-      </div>
-    );
   };
 
   return (
@@ -293,35 +314,33 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
       <ElementToolbar />
 
       {/* Navigation */}
-      {showPageNavigation && (
-        <div className="border-b p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigatePages(-1)}
-                disabled={currentPageIndex === 0}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm">
-                Page {currentPageIndex + 1} of {form.pages.length}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigatePages(1)}
-                disabled={currentPageIndex === form.pages.length - 1}>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button onClick={addNewPage}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Page
+      <div className="border-b p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigatePages(-1)}
+              disabled={currentPageIndex === 0}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm">
+              Page {currentPageIndex + 1} of {form.pages.length}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigatePages(1)}
+              disabled={currentPageIndex === form.pages.length - 1}>
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
+          <Button onClick={addNewPage}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Page
+          </Button>
         </div>
-      )}
+      </div>
 
       {/* Canvas */}
       <div className="flex-1 overflow-auto p-6">
@@ -331,23 +350,37 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
             width: form.styles?.width || "100%",
             height: form.styles?.height || "auto",
           }}>
-          <div className={`${form.styles?.columns === 2 ? "" : "grid-cols-1"}`}>
-            <Card
-              className={cn("min-h-[400px] transition-all")}
-              style={{
-                ...currentPage.styles,
-                backgroundColor: currentPage.background || "#ffffff",
-              }}>
-              <div className="p-6 space-y-6">
-                <Input
-                  value={currentPage.title}
-                  onChange={(e) => updatePageTitle(e.target.value)}
-                  className="text-xl font-semibold"
-                />
-                {renderElements()}
+          <Card
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedElement(null);
+              }
+            }}
+            className={cn("min-h-[400px] transition-all", !selectedElement && "border-4 border-dashed border-blue-500")}
+            style={{ backgroundColor: currentPage.background || "#ffffff" }}>
+            <div className="p-6 space-y-6">
+              <Input
+                value={currentPage.title}
+                onChange={(e) => updatePageTitle(e.target.value)}
+                className="text-xl font-semibold mb-4"
+                placeholder="Page Title"
+                onClick={(e) => e.stopPropagation()}
+              />
+              {renderElements()}
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDraggedOver(true);
+                }}
+                onDragLeave={() => setDraggedOver(false)}
+                onDrop={handleNewElementDrop}
+                className={`mt-6 flex items-center justify-center p-4 border-2 border-dashed rounded-lg transition-all ${
+                  draggedOver ? "ring-2 ring-blue-500" : "border-gray-300"
+                }`}>
+                Drag element here
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
