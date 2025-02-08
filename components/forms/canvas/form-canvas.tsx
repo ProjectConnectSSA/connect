@@ -4,7 +4,6 @@ import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Plus, ArrowLeft, ArrowRight, Trash2, GripVertical, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ElementToolbar } from "./element-toolbar";
@@ -90,19 +89,16 @@ const EditableElement = ({
   setSelectedElement: (sel: any) => void;
   currentPageIndex: number;
 }) => {
-  // Reference to a hidden file input for replacing images.
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // State to track image upload processing.
   const [uploading, setUploading] = useState(false);
 
-  // Handle file upload for image elements.
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     try {
-      // If there's an existing image, attempt to delete it.
+      // Delete any existing image.
       if (element.value) {
         try {
           const urlObj = new URL(element.value);
@@ -110,25 +106,20 @@ const EditableElement = ({
           if (parts.length === 2) {
             const oldFileName = parts[1];
             const { error: removeError } = await supabase.storage.from("formImage").remove([oldFileName]);
-            if (removeError) {
-              console.error("Error deleting old image:", removeError);
-            }
+            if (removeError) console.error("Error deleting old image:", removeError);
           }
         } catch (error) {
           console.error("Error parsing old image URL:", error);
         }
       }
 
-      // Create a unique file name using the element id and the new file name.
       const fileName = `${element.id}-${file.name}`;
       const { error } = await supabase.storage.from("formImage").upload(fileName, file);
       if (error) {
         console.error("Error uploading image:", error);
         return;
       }
-      // Get the public URL for the uploaded file.
       const { data } = supabase.storage.from("formImage").getPublicUrl(fileName);
-      // Update the element with the new image URL.
       updateElement(element.id, { value: data.publicUrl });
     } catch (error) {
       console.error(error);
@@ -137,13 +128,10 @@ const EditableElement = ({
     }
   };
 
-  // Helper to trigger file input for image replacement.
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
   };
 
-  // Handle deletion of an element.
-  // If the element is an image, delete it from the bucket first.
   const handleDelete = async () => {
     if (element.type === "image" && element.value) {
       try {
@@ -152,9 +140,7 @@ const EditableElement = ({
         if (parts.length === 2) {
           const oldFileName = parts[1];
           const { error: removeError } = await supabase.storage.from("formImage").remove([oldFileName]);
-          if (removeError) {
-            console.error("Error deleting image from bucket:", removeError);
-          }
+          if (removeError) console.error("Error deleting image from bucket:", removeError);
         }
       } catch (error) {
         console.error("Error parsing image URL:", error);
@@ -199,26 +185,26 @@ const EditableElement = ({
         animate="visible"
         exit="hidden"
         className={cn(
-          "mb-4 p-3 rounded-md shadow-sm bg-white flex items-start cursor-move",
-          selectedElement?.element?.id === element.id && "border-2 border-dashed border-blue-500"
+          "mb-4 p-4 rounded-lg shadow-lg bg-white flex items-start cursor-move",
+          selectedElement?.element?.id === element.id && "ring-2 ring-blue-500"
         )}>
-        {/* Drag Handle Icon */}
-        <div className="mr-2 flex-shrink-0">
-          <GripVertical className="h-5 w-5 text-gray-500" />
+        {/* Drag Handle */}
+        <div className="mr-4 flex-shrink-0">
+          <GripVertical className="h-6 w-6 text-gray-500" />
         </div>
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-3">
             <Input
               value={element.title}
               onChange={(e) => updateElement(element.id, { title: e.target.value })}
               placeholder="Element Label"
-              className="flex-1 mr-2"
+              className="flex-1 mr-4 border-none rounded-lg focus:ring-2 focus:ring-blue-500"
             />
             <Button
               variant="ghost"
               size="icon"
               onClick={handleDelete}>
-              <Trash2 className="h-4 w-4 text-red-500" />
+              <Trash2 className="h-5 w-5 text-red-500" />
             </Button>
           </div>
           <div>
@@ -229,22 +215,48 @@ const EditableElement = ({
                     <Input
                       placeholder="Enter text"
                       style={{
-                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
                       }}
+                      className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
                     />
                   );
                 case "checkbox":
-                  return <input type="checkbox" />;
+                  return (
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5"
+                      />
+                      <span className="text-gray-700">Checkbox</span>
+                    </label>
+                  );
                 case "date":
-                  return <input type="date" />;
+                  return (
+                    <input
+                      type="date"
+                      className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+                    />
+                  );
                 case "rating":
-                  return <div>⭐ Rating Field</div>;
+                  return (
+                    <div className="flex space-x-1">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <motion.button
+                          key={index}
+                          whileHover={{ scale: 1.2 }}
+                          className="text-gray-400 hover:text-yellow-400 text-xl">
+                          ★
+                        </motion.button>
+                      ))}
+                    </div>
+                  );
                 case "select":
                   return (
                     <select
                       style={{
-                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
-                      }}>
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
+                      }}
+                      className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
                       <option>Option 1</option>
                       <option>Option 2</option>
                     </select>
@@ -255,8 +267,9 @@ const EditableElement = ({
                       type="tel"
                       placeholder="Enter phone number"
                       style={{
-                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
                       }}
+                      className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
                     />
                   );
                 case "email":
@@ -265,8 +278,9 @@ const EditableElement = ({
                       type="email"
                       placeholder="Enter email"
                       style={{
-                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
                       }}
+                      className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
                     />
                   );
                 case "image":
@@ -283,6 +297,7 @@ const EditableElement = ({
                             src={element.value}
                             alt="Uploaded"
                             style={{ maxWidth: "100%", height: "auto" }}
+                            className="rounded-lg"
                           />
                           <Button
                             size="sm"
@@ -297,7 +312,6 @@ const EditableElement = ({
                           Upload Image
                         </Button>
                       )}
-                      {/* Hidden file input */}
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -305,6 +319,23 @@ const EditableElement = ({
                         onChange={handleImageUpload}
                         style={{ display: "none" }}
                       />
+                    </div>
+                  );
+                case "yesno":
+                  return (
+                    <div className="flex space-x-4">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg focus:ring-2 focus:ring-green-300">
+                        Yes
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg focus:ring-2 focus:ring-red-300">
+                        No
+                      </motion.button>
                     </div>
                   );
                 default:
@@ -321,7 +352,6 @@ const EditableElement = ({
 export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, setCurrentPageIndex, setSelectedElement }: FormEditorProps) {
   const [draggedOver, setDraggedOver] = useState(false);
   const currentPage = form.pages[currentPageIndex];
-  const showPageNavigation = form.isMultiPage !== false;
 
   const updateElement = useCallback(
     (elementId: string, changes: Partial<Elements>) => {
@@ -423,79 +453,65 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Toolbar */}
+    <div className="h-full flex flex-col gap-4 p-4 bg-gray-50">
       <ElementToolbar />
-
-      {/* Navigation */}
-      <div className="border-b p-4">
+      <div className="flex flex-col ">
+        {/* Navigation Bar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
-              size="icon"
+              variant="ghost"
+              className="rounded-full p-3"
               onClick={() => navigatePages(-1)}
               disabled={currentPageIndex === 0}>
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-8 w-8" />
             </Button>
-            <span className="text-sm">
+            <span className="text-lg font-medium text-gray-700">
               Page {currentPageIndex + 1} of {form.pages.length}
             </span>
             <Button
-              variant="outline"
-              size="icon"
+              variant="ghost"
+              className="rounded-full p-3"
               onClick={() => navigatePages(1)}
               disabled={currentPageIndex === form.pages.length - 1}>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-8 w-8" />
             </Button>
           </div>
-          <Button onClick={addNewPage}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Page
+          {/* Add Page Button placed at the top right (outside card) */}
+          <Button
+            variant="outline"
+            className="rounded-full p-3"
+            onClick={addNewPage}>
+            <Plus className="h-6 w-6" />
           </Button>
         </div>
-      </div>
-
-      {/* Canvas */}
-      <div className="flex-1 overflow-auto p-6">
-        <div
-          className="max-w-2xl mx-auto"
-          style={{
-            width: form.styles?.width || "100%",
-            height: form.styles?.height || "auto",
-          }}>
-          <Card
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setSelectedElement(null);
-              }
-            }}
-            className={cn("min-h-[400px] transition-all", !selectedElement && "border-4 border-dashed border-blue-500")}
-            style={{ backgroundColor: currentPage.background || "#ffffff" }}>
-            <div className="p-6 space-y-6">
-              <Input
-                value={currentPage.title}
-                onChange={(e) => updatePageTitle(e.target.value)}
-                className="text-xl font-semibold mb-4"
-                placeholder="Page Title"
-                onClick={(e) => e.stopPropagation()}
-              />
-              {renderElements()}
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDraggedOver(true);
-                }}
-                onDragLeave={() => setDraggedOver(false)}
-                onDrop={handleNewElementDrop}
-                className={`mt-6 flex items-center justify-center p-4 border-2 border-dashed rounded-lg transition-all ${
-                  draggedOver ? "ring-2 ring-blue-500" : "border-gray-300"
-                }`}>
-                Drag element here
-              </div>
+        {/* Form Content Card */}
+        <Card
+          className="shadow-lg border-0 overflow-auto w-full"
+          style={{ maxHeight: "calc(100vh - 400px)", width: "100%", backgroundColor: currentPage.background || "#ffffff" }}>
+          <div className="p-6">
+            <Input
+              value={currentPage.title}
+              onChange={(e) => updatePageTitle(e.target.value)}
+              className="text-2xl font-bold mb-6 w-full"
+              placeholder="Page Title"
+              onClick={(e) => e.stopPropagation()}
+            />
+            {renderElements()}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDraggedOver(true);
+              }}
+              onDragLeave={() => setDraggedOver(false)}
+              onDrop={handleNewElementDrop}
+              className={`mt-6 flex items-center justify-center p-4 border-2 border-dashed rounded-lg transition-all ${
+                draggedOver ? "ring-2 ring-blue-500" : "border-gray-300"
+              }`}>
+              Drag element here
             </div>
-          </Card>
-        </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
