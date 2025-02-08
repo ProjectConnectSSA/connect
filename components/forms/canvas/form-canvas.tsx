@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, ArrowLeft, ArrowRight, Trash2, GripVertical } from "lucide-react";
+import { Plus, ArrowLeft, ArrowRight, Trash2, GripVertical, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ElementToolbar } from "./element-toolbar";
 import { motion } from "framer-motion";
+import supabase from "@/lib/supabaseClient";
 
 // Interfaces
 interface FormEditorProps {
@@ -71,7 +72,7 @@ const itemVariants = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
 };
 
-// Editable element component with a drag handle icon and thicker dashed border when selected.
+// Editable element component with drag handle and selection support.
 const EditableElement = ({
   element,
   selectedElement,
@@ -89,6 +90,79 @@ const EditableElement = ({
   setSelectedElement: (sel: any) => void;
   currentPageIndex: number;
 }) => {
+  // Reference to a hidden file input for replacing images.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // State to track image upload processing.
+  const [uploading, setUploading] = useState(false);
+
+  // Handle file upload for image elements.
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // If there's an existing image, attempt to delete it.
+      if (element.value) {
+        try {
+          const urlObj = new URL(element.value);
+          const parts = urlObj.pathname.split("formImage/");
+          if (parts.length === 2) {
+            const oldFileName = parts[1];
+            const { error: removeError } = await supabase.storage.from("formImage").remove([oldFileName]);
+            if (removeError) {
+              console.error("Error deleting old image:", removeError);
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing old image URL:", error);
+        }
+      }
+
+      // Create a unique file name using the element id and the new file name.
+      const fileName = `${element.id}-${file.name}`;
+      const { error } = await supabase.storage.from("formImage").upload(fileName, file);
+      if (error) {
+        console.error("Error uploading image:", error);
+        return;
+      }
+      // Get the public URL for the uploaded file.
+      const { data } = supabase.storage.from("formImage").getPublicUrl(fileName);
+      // Update the element with the new image URL.
+      updateElement(element.id, { value: data.publicUrl });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Helper to trigger file input for image replacement.
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Handle deletion of an element.
+  // If the element is an image, delete it from the bucket first.
+  const handleDelete = async () => {
+    if (element.type === "image" && element.value) {
+      try {
+        const urlObj = new URL(element.value);
+        const parts = urlObj.pathname.split("formImage/");
+        if (parts.length === 2) {
+          const oldFileName = parts[1];
+          const { error: removeError } = await supabase.storage.from("formImage").remove([oldFileName]);
+          if (removeError) {
+            console.error("Error deleting image from bucket:", removeError);
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing image URL:", error);
+      }
+    }
+    deleteElement(element.id);
+  };
+
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("text/plain", element.id);
   };
@@ -126,7 +200,7 @@ const EditableElement = ({
         exit="hidden"
         className={cn(
           "mb-4 p-3 rounded-md shadow-sm bg-white flex items-start cursor-move",
-          selectedElement?.element?.id === element.id && "border-4 border-dashed border-blue-500"
+          selectedElement?.element?.id === element.id && "border-2 border-dashed border-blue-500"
         )}>
         {/* Drag Handle Icon */}
         <div className="mr-2 flex-shrink-0">
@@ -143,7 +217,7 @@ const EditableElement = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => deleteElement(element.id)}>
+              onClick={handleDelete}>
               <Trash2 className="h-4 w-4 text-red-500" />
             </Button>
           </div>
@@ -154,7 +228,9 @@ const EditableElement = ({
                   return (
                     <Input
                       placeholder="Enter text"
-                      style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
+                      }}
                     />
                   );
                 case "checkbox":
@@ -165,7 +241,10 @@ const EditableElement = ({
                   return <div>⭐ Rating Field</div>;
                 case "select":
                   return (
-                    <select style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}>
+                    <select
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
+                      }}>
                       <option>Option 1</option>
                       <option>Option 2</option>
                     </select>
@@ -175,7 +254,9 @@ const EditableElement = ({
                     <Input
                       type="tel"
                       placeholder="Enter phone number"
-                      style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
+                      }}
                     />
                   );
                 case "email":
@@ -183,15 +264,48 @@ const EditableElement = ({
                     <Input
                       type="email"
                       placeholder="Enter email"
-                      style={{ backgroundColor: element.styles.backgroundColor || "#f0f0f0" }}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f0f0f0",
+                      }}
                     />
                   );
                 case "image":
                   return (
-                    <input
-                      type="file"
-                      accept="image/*"
-                    />
+                    <div className="space-y-2">
+                      {uploading ? (
+                        <div className="flex items-center gap-2">
+                          <Loader className="animate-spin h-5 w-5 text-gray-500" />
+                          <span>Uploading image...</span>
+                        </div>
+                      ) : element.value ? (
+                        <>
+                          <img
+                            src={element.value}
+                            alt="Uploaded"
+                            style={{ maxWidth: "100%", height: "auto" }}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={triggerFileSelect}>
+                            Replace Image
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={triggerFileSelect}>
+                          Upload Image
+                        </Button>
+                      )}
+                      {/* Hidden file input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: "none" }}
+                      />
+                    </div>
                   );
                 default:
                   return <div>Unsupported element</div>;
@@ -276,7 +390,7 @@ export function FormCanvas({ form, setForm, selectedElement, currentPageIndex, s
       const newElement: Elements = {
         id: Date.now().toString(),
         type: elementType,
-        title: `New ${elementType.charAt(0).toUpperCase() + elementType.slice(1)}`,
+        title: "New " + elementType.charAt(0).toUpperCase() + elementType.slice(1),
         required: true,
         styles: {
           width: "100%",
