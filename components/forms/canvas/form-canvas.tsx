@@ -25,13 +25,14 @@ interface Form {
   description: string;
   pages: Pages[];
   background?: string;
+  formType?: string;
   styles?: {
     width?: string;
     height?: string;
     columns?: number;
   };
-  isActive?: boolean;
   isMultiPage?: boolean;
+  isActive?: boolean;
 }
 
 interface Pages {

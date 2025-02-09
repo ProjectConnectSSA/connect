@@ -134,7 +134,7 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
               type="number"
               min={200}
               max={800}
-              className="border-border/40"
+              className="border-black-900"
               onChange={(e) => updateWidth(e.target.value)}
               // Optionally show current width if element is selected.
               defaultValue={isElementSelected ? selectedElement.element.styles.width?.replace("px", "") : ""}
@@ -146,7 +146,7 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
               type="number"
               min={40}
               max={400}
-              className="border-border/40"
+              className="border-black-900"
               onChange={(e) => updateHeight(e.target.value)}
               defaultValue={isElementSelected ? selectedElement.element.styles.height?.replace("px", "") : ""}
             />
@@ -194,7 +194,7 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
             type="number"
             min={0}
             max={100}
-            className="border-border/40"
+            className="border-black-900"
           />
         </div>
       </CardContent>

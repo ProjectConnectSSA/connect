@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-// If you have a Switch or Toggle from your UI library:
 import { Switch } from "@/components/ui/switch";
 
 // Types
@@ -13,13 +12,12 @@ interface Form {
   description: string;
   pages: Pages[];
   background?: string;
-  // Add a styles object that can hold form-wide styling info
+  formType?: string;
   styles?: {
     width?: string;
     height?: string;
     columns?: number;
   };
-  // A simple boolean to track if the form is multi-page
   isMultiPage?: boolean;
   isActive?: boolean;
 }
@@ -52,27 +50,27 @@ interface FormEditorProps {
 }
 
 export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageIndex }: FormEditorProps) {
-  // Local states to manage input before applying changes to the main form
+  // Local state for style options
   const [width, setWidth] = useState(form.styles?.width || "800px");
   const [height, setHeight] = useState(form.styles?.height || "auto");
   const [columns, setColumns] = useState<number>(form.styles?.columns || 1);
   const [isMultiPage, setIsMultiPage] = useState(form.isMultiPage !== undefined ? form.isMultiPage : true);
   const [isActive, setIsActive] = useState(form.isActive !== undefined ? form.isActive : true);
+  // New local state for form type
+  const [formType, setFormType] = useState(form.formType || "traditional");
 
-  // Whenever form changes externally, make sure our local states stay in sync
+  // Keep local state in sync with form updates
   useEffect(() => {
     setWidth(form.styles?.width || "800px");
     setHeight(form.styles?.height || "auto");
     setColumns(form.styles?.columns || 1);
     setIsMultiPage(form.isMultiPage !== undefined ? form.isMultiPage : true);
     setIsActive(form.isActive !== undefined ? form.isActive : true);
+    setFormType(form.formType || "traditional");
   }, [form]);
 
-  // Apply any changes back to the main form state
+  // Apply changes back to the main form state
   const handleApplyChanges = () => {
-    // If user switched to single-page while there are multiple pages,
-    // decide whether to remove extra pages or keep them hidden.
-    // Here we remove them for simplicity.
     let updatedPages = [...form.pages];
     if (!isMultiPage && form.pages.length > 1) {
       updatedPages = [form.pages[0]];
@@ -83,6 +81,7 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
       ...form,
       isMultiPage,
       isActive,
+      formType, // update form type in the form state
       styles: {
         ...form.styles,
         width,
@@ -126,6 +125,20 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
           className="border rounded px-2 py-1">
           <option value={1}>Single Column</option>
           <option value={2}>Double Column</option>
+        </select>
+      </div>
+
+      {/* New Dropdown for Form Type */}
+      <div>
+        <Label htmlFor="formType">Form Type</Label>
+        <select
+          id="formType"
+          value={formType}
+          onChange={(e) => setFormType(e.target.value)}
+          className="border rounded px-2 py-1">
+          <option value="traditional">Traditional Form</option>
+          <option value="typeform">Typeform Style</option>
+          <option value="card">Card Type</option>
         </select>
       </div>
 
