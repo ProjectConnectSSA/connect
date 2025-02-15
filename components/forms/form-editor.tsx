@@ -5,42 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-
-// Types
-interface Form {
-  title: string;
-  description: string;
-  pages: Pages[];
-  background?: string;
-  formType?: string;
-  styles?: {
-    width?: string;
-    height?: string;
-    columns?: number;
-  };
-  isMultiPage?: boolean;
-  isActive?: boolean;
-}
-
-interface Pages {
-  id: string;
-  title: string;
-  elements: Elements[];
-  styles?: {};
-  background?: string;
-}
-
-interface Elements {
-  id: string;
-  title: string;
-  styles: {
-    backgroundColor?: string;
-    width?: string;
-    height?: string;
-  };
-  type: string;
-  required: boolean;
-}
+import { Form, Page, ElementType } from "./canvas/FormCanvasTraditional"; // shared interfaces
 
 interface FormEditorProps {
   form: Form;
@@ -50,16 +15,15 @@ interface FormEditorProps {
 }
 
 export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageIndex }: FormEditorProps) {
-  // Local state for style options
+  // Local state for style options.
   const [width, setWidth] = useState(form.styles?.width || "800px");
   const [height, setHeight] = useState(form.styles?.height || "auto");
   const [columns, setColumns] = useState<number>(form.styles?.columns || 1);
   const [isMultiPage, setIsMultiPage] = useState(form.isMultiPage !== undefined ? form.isMultiPage : true);
   const [isActive, setIsActive] = useState(form.isActive !== undefined ? form.isActive : true);
-  // New local state for form type
+  // New local state for form type.
   const [formType, setFormType] = useState(form.formType || "traditional");
 
-  // Keep local state in sync with form updates
   useEffect(() => {
     setWidth(form.styles?.width || "800px");
     setHeight(form.styles?.height || "auto");
@@ -69,7 +33,6 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
     setFormType(form.formType || "traditional");
   }, [form]);
 
-  // Apply changes back to the main form state
   const handleApplyChanges = () => {
     let updatedPages = [...form.pages];
     if (!isMultiPage && form.pages.length > 1) {
@@ -81,7 +44,7 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
       ...form,
       isMultiPage,
       isActive,
-      formType, // update form type in the form state
+      formType,
       styles: {
         ...form.styles,
         width,
@@ -95,7 +58,7 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 border rounded bg-white">
       <div>
         <Label htmlFor="width">Form Width</Label>
         <Input
@@ -105,7 +68,6 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
           placeholder="e.g. 800px or 100%"
         />
       </div>
-
       <div>
         <Label htmlFor="height">Form Height</Label>
         <Input
@@ -115,7 +77,6 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
           placeholder="e.g. 600px or auto"
         />
       </div>
-
       <div>
         <Label htmlFor="columns">Columns</Label>
         <select
@@ -127,8 +88,7 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
           <option value={2}>Double Column</option>
         </select>
       </div>
-
-      {/* New Dropdown for Form Type */}
+      {/* Dropdown for selecting the form type */}
       <div>
         <Label htmlFor="formType">Form Type</Label>
         <select
@@ -141,7 +101,6 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
           <option value="card">Card Type</option>
         </select>
       </div>
-
       <div className="flex items-center gap-2">
         <Switch
           checked={isMultiPage}
@@ -158,7 +117,6 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
         />
         <Label htmlFor="activeSwitch">Active</Label>
       </div>
-
       <Button onClick={handleApplyChanges}>Apply Changes</Button>
     </div>
   );

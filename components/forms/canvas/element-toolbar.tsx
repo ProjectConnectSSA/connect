@@ -15,8 +15,8 @@ const ELEMENT_TYPES = [
 
 export function ElementToolbar() {
   return (
-    <div className="border-b p-4">
-      <div className="flex gap-2">
+    <div className="p-4">
+      <div className="grid grid-cols-2 gap-2">
         {ELEMENT_TYPES.map((type) => {
           const Icon = type.icon;
           return (
