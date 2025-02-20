@@ -14,30 +14,20 @@ import { PreviewForm } from "@/components/forms/form-preview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ElementToolbar } from "@/components/forms/canvas/element-toolbar";
 import { FormCanvasTraditional } from "@/components/forms/canvas/FormCanvasTraditional";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useRouter } from "next/navigation";
 
 interface EditFormPageProps {
   params: Promise<{ id: string }>;
 }
 
-interface Form {
-  title: string;
-  description: string;
-  pages: Pages[];
-  background?: string;
-  styles?: {
-    width?: string;
-    height?: string;
-    columns?: number;
-  };
-  isActive?: boolean;
-  isMultiPage?: boolean;
-}
-
-interface Pages {
+interface Condition {
   id: string;
-  title: string;
-  elements: Elements[];
-  background?: string;
+  sourcePageId: string;
+  elementId: string;
+  operator: string;
+  value: string;
+  targetPageId: string;
 }
 
 interface Elements {
@@ -52,6 +42,28 @@ interface Elements {
   required: boolean;
 }
 
+interface Pages {
+  id: string;
+  title: string;
+  elements: Elements[];
+  background?: string;
+}
+
+interface Form {
+  title: string;
+  description: string;
+  pages: Pages[];
+  conditions?: Condition[];
+  background?: string;
+  styles?: {
+    width?: string;
+    height?: string;
+    columns?: number;
+  };
+  isActive?: boolean;
+  isMultiPage?: boolean;
+}
+
 export default function EditFormPage({ params }: EditFormPageProps) {
   const unwrappedParams = React.use(params);
   const { id } = unwrappedParams;
@@ -60,8 +72,8 @@ export default function EditFormPage({ params }: EditFormPageProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedElement, setSelectedElement] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [activeMode, setActiveMode] = useState("design"); // Modes: "design", "preview", "condition", "publish"
-  const [rightTab, setRightTab] = useState("editor"); // Right panel tabs: "editor" or "style"
+  const [activeMode, setActiveMode] = useState("design"); // Modes: design, preview, condition, publish
+  const [rightTab, setRightTab] = useState("editor"); // Right panel tabs: editor or style
 
   const [form, setForm] = useState<Form>({
     title: "New Form",
@@ -73,6 +85,7 @@ export default function EditFormPage({ params }: EditFormPageProps) {
         elements: [],
       },
     ],
+    conditions: [],
     styles: {
       width: "800px",
       height: "auto",
@@ -80,6 +93,8 @@ export default function EditFormPage({ params }: EditFormPageProps) {
     },
     isMultiPage: true,
   });
+
+  const router = useRouter();
 
   useEffect(() => {
     const form = getFormToEdit();
@@ -107,6 +122,7 @@ export default function EditFormPage({ params }: EditFormPageProps) {
       isMultiPage: form.isMultiPage,
       isActive: form.isActive,
       pages: form.pages,
+      conditions: form.conditions,
       styles: form.styles,
     };
 
@@ -132,139 +148,103 @@ export default function EditFormPage({ params }: EditFormPageProps) {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col gap-4 p-4 bg-gray-50">
-      {/* Header */}
-      <div className="w-full bg-white shadow p-4 flex items-center justify-between">
-        <Button
-          onClick={saveForm}
-          className="flex items-center space-x-2">
-          <Plus className="h-5 w-5" />
-          <span>Back</span>
-        </Button>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <label className="text-2xl font-medium">Title</label>
-            <input
-              type="text"
-              value={form?.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="rounded-md px-2 py-1 text-sm w-64"
+    <div className="w-full flex flex-col bg-gray-50">
+      {/* Navigation Tabs with Save and Exit Buttons */}
+      <Tabs
+        value={activeMode}
+        onValueChange={setActiveMode}>
+        <div className="flex items-center justify-between w-full bg-white shadow rounded p-2">
+          <TabsList className="flex space-x-4">
+            <TabsTrigger value="design">Design</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="condition">Condition</TabsTrigger>
+            <TabsTrigger value="publish">Publish</TabsTrigger>
+          </TabsList>
+          <div className="flex space-x-2">
+            <Button onClick={saveForm}>Save</Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/dashboard")}>
+              Exit
+            </Button>
+          </div>
+        </div>
+
+        <TabsContent value="design">
+          <div className="w-full flex gap-4 mt-4">
+            {/* Left Column: Element Toolbar */}
+            <div className="w-64 bg-white shadow rounded p-2 overflow-auto">
+              <ElementToolbar />
+            </div>
+
+            {/* Center Column: Form Builder (centered) */}
+            <div className="flex-1 flex justify-center">
+              <FormContainer
+                form={form}
+                setForm={setForm}
+              />
+            </div>
+
+            {/* Right Column: Editor & Style Panel */}
+            <div className="w-80 bg-white shadow rounded overflow-hidden">
+              <div className="flex border-b">
+                <Button
+                  variant={rightTab === "editor" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setRightTab("editor")}>
+                  Editor
+                </Button>
+                <Button
+                  variant={rightTab === "style" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setRightTab("style")}>
+                  Style
+                </Button>
+              </div>
+              <div className="p-4 overflow-y-auto">
+                {rightTab === "editor" && (
+                  <FormEditor
+                    form={form}
+                    setForm={setForm}
+                    currentPageIndex={currentPageIndex}
+                    setCurrentPageIndex={setCurrentPageIndex}
+                  />
+                )}
+                {rightTab === "style" && (
+                  <FormStyles
+                    form={form}
+                    setForm={setForm}
+                    currentPageIndex={currentPageIndex}
+                    selectedElement={selectedElement}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="preview">
+          <div className="flex flex-1 bg-gray-200 rounded p-2 overflow-auto">
+            <PreviewForm form={form} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="condition">
+          <div className="flex flex-1 bg-gray-200 rounded p-2 ">
+            <ConditionTabs
+              form={form}
+              setForm={setForm}
             />
           </div>
-          <Button
-            variant="outline"
-            className="flex items-center space-x-2"
-            onClick={() => setIsPreviewOpen(true)}>
-            <Eye className="h-5 w-5" />
-            <span>Preview</span>
-          </Button>
-          <Button
-            onClick={saveForm}
-            className="flex items-center space-x-2">
-            <Plus className="h-5 w-5" />
-            <span>Save Form</span>
-          </Button>
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* Main Mode Navigation */}
-      <div className="w-full bg-white shadow rounded p-2 flex justify-around">
-        <Button
-          variant={activeMode === "design" ? "default" : "outline"}
-          onClick={() => setActiveMode("design")}>
-          Design
-        </Button>
-        <Button
-          variant={activeMode === "preview" ? "default" : "outline"}
-          onClick={() => setActiveMode("preview")}>
-          Preview
-        </Button>
-        <Button
-          variant={activeMode === "condition" ? "default" : "outline"}
-          onClick={() => setActiveMode("condition")}>
-          Condition
-        </Button>
-        <Button
-          variant={activeMode === "publish" ? "default" : "outline"}
-          onClick={() => setActiveMode("publish")}>
-          Publish
-        </Button>
-      </div>
-
-      {/* Main Content */}
-      {activeMode === "design" && (
-        <div className="flex flex-1 gap-4">
-          {/* Left Column: Element Toolbar */}
-          <div className="w-64 bg-white shadow rounded p-2 overflow-auto">
-            <ElementToolbar />
+        <TabsContent value="publish">
+          <div className="flex flex-1 bg-gray-200 rounded p-2 flex-col items-center justify-center">
+            <p className="mb-4">Publish your form when you’re ready.</p>
+            <Button>Publish Form</Button>
           </div>
-
-          {/* Center Column: Form Builder */}
-          <FormContainer
-            form={form}
-            setForm={setForm}
-          />
-
-          {/* Right Column: Editor & Style Panel */}
-          <div className="w-80 bg-white shadow rounded overflow-hidden">
-            <div className="flex border-b">
-              <Button
-                variant={rightTab === "editor" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => setRightTab("editor")}>
-                Editor
-              </Button>
-              <Button
-                variant={rightTab === "style" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => setRightTab("style")}>
-                Style
-              </Button>
-            </div>
-            <div className="p-4 overflow-y-auto">
-              {rightTab === "editor" && (
-                <FormEditor
-                  form={form}
-                  setForm={setForm}
-                  currentPageIndex={currentPageIndex}
-                  setCurrentPageIndex={setCurrentPageIndex}
-                />
-              )}
-              {rightTab === "style" && (
-                <FormStyles
-                  form={form}
-                  setForm={setForm}
-                  currentPageIndex={currentPageIndex}
-                  selectedElement={selectedElement}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeMode === "preview" && (
-        <div className="flex flex-1 bg-gray-200 rounded p-2 overflow-auto">
-          <PreviewForm form={form} />
-        </div>
-      )}
-
-      {activeMode === "condition" && (
-        <div className="flex flex-1 bg-gray-200 rounded p-2 overflow-auto">
-          <ConditionTabs
-            form={form}
-            setForm={setForm}
-            currentPageIndex={currentPageIndex}
-          />
-        </div>
-      )}
-
-      {activeMode === "publish" && (
-        <div className="flex flex-1 bg-gray-200 rounded p-2 flex-col items-center justify-center">
-          <p className="mb-4">Publish your form when you’re ready.</p>
-          <Button>Publish Form</Button>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
 
       {/* Preview Modal */}
       <Dialog

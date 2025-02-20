@@ -8,6 +8,7 @@ interface Form {
   pages: Pages[];
   background?: string;
   user_id: string;
+  conditions?: Condition[];
   styles?: {
     width?: string;
     height?: string;
@@ -36,6 +37,15 @@ interface Elements {
   required: boolean;
 }
 
+interface Condition {
+  id: string;
+  sourcePageId: string;
+  elementId: string;
+  operator: string;
+  value: string;
+  targetPageId: string;
+}
+
 // Function to fetch all forms
 export async function GET() {
   try {
@@ -58,7 +68,15 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from("forms")
       .insert([
-        { user_id: form.user_id, title: form.title, pages: form.pages, styles: form.styles, isMultiPage: form.isMultiPage, isActive: form.isActive },
+        {
+          user_id: form.user_id,
+          title: form.title,
+          pages: form.pages,
+          styles: form.styles,
+          isMultiPage: form.isMultiPage,
+          isActive: form.isActive,
+          conditions: form.conditions,
+        },
       ])
       .select();
 

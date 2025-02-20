@@ -1,28 +1,38 @@
-"use client";
+import { Handle, Position } from "reactflow";
 
-import { memo } from "react";
-import { Handle, Position, NodeProps } from "reactflow";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+interface PageNodeProps {
+  data: {
+    label: string;
+    pageNumber: number;
+    elementsCount: number;
+  };
+  isConnectable: boolean;
+}
 
-export const PageNode = memo(({ data }: NodeProps) => {
+export function PageNode({ data, isConnectable }: PageNodeProps) {
   return (
-    <Card className="w-[300px]">
-      <CardHeader className="p-4">
-        <CardTitle className="text-sm">
-          Page {data.pageNumber}: {data.title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="text-xs text-muted-foreground">{data.elements?.length || 0} Elements</div>
-      </CardContent>
+    <div className="p-4 rounded-md bg-blue-50 border-2 border-blue-200 shadow-md min-w-32">
       <Handle
         type="target"
-        position={Position.Left}
+        position={Position.Top}
+        isConnectable={isConnectable}
+        className="w-3 h-3 bg-blue-500"
       />
+
+      <div className="flex flex-col gap-1">
+        <div className="bg-blue-500 text-white text-xs rounded-full px-2 py-0.5 w-fit mb-1">Page {data.pageNumber}</div>
+        <div className="text-sm font-semibold text-blue-900">{data.label}</div>
+        <div className="text-xs text-blue-700">
+          {data.elementsCount} {data.elementsCount === 1 ? "element" : "elements"}
+        </div>
+      </div>
+
       <Handle
         type="source"
-        position={Position.Right}
+        position={Position.Bottom}
+        isConnectable={isConnectable}
+        className="w-3 h-3 bg-blue-500"
       />
-    </Card>
+    </div>
   );
-});
+}

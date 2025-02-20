@@ -22,7 +22,7 @@ export function DashboardSidebar() {
   const routes = [
     {
       href: "/dashboard/links",
-      label: "Links Usage",
+      label: "Link",
       icon: LinkIcon,
     },
     {

@@ -1,30 +1,40 @@
-"use client";
+import { Handle, Position } from "reactflow";
 
-import { memo } from "react";
-import { Handle, Position, NodeProps } from "reactflow";
-import { Card, CardContent } from "@/components/ui/card";
-import { GitBranch } from "lucide-react";
+interface ConditionData {
+  label: string;
+  condition: {
+    id: string;
+    sourcePageId: string;
+    elementId: string;
+    operator: string;
+    value: string;
+    targetPageId: string;
+  };
+}
 
-export const ConditionNode = memo(({ data }: NodeProps) => {
+interface ConditionNodeProps {
+  data: ConditionData;
+  isConnectable: boolean;
+}
+
+export function ConditionNode({ data, isConnectable }: ConditionNodeProps) {
   return (
-    <Card className="w-[200px]">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2">
-          <GitBranch className="h-4 w-4 text-muted-foreground" />
-          <div className="text-sm font-medium">{data.label}</div>
-        </div>
-        <div className="mt-2 text-xs text-muted-foreground">
-          {data.operator} {data.value}
-        </div>
-      </CardContent>
+    <div className="p-3 rounded-md bg-purple-100 border-2 border-purple-300 shadow-md">
       <Handle
         type="target"
-        position={Position.Left}
+        position={Position.Top}
+        isConnectable={isConnectable}
+        className="w-3 h-3 bg-purple-500"
       />
+
+      <div className="text-sm font-medium text-purple-800">{data.label}</div>
+
       <Handle
         type="source"
-        position={Position.Right}
+        position={Position.Bottom}
+        isConnectable={isConnectable}
+        className="w-3 h-3 bg-green-500"
       />
-    </Card>
+    </div>
   );
-});
+}

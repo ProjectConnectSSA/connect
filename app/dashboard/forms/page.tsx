@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2, FileText, Copy, QrCode, Sidebar } from "lucide-react";
+import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2, FileText, Copy, QrCode } from "lucide-react";
 import { DataTable } from "@/components/forms/data-table";
 import { setFormToEdit, clearFormToEdit } from "@/services/formService";
 import { Badge } from "@/components/ui/badge";
@@ -191,6 +191,8 @@ export default function FormsPage() {
         throw new Error("Failed to fetch forms");
       }
       const data = await response.json();
+      // Sort forms so that the latest ones appear first
+      data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setForms(data);
     } catch (error) {
       console.error("Error fetching forms:", error);
@@ -208,56 +210,52 @@ export default function FormsPage() {
   return (
     <div className="flex h-screen">
       <DashboardSidebar />
-      <div className="space-y-6">
-        {/* Header */}
+      {/* Main content taking full width */}
+      <div className="space-y-6 flex-1 p-6">
+        {/* Header with title and actions */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Forms</h1>
-            <p className="text-gray-600">Create and manage your forms efficiently.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => router.push("/dashboard/forms/edit/new")}
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Form
-            </Button>
-            <Button
-              onClick={() => setTemplateDialogOpen(true)}
-              variant="outline"
-              className="border-blue-600 text-blue-600 hover:bg-blue-50">
-              Templates
-            </Button>
+          {/* Actions and usage indicator */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => router.push("/dashboard/forms/edit/new")}
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Form
+              </Button>
+              <Button
+                onClick={() => setTemplateDialogOpen(true)}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                Templates
+              </Button>
+            </div>
+            {/* Usage indicator styled to be about the same size as a button */}
+            <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-2 w-32 h-12 flex flex-col justify-center">
+              <span className="text-sm font-medium text-gray-900">
+                {usedLinks}/{totalLinksAllowed}
+              </span>
+              <Progress
+                value={progressValue}
+                className="w-full mt-1 h-2 bg-gray-300"
+              />
+            </Card>
           </div>
         </div>
 
-        {/* Usage Card */}
-        <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-4 max-w-sm">
-          <CardHeader>
-            <CardTitle className="text-gray-900 text-lg">Usage</CardTitle>
-            <CardDescription className="text-gray-600">
-              {usedLinks} of {totalLinksAllowed} forms used
-            </CardDescription>
-            <Progress
-              value={progressValue}
-              className="mt-2 bg-gray-300"
-            />
-          </CardHeader>
-        </Card>
-
         {/* Forms List */}
-        <Card className="bg-white border-none shadow-sm rounded-lg p-4">
-          <CardHeader>
-            <CardTitle className="text-gray-900 text-xl">Your Forms</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card className="bg-white border-none shadow-sm rounded-lg p-4 w-full">
+          <div>
             <DataTable
               data={Forms || []}
               columns={columns}
               filters={filters}
               itemsPerPage={5}
             />
-          </CardContent>
+          </div>
         </Card>
 
         {/* Share Dialog */}

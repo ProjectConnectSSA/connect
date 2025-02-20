@@ -59,6 +59,16 @@ export function FormEditor({ form, setForm, currentPageIndex, setCurrentPageInde
 
   return (
     <div className="space-y-4 p-4 border rounded bg-white">
+      {/* New Title Field */}
+      <div>
+        <Label htmlFor="title">Title</Label>
+        <Input
+          id="title"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          placeholder="Enter form title"
+        />
+      </div>
       <div>
         <Label htmlFor="width">Form Width</Label>
         <Input

@@ -8,14 +8,13 @@ import { List, Share2 } from "lucide-react";
 interface ConditionTabsProps {
   form: any;
   setForm: (form: any) => void;
-  currentPageIndex: number;
 }
 
-export function ConditionTabs({ form, setForm, currentPageIndex }: ConditionTabsProps) {
+export function ConditionTabs({ form, setForm }: ConditionTabsProps) {
   return (
     <Tabs
       defaultValue="list"
-      className="h-full">
+      className="h-full overflow-x-hidden">
       <div className="border-b px-6 py-2">
         <TabsList>
           <TabsTrigger
@@ -33,19 +32,21 @@ export function ConditionTabs({ form, setForm, currentPageIndex }: ConditionTabs
         </TabsList>
       </div>
 
+      {/* LIST TAB */}
       <TabsContent
         value="list"
-        className="h-[calc(100%-3rem)] mt-0">
+        // Ensure horizontal overflow is hidden here
+        className="h-[calc(100%-3rem)] mt-0 overflow-x-hidden">
         <ConditionBuilder
           form={form}
           setForm={setForm}
-          currentPageIndex={currentPageIndex}
         />
       </TabsContent>
 
+      {/* FLOW TAB */}
       <TabsContent
         value="flow"
-        className="h-[calc(100%-3rem)] mt-0">
+        className="h-full w-full overflow-x-hidden">
         <ConditionFlow
           form={form}
           setForm={setForm}
