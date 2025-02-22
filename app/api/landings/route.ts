@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/lib/supabaseClient";
 import { UUID } from "crypto";
 
-interface Form {
+interface LandingPage {
   title: string;
   description: string;
   pages: Pages[];
@@ -36,12 +36,12 @@ interface Elements {
   required: boolean;
 }
 
-// Function to fetch all forms
+// Function to fetch all landingPages
 export async function GET() {
   try {
-    console.log("API GET formal forms");
+    console.log("API GET landingPageal landingPages");
     const { data, error } = await supabase.from("landing_pages").select("*");
-    console.log("API GET formal forms", data);
+    console.log("API GET landingPageal landingPages", data);
     if (error) throw new Error(error.message);
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
@@ -49,22 +49,25 @@ export async function GET() {
   }
 }
 
-// Function to create a new form
+// Function to create a new landingPage
 export async function POST(req: NextRequest) {
   try {
-    const form: Form = await req.json();
-    console.log("API CREATE formal form", form.isMultiPage);
+    const landingPage: LandingPage = await req.json();
+    console.log(
+      "API CREATE landingPageal landingPage",
+      landingPage.isMultiPage
+    );
 
     const { data, error } = await supabase
       .from("landing_pages")
       .insert([
         {
-          user_id: form.user_id,
-          title: form.title,
-          pages: form.pages,
-          styles: form.styles,
-          isMultiPage: form.isMultiPage,
-          isActive: form.isActive,
+          user_id: landingPage.user_id,
+          title: landingPage.title,
+          pages: landingPage.pages,
+          styles: landingPage.styles,
+          isMultiPage: landingPage.isMultiPage,
+          isActive: landingPage.isActive,
         },
       ])
       .select();
@@ -77,15 +80,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Function to update a form
+// Function to update a landingPage
 export async function PUT(req: NextRequest) {
   try {
-    const { id, ...form }: { id: string } & Form = await req.json();
-    console.log("API UPDATE formal form", id, "data", form);
+    const { id, ...landingPage }: { id: string } & LandingPage =
+      await req.json();
+    console.log(
+      "API UPDATE landingPageal landingPage",
+      id,
+      "data",
+      landingPage
+    );
 
     const { data, error } = await supabase
       .from("landing_pages")
-      .update(form)
+      .update(landingPage)
       .eq("id", id)
       .select()
       .single(); // Ensures only one record is fetched
@@ -98,11 +107,11 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// Function to delete a form
+// Function to delete a landingPage
 export async function DELETE(req: NextRequest) {
   try {
     const { id }: { id: string } = await req.json();
-    console.log("API DELETE formal form", id);
+    console.log("API DELETE landingPageal landingPage", id);
     const { data, error } = await supabase
       .from("landing_pages")
       .delete()
@@ -110,7 +119,7 @@ export async function DELETE(req: NextRequest) {
       .single();
     if (error) throw new Error(error.message);
     return NextResponse.json(
-      { message: "Form deleted successfully", data },
+      { message: "LandingPage deleted successfully", data },
       { status: 200 }
     );
   } catch (error: any) {
