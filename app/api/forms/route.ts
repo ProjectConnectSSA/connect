@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/lib/supabaseClient";
 import { UUID } from "crypto";
-
+import { getCurrentUser } from "@/app/actions";
 interface Form {
   title: string;
   description: string;
@@ -50,7 +50,8 @@ interface Condition {
 export async function GET() {
   try {
     console.log("API GET formal forms");
-    const { data, error } = await supabase.from("forms").select("*");
+    const currentUser = await getCurrentUser();
+    const { data, error } = await supabase.from("forms").select("*").eq("user_id", currentUser.id);
     console.log("API GET formal forms", data);
     if (error) throw new Error(error.message);
     return NextResponse.json(data, { status: 200 });
