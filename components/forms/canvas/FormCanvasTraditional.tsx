@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, ArrowLeft, ArrowRight, Trash2, GripVertical, Loader } from "lucide-react";
+import { Plus, ArrowLeft, ArrowRight, Trash2, GripVertical, Loader, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import supabase from "@/lib/supabaseClient";
@@ -438,39 +438,49 @@ export function FormCanvasTraditional({
   };
 
   return (
-    <div className="h-full flex flex-col gap-4 p-4 bg-gray-200">
-      <div className="flex items-center justify-between mb-4">
+    <div>
+      {/* Navigation Bar */}
+      <div className="bg-green-600 text-white p-4 flex items-center justify-between rounded-lg">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            className="rounded-full p-3"
+            className="rounded-full p-3 text-white"
             onClick={() => navigatePages(-1)}
             disabled={currentPageIndex === 0}>
-            <ArrowLeft className="h-8 w-8" />
+            <ArrowLeft className="h-6 w-6" />
           </Button>
-          <span className="text-lg font-medium text-gray-700">
+          <span className="text-xl font-semibold">
             Page {currentPageIndex + 1} of {form.pages.length}
           </span>
           <Button
             variant="ghost"
-            className="rounded-full p-3"
+            className="rounded-full p-3 text-white"
             onClick={() => navigatePages(1)}
             disabled={currentPageIndex === form.pages.length - 1}>
-            <ArrowRight className="h-8 w-8" />
+            <ArrowRight className="h-6 w-6" />
           </Button>
         </div>
-        <Button
-          variant="outline"
-          className="rounded-full p-3"
-          onClick={addNewPage}>
-          <Plus className="h-6 w-6" />
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            className="rounded-full p-3 text-green-600 bg-white"
+            onClick={addNewPage}>
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
-      <div className="flex-1 overflow-auto p-6 bg-gray-100">
+
+      {/* Form Canvas */}
+      <div
+        className="bg-white p-6 rounded-lg shadow-lg mt-4"
+        style={{
+          background: currentPage.background || "#ffffff",
+          ...currentPage.styles,
+        }}>
         <Input
           value={currentPage.title}
           onChange={(e) => updatePageTitle(e.target.value)}
-          className="text-2xl font-bold mb-6 w-full"
+          className="text-2xl font-bold mb-6 w-full border-b border-gray-300 focus:ring-0"
           placeholder="Page Title"
           onClick={(e) => e.stopPropagation()}
         />

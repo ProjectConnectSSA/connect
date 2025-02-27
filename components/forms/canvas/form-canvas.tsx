@@ -43,23 +43,21 @@ export function FormContainer({ form, setForm }: FormContainerProps) {
       case "traditional":
       default:
         return (
-          <div className="flex-1 bg-gray-200 rounded p-2 overflow-auto">
-            <FormCanvasTraditional
-              form={form}
-              setForm={setForm}
-              selectedElement={selectedElement}
-              setSelectedElement={setSelectedElement}
-              currentPageIndex={currentPageIndex}
-              setCurrentPageIndex={setCurrentPageIndex}
-            />
-          </div>
+          <FormCanvasTraditional
+            form={form}
+            setForm={setForm}
+            selectedElement={selectedElement}
+            setSelectedElement={setSelectedElement}
+            currentPageIndex={currentPageIndex}
+            setCurrentPageIndex={setCurrentPageIndex}
+          />
         );
     }
   };
 
   return (
-    <div className="flex gap-8">
-      <div className="w-2/3">{renderCanvas()}</div>
+    <div>
+      <div>{renderCanvas()}</div>
     </div>
   );
 }

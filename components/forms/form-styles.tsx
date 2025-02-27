@@ -10,7 +10,7 @@ interface FormStylesProps {
   form: Form;
   setForm: (form: Form) => void;
   currentPageIndex: number;
-  selectedElement: any;
+  selectedElement: SelectedElement | null;
 }
 
 interface Form {
@@ -34,6 +34,7 @@ interface Elements {
     backgroundColor?: string;
     width?: string;
     height?: string;
+    opacity?: number;
   };
   type: string;
   required: boolean;
@@ -45,8 +46,7 @@ interface SelectedElement {
 }
 
 export function FormStyles({ form, setForm, currentPageIndex, selectedElement }: FormStylesProps) {
-  // Determine if an element on the current page is selected;
-  // if not, we assume the page itself is selected.
+  // If an element on the current page is selected, we'll update that element.
   const isElementSelected = selectedElement && selectedElement.pageIndex === currentPageIndex;
   const currentPage = form.pages[currentPageIndex];
 
@@ -56,10 +56,9 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
     accent: ["#FF69B4", "#9747FF", "#00C7B0", "#FF5630", "#36B37E", "#00B8D9", "#6554C0"],
   };
 
-  // Update background color: if an element is selected, update its background color;
-  // otherwise, update the page background.
+  // Update background color (for element if selected; otherwise, for page background)
   const updateBackgroundColor = (color: string) => {
-    if (isElementSelected) {
+    if (isElementSelected && selectedElement) {
       const updatedPages = [...form.pages];
       const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
       if (elementIndex !== -1) {
@@ -83,9 +82,9 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
     }
   };
 
-  // Update width: for selected element if present.
+  // Update width for selected element.
   const updateWidth = (width: string) => {
-    if (isElementSelected) {
+    if (isElementSelected && selectedElement) {
       const updatedPages = [...form.pages];
       const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
       if (elementIndex !== -1) {
@@ -94,7 +93,7 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
           ...element,
           styles: {
             ...element.styles,
-            width: width + "px",
+            width: width ? width + "px" : "",
           },
         };
         setForm({ ...form, pages: updatedPages });
@@ -102,9 +101,9 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
     }
   };
 
-  // Update height: for selected element if present.
+  // Update height for selected element.
   const updateHeight = (height: string) => {
-    if (isElementSelected) {
+    if (isElementSelected && selectedElement) {
       const updatedPages = [...form.pages];
       const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
       if (elementIndex !== -1) {
@@ -113,13 +112,57 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
           ...element,
           styles: {
             ...element.styles,
-            height: height + "px",
+            height: height ? height + "px" : "",
           },
         };
         setForm({ ...form, pages: updatedPages });
       }
     }
   };
+
+  // Update opacity for selected element or page.
+  const updateOpacity = (opacity: string) => {
+    const opacityValue = parseFloat(opacity) / 100;
+    if (isElementSelected && selectedElement) {
+      const updatedPages = [...form.pages];
+      const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
+      if (elementIndex !== -1) {
+        const element = updatedPages[currentPageIndex].elements[elementIndex];
+        updatedPages[currentPageIndex].elements[elementIndex] = {
+          ...element,
+          styles: {
+            ...element.styles,
+            opacity: opacityValue,
+          },
+        };
+        setForm({ ...form, pages: updatedPages });
+      }
+    } else {
+      // For page opacity, we store it in the page styles.
+      const updatedPages = [...form.pages];
+      updatedPages[currentPageIndex] = {
+        ...updatedPages[currentPageIndex],
+        styles: {
+          ...(updatedPages[currentPageIndex].styles || {}),
+          opacity: opacityValue,
+        },
+      };
+      setForm({ ...form, pages: updatedPages });
+    }
+  };
+
+  // Derive controlled values from the form state
+  const currentWidth = isElementSelected && selectedElement?.element.styles.width ? selectedElement.element.styles.width.replace("px", "") : "";
+  const currentHeight = isElementSelected && selectedElement?.element.styles.height ? selectedElement.element.styles.height.replace("px", "") : "";
+  const currentOpacity = isElementSelected
+    ? selectedElement.element.styles.opacity !== undefined
+      ? Math.round(selectedElement.element.styles.opacity * 100)
+      : 100
+    : currentPage.styles && currentPage.styles.opacity !== undefined
+    ? Math.round(currentPage.styles.opacity * 100)
+    : 100;
+
+  const currentBgColor = isElementSelected ? selectedElement?.element.styles.backgroundColor || "#ffffff" : currentPage.background || "#ffffff";
 
   return (
     <Card className="border-dotted border-blue-500">
@@ -128,29 +171,32 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
           <Label className="text-lg font-bold">{isElementSelected ? "Element Attributes" : "Page Attributes"}</Label>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Width (px)</Label>
-            <Input
-              type="number"
-              min={200}
-              max={800}
-              className="border-black-900"
-              onChange={(e) => updateWidth(e.target.value)}
-              // Optionally show current width if element is selected.
-              defaultValue={isElementSelected ? selectedElement.element.styles.width?.replace("px", "") : ""}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Height (px)</Label>
-            <Input
-              type="number"
-              min={40}
-              max={400}
-              className="border-black-900"
-              onChange={(e) => updateHeight(e.target.value)}
-              defaultValue={isElementSelected ? selectedElement.element.styles.height?.replace("px", "") : ""}
-            />
-          </div>
+          {isElementSelected && (
+            <>
+              <div className="space-y-2">
+                <Label>Width (px)</Label>
+                <Input
+                  type="number"
+                  min={200}
+                  max={800}
+                  className="border-black"
+                  value={currentWidth}
+                  onChange={(e) => updateWidth(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Height (px)</Label>
+                <Input
+                  type="number"
+                  min={40}
+                  max={400}
+                  className="border-black"
+                  value={currentHeight}
+                  onChange={(e) => updateHeight(e.target.value)}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -159,7 +205,7 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
             <Input
               type="color"
               id="background-color"
-              value={isElementSelected ? selectedElement.element.styles.backgroundColor || "#ffffff" : currentPage.background || "#ffffff"}
+              value={currentBgColor}
               onChange={(e) => updateBackgroundColor(e.target.value)}
             />
           </div>
@@ -177,7 +223,7 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
                   {colors.map((color) => (
                     <button
                       key={color}
-                      className="w-8 h-8 rounded-lg border border-border/40 shadow-sm transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      className="w-8 h-8 rounded-lg border border-gray-300 shadow-sm transition-all duration-200 hover:scale-110 hover:shadow-lg"
                       style={{ background: color }}
                       onClick={() => updateBackgroundColor(color)}
                     />
@@ -194,7 +240,9 @@ export function FormStyles({ form, setForm, currentPageIndex, selectedElement }:
             type="number"
             min={0}
             max={100}
-            className="border-black-900"
+            className="border-black"
+            value={currentOpacity}
+            onChange={(e) => updateOpacity(e.target.value)}
           />
         </div>
       </CardContent>

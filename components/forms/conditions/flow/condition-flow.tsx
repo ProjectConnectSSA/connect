@@ -5,7 +5,7 @@ import ReactFlow, { Background, Controls, MiniMap, NodeTypes, Panel, ReactFlowPr
 import "reactflow/dist/style.css";
 import { PageNode } from "./page-node";
 import { ConditionNode } from "./condition-node";
-import { buildNodesAndEdges } from "./flow-utils";
+import { buildNodesAndEdges, createNewCondition } from "./flow-utils";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, Maximize, RefreshCw } from "lucide-react";
 
@@ -50,6 +50,15 @@ function ConditionFlowInner({ form, setForm }: { form: Form; setForm: (form: For
   const [isLoaded, setIsLoaded] = useState(false);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
+  // Handler for adding a new condition
+  const handleAddCondition = useCallback(
+    (pageId: string, elementId: string) => {
+      const updatedForm = createNewCondition(pageId, elementId, form);
+      setForm(updatedForm);
+    },
+    [form, setForm]
+  );
+
   const initializeFlow = useCallback(() => {
     if (!form?.pages?.length) return;
 
@@ -57,7 +66,7 @@ function ConditionFlowInner({ form, setForm }: { form: Form; setForm: (form: For
     console.log("Building flow with form:", form);
     console.log("Conditions:", form.conditions || []);
 
-    const { nodes: initialNodes, edges: initialEdges } = buildNodesAndEdges(form);
+    const { nodes: initialNodes, edges: initialEdges } = buildNodesAndEdges(form, handleAddCondition);
     console.log("Generated nodes:", initialNodes);
     console.log("Generated edges:", initialEdges);
 
@@ -65,7 +74,7 @@ function ConditionFlowInner({ form, setForm }: { form: Form; setForm: (form: For
     setEdges(initialEdges);
     setTimeout(() => fitView({ padding: 0.2 }), 50);
     setIsLoaded(true);
-  }, [form, setNodes, setEdges, fitView]);
+  }, [form, setNodes, setEdges, fitView, handleAddCondition]);
 
   // Re-initialize when form changes (especially conditions)
   useEffect(() => {
