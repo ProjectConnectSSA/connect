@@ -1,6 +1,6 @@
 "use client";
 
-import { Type, Star, List, CheckSquare, Calendar, Mail, Phone, Image } from "lucide-react";
+import { Type, Star, List, CheckSquare, Calendar, Mail, Phone, Image, Link, Cuboid } from "lucide-react";
 
 const ELEMENT_TYPES = [
   { id: "text", icon: Type, label: "Text", type: "text" },
@@ -11,6 +11,8 @@ const ELEMENT_TYPES = [
   { id: "phone", icon: Phone, label: "Phone", type: "phone" },
   { id: "image", icon: Image, label: "Image", type: "image" },
   { id: "email", icon: Mail, label: "Email", type: "email" },
+  { id: "link", icon: Link, label: "Link", type: "link" },
+  { id: "button", icon: Cuboid, label: "Button", type: "button" },
 ];
 
 export function ElementToolbar() {

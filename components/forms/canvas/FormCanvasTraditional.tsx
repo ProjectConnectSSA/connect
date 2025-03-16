@@ -200,7 +200,9 @@ const EditableElement = ({
                   return (
                     <Input
                       placeholder="Enter text"
-                      style={{ backgroundColor: element.styles.backgroundColor || "#f9f9f9" }}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
+                      }}
                       className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
                     />
                   );
@@ -237,7 +239,9 @@ const EditableElement = ({
                 case "select":
                   return (
                     <select
-                      style={{ backgroundColor: element.styles.backgroundColor || "#f9f9f9" }}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
+                      }}
                       className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
                       <option>Option 1</option>
                       <option>Option 2</option>
@@ -248,7 +252,9 @@ const EditableElement = ({
                     <Input
                       type="tel"
                       placeholder="Enter phone number"
-                      style={{ backgroundColor: element.styles.backgroundColor || "#f9f9f9" }}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
+                      }}
                       className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
                     />
                   );
@@ -257,7 +263,9 @@ const EditableElement = ({
                     <Input
                       type="email"
                       placeholder="Enter email"
-                      style={{ backgroundColor: element.styles.backgroundColor || "#f9f9f9" }}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#f9f9f9",
+                      }}
                       className="border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
                     />
                   );
@@ -315,6 +323,27 @@ const EditableElement = ({
                         No
                       </motion.button>
                     </div>
+                  );
+                case "link":
+                  return (
+                    <a
+                      href={element.value || "#"}
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "transparent",
+                      }}
+                      className="text-blue-500 underline">
+                      {element.title || "Link"}
+                    </a>
+                  );
+                case "button":
+                  return (
+                    <Button
+                      style={{
+                        backgroundColor: element.styles.backgroundColor || "#007bff",
+                      }}
+                      className="text-white px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
+                      {element.title || "Button"}
+                    </Button>
                   );
                 default:
                   return <div>Unsupported element</div>;

@@ -204,6 +204,27 @@ export function PreviewForm({ form }: PreviewFormProps) {
               </Button>
             </div>
           );
+        case "link":
+          return (
+            <a
+              href={element.value || "#"}
+              style={{
+                backgroundColor: element.styles.backgroundColor || "transparent",
+              }}
+              className="text-blue-500 underline">
+              {element.title || "Link"}
+            </a>
+          );
+        case "button":
+          return (
+            <Button
+              style={{
+                backgroundColor: element.styles.backgroundColor || "#007bff",
+              }}
+              className="text-white px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
+              {element.title || "Button"}
+            </Button>
+          );
           break;
 
         case "rating":

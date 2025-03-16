@@ -16,7 +16,7 @@ import { ElementToolbar } from "@/components/forms/canvas/element-toolbar";
 import { FormCanvasTraditional } from "@/components/forms/canvas/FormCanvasTraditional";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
-
+import PublishOptions from "@/components/forms/form-publish";
 interface EditFormPageProps {
   params: Promise<{ id: string }>;
 }
@@ -240,8 +240,7 @@ export default function EditFormPage({ params }: EditFormPageProps) {
 
         <TabsContent value="publish">
           <div className="flex flex-1 bg-gray-200 rounded p-2 flex-col items-center justify-center">
-            <p className="mb-4">Publish your form when you’re ready.</p>
-            <Button>Publish Form</Button>
+            <PublishOptions formId={formId} />
           </div>
         </TabsContent>
       </Tabs>
