@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Link as LinkIcon, FileText, Mail, User, LogOut, BarChart, ChevronRight, LayoutTemplate } from "lucide-react";
+import { Link as LinkIcon, FileText, Mail, User, LogOut, BarChart, ChevronRight, LayoutTemplate, Contact } from "lucide-react";
 import { useState } from "react";
 
 interface User {
@@ -39,6 +39,11 @@ export function DashboardSidebar() {
       href: "/dashboard/landing",
       label: "Create Landing Page",
       icon: LayoutTemplate,
+    },
+    {
+      href: "/dashboard/contacts",
+      label: "Contacts",
+      icon: Contact,
     },
     {
       href: "/dashboard/analytics",
