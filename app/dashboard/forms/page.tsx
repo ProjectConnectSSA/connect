@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2, FileText, Copy, QrCode } from "lucide-react";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { TemplateSelector } from "@/components/forms/templates/templateSelecter";
+import DashboardSidebar from "@/components/dashboard/sidebar";
 
 // Utility function: format date.
 const formatDate = (dateString: string) => {
@@ -190,6 +191,8 @@ export default function FormsPage() {
         throw new Error("Failed to fetch forms");
       }
       const data = await response.json();
+      // Sort forms so that the latest ones appear first
+      data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setForms(data);
     } catch (error) {
       console.error("Error fetching forms:", error);
@@ -205,121 +208,120 @@ export default function FormsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Forms</h1>
-          <p className="text-gray-600">Create and manage your forms efficiently.</p>
+    <div className="flex h-screen">
+      <DashboardSidebar />
+      {/* Main content taking full width */}
+      <div className="space-y-6 flex-1 p-6">
+        {/* Header with title and actions */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Forms</h1>
+          </div>
+          {/* Actions and usage indicator */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => router.push("/dashboard/forms/edit/new")}
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Form
+              </Button>
+              <Button
+                onClick={() => setTemplateDialogOpen(true)}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                Templates
+              </Button>
+            </div>
+            {/* Usage indicator styled to be about the same size as a button */}
+            <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-2 w-32 h-12 flex flex-col justify-center">
+              <span className="text-sm font-medium text-gray-900">
+                {usedLinks}/{totalLinksAllowed}
+              </span>
+              <Progress
+                value={progressValue}
+                className="w-full mt-1 h-2 bg-gray-300"
+              />
+            </Card>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => router.push("/dashboard/forms/edit/new")}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Form
-          </Button>
-          <Button
-            onClick={() => setTemplateDialogOpen(true)}
-            variant="outline"
-            className="border-blue-600 text-blue-600 hover:bg-blue-50">
-            Templates
-          </Button>
-        </div>
-      </div>
 
-      {/* Usage Card */}
-      <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-4 max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900 text-lg">Usage</CardTitle>
-          <CardDescription className="text-gray-600">
-            {usedLinks} of {totalLinksAllowed} forms used
-          </CardDescription>
-          <Progress
-            value={progressValue}
-            className="mt-2 bg-gray-300"
-          />
-        </CardHeader>
-      </Card>
-
-      {/* Forms List */}
-      <Card className="bg-white border-none shadow-sm rounded-lg p-4">
-        <CardHeader>
-          <CardTitle className="text-gray-900 text-xl">Your Forms</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={Forms || []}
-            columns={columns}
-            filters={filters}
-            itemsPerPage={5}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Share Dialog */}
-      <Dialog
-        open={shareDialogOpen}
-        onOpenChange={setShareDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Share Form</DialogTitle>
-            <DialogDescription>Use the link below to share the form or generate its QR code.</DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center space-x-2 mt-4">
-            <input
-              type="text"
-              value={shareLink}
-              readOnly
-              className="flex-1 border border-gray-300 rounded px-3 py-2"
+        {/* Forms List */}
+        <Card className="bg-white border-none shadow-sm rounded-lg p-4 w-full">
+          <div>
+            <DataTable
+              data={Forms || []}
+              columns={columns}
+              filters={filters}
+              itemsPerPage={5}
             />
-            <Button
-              onClick={handleCopy}
-              variant="outline">
-              <Copy className={copied ? "text-green-500" : "text-gray-500"} />
-              <span className="sr-only">Copy link</span>
-            </Button>
           </div>
-          <div className="mt-4">
-            <Button
-              onClick={() => setShowQRCode(!showQRCode)}
-              variant="secondary">
-              {showQRCode ? "Hide QR Code" : "Generate QR Code"}
-              <QrCode className="ml-2 h-4 w-4" />
-            </Button>
-            {showQRCode && (
-              <div className="mt-4 flex flex-col items-center">
-                <div ref={qrCodeRef}>
-                  <QRCodeSVG
-                    value={shareLink}
-                    style={{ width: 128, height: 128 }}
-                  />
-                </div>
-                <Button
-                  onClick={downloadQRCode}
-                  variant="outline"
-                  className="mt-2">
-                  Download QR Code
-                </Button>
-              </div>
-            )}
-          </div>
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              className="mt-4 w-full">
-              Close
-            </Button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
+        </Card>
 
-      {/* Template Selection Dialog */}
-      <TemplateSelector
-        open={templateDialogOpen}
-        onClose={() => setTemplateDialogOpen(false)}
-        onSelectTemplate={handleSelectTemplate}
-      />
+        {/* Share Dialog */}
+        <Dialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Share Form</DialogTitle>
+              <DialogDescription>Use the link below to share the form or generate its QR code.</DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center space-x-2 mt-4">
+              <input
+                type="text"
+                value={shareLink}
+                readOnly
+                className="flex-1 border border-gray-300 rounded px-3 py-2"
+              />
+              <Button
+                onClick={handleCopy}
+                variant="outline">
+                <Copy className={copied ? "text-green-500" : "text-gray-500"} />
+                <span className="sr-only">Copy link</span>
+              </Button>
+            </div>
+            <div className="mt-4">
+              <Button
+                onClick={() => setShowQRCode(!showQRCode)}
+                variant="secondary">
+                {showQRCode ? "Hide QR Code" : "Generate QR Code"}
+                <QrCode className="ml-2 h-4 w-4" />
+              </Button>
+              {showQRCode && (
+                <div className="mt-4 flex flex-col items-center">
+                  <div ref={qrCodeRef}>
+                    <QRCodeSVG
+                      value={shareLink}
+                      style={{ width: 128, height: 128 }}
+                    />
+                  </div>
+                  <Button
+                    onClick={downloadQRCode}
+                    variant="outline"
+                    className="mt-2">
+                    Download QR Code
+                  </Button>
+                </div>
+              )}
+            </div>
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+
+        {/* Template Selection Dialog */}
+        <TemplateSelector
+          open={templateDialogOpen}
+          onClose={() => setTemplateDialogOpen(false)}
+          onSelectTemplate={handleSelectTemplate}
+        />
+      </div>
     </div>
   );
 }

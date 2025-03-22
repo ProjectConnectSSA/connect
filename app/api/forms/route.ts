@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/lib/supabaseClient";
 import { UUID } from "crypto";
-
+import { getCurrentUser } from "@/app/actions";
 interface Form {
   title: string;
   description: string;
   pages: Pages[];
   background?: string;
   user_id: string;
+  conditions?: Condition[];
   styles?: {
     width?: string;
     height?: string;
@@ -36,11 +37,21 @@ interface Elements {
   required: boolean;
 }
 
+interface Condition {
+  id: string;
+  sourcePageId: string;
+  elementId: string;
+  operator: string;
+  value: string;
+  targetPageId: string;
+}
+
 // Function to fetch all forms
 export async function GET() {
   try {
     console.log("API GET formal forms");
-    const { data, error } = await supabase.from("forms").select("*");
+    const currentUser = await getCurrentUser();
+    const { data, error } = await supabase.from("forms").select("*").eq("user_id", currentUser.id);
     console.log("API GET formal forms", data);
     if (error) throw new Error(error.message);
     return NextResponse.json(data, { status: 200 });
@@ -58,7 +69,15 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from("forms")
       .insert([
-        { user_id: form.user_id, title: form.title, pages: form.pages, styles: form.styles, isMultiPage: form.isMultiPage, isActive: form.isActive },
+        {
+          user_id: form.user_id,
+          title: form.title,
+          pages: form.pages,
+          styles: form.styles,
+          isMultiPage: form.isMultiPage,
+          isActive: form.isActive,
+          conditions: form.conditions,
+        },
       ])
       .select();
 
