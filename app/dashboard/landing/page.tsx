@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
-import { landingTemplates } from "@/components/templates/landing-templates";
+import { landingTemplates } from "@/components/landing/templates/landing-templates";
 
 // Utility function: format date.
 const formatDate = (dateString: string) => {
