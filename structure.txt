@@ -1,0 +1,570 @@
+Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app
+
+01-03-2025  18:08    <DIR>          .
+01-03-2025  18:08    <DIR>          ..
+18-02-2025  18:14    <DIR>          (auth-pages)
+18-02-2025  18:10             3,802 actions.ts
+01-03-2025  18:09    <DIR>          api
+18-02-2025  18:14    <DIR>          blog
+18-02-2025  18:14    <DIR>          callback
+21-02-2025  19:09    <DIR>          dashboard
+18-02-2025  18:10            25,931 favicon.ico
+18-02-2025  18:14    <DIR>          fonts
+18-02-2025  18:10             1,453 globals.css
+18-02-2025  18:10             1,093 layout.tsx
+18-02-2025  18:14    <DIR>          login
+18-02-2025  18:10             1,122 page.tsx
+18-02-2025  18:14    <DIR>          pricing
+18-02-2025  18:14    <DIR>          protected
+01-03-2025  18:08    <DIR>          types
+               5 File(s)         33,401 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\(auth-pages)
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          forgot-password
+18-02-2025  18:10               198 layout.tsx
+18-02-2025  18:14    <DIR>          logout
+18-02-2025  18:14    <DIR>          sign-in
+18-02-2025  18:14    <DIR>          sign-up
+18-02-2025  18:10               856 smtp-message.tsx
+               2 File(s)          1,054 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\(auth-pages)\forgot-password
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             1,768 page.tsx
+               1 File(s)          1,768 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\(auth-pages)\logout
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             1,275 page.tsx
+               1 File(s)          1,275 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\(auth-pages)\sign-in
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             2,433 page.tsx
+               1 File(s)          2,433 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\(auth-pages)\sign-up
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             2,293 page.tsx
+               1 File(s)          2,293 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api
+
+01-03-2025  18:09    <DIR>          .
+01-03-2025  18:09    <DIR>          ..
+01-03-2025  18:14    <DIR>          drafts
+18-02-2025  18:14    <DIR>          form-submision
+18-02-2025  18:14    <DIR>          forms
+18-02-2025  18:14    <DIR>          links
+               0 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api\drafts
+
+01-03-2025  18:14    <DIR>          .
+01-03-2025  18:14    <DIR>          ..
+01-03-2025  18:14             1,386 index.ts
+01-03-2025  18:15             1,533 [id].ts
+               2 File(s)          2,919 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api\form-submision
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          [id]
+               0 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api\form-submision\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+22-02-2025  11:54             1,536 route.ts
+               1 File(s)          1,536 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api\forms
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             2,967 route.ts
+18-02-2025  18:14    <DIR>          [id]
+               1 File(s)          2,967 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api\forms\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               624 route.ts
+               1 File(s)            624 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api\links
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             2,370 route.ts
+18-02-2025  18:14    <DIR>          [id]
+               1 File(s)          2,370 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\api\links\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               629 route.ts
+               1 File(s)            629 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\blog
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10                 0 page.tsx
+               1 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\callback
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               917 route.ts
+               1 File(s)            917 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard
+
+21-02-2025  19:09    <DIR>          .
+21-02-2025  19:09    <DIR>          ..
+01-03-2025  18:01    <DIR>          emails
+18-02-2025  18:14    <DIR>          forms
+18-02-2025  18:14    <DIR>          landing
+18-02-2025  18:10               485 layout.tsx
+18-02-2025  18:14    <DIR>          links
+18-02-2025  18:10             2,639 page.tsx
+               2 File(s)          3,124 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\emails
+
+01-03-2025  18:01    <DIR>          .
+01-03-2025  18:01    <DIR>          ..
+19-02-2025  22:18             1,954 page.tsx
+               1 File(s)          1,954 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\forms
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          edit
+18-02-2025  18:10            11,011 page.tsx
+18-02-2025  18:14    <DIR>          response
+18-02-2025  18:14    <DIR>          view
+               1 File(s)         11,011 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\forms\edit
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          [id]
+               0 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\forms\edit\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             8,077 page.tsx
+               1 File(s)          8,077 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\forms\response
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          [id]
+               0 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\forms\response\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             6,620 page.tsx
+               1 File(s)          6,620 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\forms\view
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          [id]
+               0 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\forms\view\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             9,302 page.tsx
+               1 File(s)          9,302 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\landing
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          edit
+18-02-2025  18:10             7,056 page.tsx
+               1 File(s)          7,056 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\landing\edit
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             4,234 page.tsx
+               1 File(s)          4,234 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\links
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          edit
+18-02-2025  18:10             6,451 page.tsx
+18-02-2025  18:14    <DIR>          view
+               1 File(s)          6,451 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\links\edit
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          [id]
+               0 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\links\edit\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             6,422 page.tsx
+               1 File(s)          6,422 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\links\view
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          [id]
+               0 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\dashboard\links\view\[id]
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             3,035 page.tsx
+               1 File(s)          3,035 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\fonts
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10            67,864 GeistMonoVF.woff
+18-02-2025  18:10            66,268 GeistVF.woff
+               2 File(s)        134,132 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\login
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             2,415 page.tsx
+               1 File(s)          2,415 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\pricing
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10                 0 page.tsx
+               1 File(s)              0 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\protected
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             1,155 page.tsx
+18-02-2025  18:14    <DIR>          reset-password
+               1 File(s)          1,155 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\protected\reset-password
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             1,975 page.tsx
+               1 File(s)          1,975 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\app\types
+
+01-03-2025  18:08    <DIR>          .
+01-03-2025  18:08    <DIR>          ..
+01-03-2025  18:09               259 database.ts
+               1 File(s)            259 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          analytics
+18-02-2025  18:14    <DIR>          dashboard
+21-02-2025  19:08    <DIR>          emails
+18-02-2025  18:10               743 form-message.tsx
+18-02-2025  18:14    <DIR>          forms
+18-02-2025  18:14    <DIR>          landing
+18-02-2025  18:14    <DIR>          links
+18-02-2025  18:14    <DIR>          shared
+18-02-2025  18:10               239 sidebar-wrapper.tsx
+18-02-2025  18:10               525 submit-button.tsx
+18-02-2025  18:14    <DIR>          templates
+18-02-2025  18:10               324 theme-provider.tsx
+18-02-2025  18:14    <DIR>          ui
+18-02-2025  18:14    <DIR>          website
+               4 File(s)          1,831 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\analytics
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             2,352 chart.tsx
+               1 File(s)          2,352 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\dashboard
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             5,562 sidebar.tsx
+               1 File(s)          5,562 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\emails
+
+21-02-2025  19:08    <DIR>          .
+21-02-2025  19:08    <DIR>          ..
+18-02-2025  18:10             4,318 campaign-scheduler.tsx
+18-02-2025  18:10             1,458 color-picker.tsx
+18-02-2025  18:10            24,978 email-editor.tsx
+18-02-2025  18:10             6,023 email-preview.tsx
+18-02-2025  18:10            16,236 email-styles.tsx
+19-02-2025  18:38             1,759 EmailForm.tsx
+18-02-2025  18:10               954 image-upload.tsx
+18-02-2025  18:10             4,115 segment-builder.tsx
+               8 File(s)         59,841 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\forms
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:14    <DIR>          canvas
+18-02-2025  18:14    <DIR>          conditions
+18-02-2025  18:10             6,442 data-table.tsx
+18-02-2025  18:10             4,741 form-editor.tsx
+18-02-2025  18:10             4,707 form-preview.tsx
+18-02-2025  18:10             7,100 form-styles.tsx
+18-02-2025  18:14    <DIR>          response
+18-02-2025  18:14    <DIR>          templates
+               4 File(s)         22,990 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\forms\canvas
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             1,339 element-toolbar.tsx
+18-02-2025  18:10            18,586 form-canvas.tsx
+               2 File(s)         19,925 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\forms\conditions
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             6,448 condition-builder.tsx
+18-02-2025  18:10             1,497 condition-tabs.tsx
+18-02-2025  18:14    <DIR>          flow
+               2 File(s)          7,945 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\forms\conditions\flow
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             1,732 condition-flow.tsx
+18-02-2025  18:10               885 condition-node.tsx
+18-02-2025  18:10             1,689 flow-utils.ts
+18-02-2025  18:10               814 page-node.tsx
+               4 File(s)          5,120 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\forms\response
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             7,543 export-panel.tsx
+18-02-2025  18:10             2,760 integration-panel.tsx
+18-02-2025  18:10             6,799 response-analytics.tsx
+18-02-2025  18:10             5,461 response-list.tsx
+               4 File(s)         22,563 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\forms\templates
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10            14,504 templateSelecter.tsx
+               1 File(s)         14,504 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\landing
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             7,510 domain-settings.tsx
+18-02-2025  18:10            23,777 landing-editor.tsx
+18-02-2025  18:10             5,764 landing-preview.tsx
+18-02-2025  18:10             6,081 landing-styles.tsx
+               4 File(s)         43,132 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\links
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10                 0 data-table.tsx
+18-02-2025  18:10             8,469 link-editor.tsx
+18-02-2025  18:10             4,642 link-preview.tsx
+18-02-2025  18:10             7,182 link-styles.tsx
+               4 File(s)         20,293 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\shared
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             5,676 data-table.tsx
+               1 File(s)          5,676 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\templates
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             4,313 landing-templates.tsx
+               1 File(s)          4,313 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\ui
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             2,062 accordion.tsx
+18-02-2025  18:10             4,600 alert-dialog.tsx
+18-02-2025  18:10             1,654 alert.tsx
+18-02-2025  18:10               165 aspect-ratio.tsx
+18-02-2025  18:10             1,480 avatar.tsx
+18-02-2025  18:10             1,170 badge.tsx
+18-02-2025  18:10             2,839 breadcrumb.tsx
+18-02-2025  18:10             1,902 button.tsx
+18-02-2025  18:10             2,699 calendar.tsx
+18-02-2025  18:10             1,991 card.tsx
+18-02-2025  18:10             6,558 carousel.tsx
+18-02-2025  18:10            10,916 chart.tsx
+18-02-2025  18:10             1,108 checkbox.tsx
+18-02-2025  18:10               346 collapsible.tsx
+18-02-2025  18:10             5,075 command.tsx
+18-02-2025  18:10             7,494 context-menu.tsx
+18-02-2025  18:10             3,993 dialog.tsx
+18-02-2025  18:10             3,161 drawer.tsx
+18-02-2025  18:10             7,543 dropdown-menu.tsx
+18-02-2025  18:10             4,329 form.tsx
+18-02-2025  18:10             1,236 hover-card.tsx
+18-02-2025  18:10             2,256 input-otp.tsx
+18-02-2025  18:10               876 input.tsx
+18-02-2025  18:10               759 label.tsx
+18-02-2025  18:10             8,261 menubar.tsx
+18-02-2025  18:10             5,195 navigation-menu.tsx
+18-02-2025  18:10             2,889 pagination.tsx
+18-02-2025  18:10             1,284 popover.tsx
+18-02-2025  18:10               826 progress.tsx
+18-02-2025  18:10             1,537 radio-group.tsx
+18-02-2025  18:10             1,777 resizable.tsx
+18-02-2025  18:10             1,713 scroll-area.tsx
+18-02-2025  18:10             5,812 select.tsx
+18-02-2025  18:10               808 separator.tsx
+18-02-2025  18:10             4,445 sheet.tsx
+18-02-2025  18:10               279 skeleton.tsx
+18-02-2025  18:10             1,126 slider.tsx
+18-02-2025  18:10               933 sonner.tsx
+18-02-2025  18:10               476 staybutton.tsx
+18-02-2025  18:10             1,189 switch.tsx
+18-02-2025  18:10             2,901 table.tsx
+18-02-2025  18:10             1,964 tabs.tsx
+18-02-2025  18:10               802 textarea.tsx
+18-02-2025  18:10             5,012 toast.tsx
+18-02-2025  18:10               827 toaster.tsx
+18-02-2025  18:10             1,828 toggle-group.tsx
+18-02-2025  18:10             1,503 toggle.tsx
+18-02-2025  18:10             1,199 tooltip.tsx
+              48 File(s)        130,798 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\components\website
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10             5,561 contact.tsx
+18-02-2025  18:10             2,967 CubeLoggo.tsx
+18-02-2025  18:10            18,917 EasyBuilder.tsx
+18-02-2025  18:10             3,259 FAQ.tsx
+18-02-2025  18:10             2,436 Features.tsx
+18-02-2025  18:10             3,295 Footer.tsx
+18-02-2025  18:10             9,787 HeroSection.tsx
+18-02-2025  18:10               525 Logo.tsx
+18-02-2025  18:10             4,031 Navbar.tsx
+18-02-2025  18:10             2,849 Pricing.tsx
+18-02-2025  18:10            10,787 ProductShowcase.tsx
+              11 File(s)         64,414 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\lib
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               296 supabaseClient.ts
+18-02-2025  18:10               175 utils.ts
+               2 File(s)            471 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\logo
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10           200,099 connect-logo.png
+18-02-2025  18:10           740,576 connect-logo.psd
+               2 File(s)        940,675 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\public
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               391 file.svg
+18-02-2025  18:10             1,035 globe.svg
+18-02-2025  18:10            18,906 Header.png
+18-02-2025  18:10             1,375 next.svg
+18-02-2025  18:10           424,357 pic.jpg
+18-02-2025  18:10               128 vercel.svg
+18-02-2025  18:10               385 window.svg
+               7 File(s)        446,577 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\services
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               231 formService.ts
+18-02-2025  18:10               239 linkFormService.ts
+               2 File(s)            470 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\utils
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               175 cn.ts
+18-02-2025  18:14    <DIR>          supabase
+18-02-2025  18:10               625 utils.ts
+               2 File(s)            800 bytes
+
+ Directory of G:\SHREY_BRANCH\connect _original(Fresh_No_Change)\utils\supabase
+
+18-02-2025  18:14    <DIR>          .
+18-02-2025  18:14    <DIR>          ..
+18-02-2025  18:10               185 check-env-vars.ts
+18-02-2025  18:10               214 client.ts
+18-02-2025  18:10             2,013 middleware.ts
+18-02-2025  18:10               839 server.ts
+               4 File(s)          3,251 bytes

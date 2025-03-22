@@ -1,67 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
-import supabase from "@/lib/supabaseClient";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-// GET Request Handler
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
-  try {
-    const { id: formId } = context.params;
-
-    // Validate the form ID
-    if (!formId) {
-      return NextResponse.json({ error: "Form ID is required." }, { status: 400 });
-    }
-
-    // Fetch submissions for the given form ID
-    const { data, error } = await supabase
-      .from("Submissions")
-      .select("*") // Adjust columns based on your schema
-      .eq("form_id", formId);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    // Parse the response JSON
-    const submissions = data?.map((submission) => ({
-      ...submission,
-      response: JSON.parse(submission.response), // Parse the response field
-    }));
-
-    return NextResponse.json({ submissions }, { status: 200 });
-  } catch (error: any) {
-    console.error("Error fetching submissions:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+interface TextEntry {
+  text: string;
 }
 
-// POST Request Handler
-export async function POST(req: NextRequest, context: { params: { id: string } }) {
-  try {
-    const { id: formId } = context.params;
-    const body = await req.json();
-    const { response } = body;
+// GET: Fetch all text entries for the logged-in user
+export async function GET() {
+  const supabase = createServerClient({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    // Validate the request body
-    if (!formId || !response || typeof response !== "object") {
-      return NextResponse.json({ error: "Invalid request. Form ID and response are required." }, { status: 400 });
-    }
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
 
-    // Insert the response into the database
-    const { error } = await supabase.from("Submissions").insert([
-      {
-        form_id: formId,
-        response: JSON.stringify(response.responses), // Convert response to JSON
-        meta: JSON.stringify(response.meta),
-      },
-    ]);
+  const { data, error } = await supabase
+    .from("texts")
+    .select("*")
+    .eq("user_id", user.id);
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return NextResponse.json({ message: "Response submitted successfully." }, { status: 200 });
-  } catch (error: any) {
-    console.error("Error submitting response:", error);
+  if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  return NextResponse.json(data, { status: 200 });
+}
+
+// POST: Create a new text entry for the logged-in user
+export async function POST(req: NextRequest) {
+  const supabase = createServerClient({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const { text }: TextEntry = await req.json();
+
+  if (!text) {
+    return NextResponse.json({ error: "Text is required" }, { status: 400 });
+  }
+
+  const { data, error } = await supabase
+    .from("texts")
+    .insert([{ text, user_id: user.id }])
+    .select();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json(data, { status: 201 });
 }
