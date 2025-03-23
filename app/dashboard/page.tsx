@@ -297,46 +297,6 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Upcoming Tasks & Calendar */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>
-                  <div className="flex items-center">
-                    <Calendar className="mr-2 h-5 w-5 text-orange-600" />
-                    Upcoming Tasks
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {upcomingTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0">
-                    <span
-                      className={`flex h-2 w-2 translate-y-1 rounded-full ${
-                        task.priority === "High" ? "bg-red-500" : task.priority === "Medium" ? "bg-orange-500" : "bg-green-500"
-                      }`}
-                    />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{task.title}</p>
-                      <div className="flex items-center pt-1">
-                        <Clock className="mr-1 h-3 w-3 text-gray-500" />
-                        <p className="text-xs text-gray-500">{task.due}</p>
-                        <span className="px-2 text-gray-300">•</span>
-                        <p className="text-xs text-gray-500">{task.priority} Priority</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  size="sm"
-                  className="w-full mt-4">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  View All Tasks
-                </Button>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Recent Campaigns with Tabs */}
