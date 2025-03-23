@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,88 +38,44 @@ import {
 } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
-import { landingTemplates } from "@/components/templates/landing-templates";
+import { landingTemplates } from "@/components/landing/templates/landing-templates";
 
-const pages = [
-  {
-    id: "1",
-    title: "Product Launch",
-    domain: "launch.example.com",
-    status: "published",
-    visits: 1250,
-    created: "2024-04-01",
-    type: "product",
-  },
-  {
-    id: "2",
-    title: "Event Registration",
-    domain: "event.example.com",
-    status: "draft",
-    visits: 0,
-    created: "2024-03-28",
-    type: "event",
-  },
-  {
-    id: "3",
-    title: "Coming Soon",
-    domain: "soon.example.com",
-    status: "published",
-    visits: 3420,
-    created: "2024-03-25",
-    type: "promo",
-  },
-];
+// Utility function: format date.
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-GB");
+};
 
-const columns = [
-  { key: "title", label: "Title" },
-  { key: "domain", label: "Domain" },
-  {
-    key: "status",
-    label: "Status",
-    render: (item: any) => (
-      <Badge variant={item.status === "published" ? "default" : "secondary"}>
-        {item.status}
-      </Badge>
-    ),
-  },
-  { key: "visits", label: "Visits" },
-  { key: "created", label: "Created" },
-  {
-    key: "actions",
-    label: "Actions",
-    render: (item: any) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Eye className="mr-2 h-4 w-4" />
-            Preview
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Globe className="mr-2 h-4 w-4" />
-            Manage Domain
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem className="text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-];
+// List of static pages details only to render on the landing pages list.
+// const pages = [
+//   {
+//     id: "1",
+//     title: "Product Launch",
+//     domain: "launch.example.com",
+//     status: "published",
+//     visits: 1250,
+//     created: "2024-04-01",
+//     type: "product",
+//   },
+//   {
+//     id: "2",
+//     title: "Event Registration",
+//     domain: "event.example.com",
+//     status: "draft",
+//     visits: 0,
+//     created: "2024-03-28",
+//     type: "event",
+//   },
+//   {
+//     id: "3",
+//     title: "Coming Soon",
+//     domain: "soon.example.com",
+//     status: "published",
+//     visits: 3420,
+//     created: "2024-03-25",
+//     type: "promo",
+//   },
+// ];
 
 const filters = [
   {
@@ -142,9 +99,191 @@ const filters = [
 
 export default function LandingPage() {
   const router = useRouter();
+  const [LandingPages, setLandingPages] = useState<any[]>([]);
+  const totalPagesAllowed = 10;
+  const usedPages = LandingPages?.length ?? 0;
+  const progressValue = (usedPages / totalPagesAllowed) * 100;
+
+  useEffect(() => {
+    fetchLandingPagesData();
+    // clearLandingPageToEdit();
+  }, []);
+
+  async function fetchLandingPagesData() {
+    try {
+      const response = await fetch("/api/landings");
+      if (!response.ok) {
+        throw new Error("Failed to fetch landing pages");
+      }
+      const data = await response.json();
+      setLandingPages(data);
+    } catch (error) {
+      console.error("Error fetching landing pages:", error);
+      setLandingPages([]);
+    }
+  }
+
+  const columns = [
+    { key: "title", label: "Title" },
+    { key: "domain", label: "Domain" },
+    {
+      key: "status",
+      label: "Status",
+      render: (item: any) => (
+        <Badge variant={item.status === "published" ? "default" : "secondary"}>
+          {item.status}
+        </Badge>
+      ),
+    },
+    { key: "visits", label: "Visits" },
+    { key: "created", label: "Created" },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (item: any) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Globe className="mr-2 h-4 w-4" />
+              Manage Domain
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => deleteLandingPage(item.id)}
+              className="text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
+  // const columns = [
+  //   { key: "title", label: "Title" },
+  //   {
+  //     key: "created_at",
+  //     label: "Created",
+  //     render: (item: any) => formatDate(item.created_at),
+  //   },
+  //   {
+  //     key: "status",
+  //     label: "Status",
+  //     render: (item: any) => (
+  //       <Badge variant={item.isActive ? "success" : "secondary"}>
+  //         {item.isActive ? "Active" : "Inactive"}
+  //       </Badge>
+  //     ),
+  //   },
+  //   {
+  //     key: "actions",
+  //     label: "Actions",
+  //     render: (item: any) => (
+  //       <DropdownMenu>
+  //         <DropdownMenuTrigger asChild>
+  //           <Button
+  //             variant="ghost"
+  //             size="icon"
+  //             className="hover:bg-gray-100 transition"
+  //           >
+  //             <MoreVertical className="h-4 w-4 text-gray-600" />
+  //           </Button>
+  //         </DropdownMenuTrigger>
+  //         <DropdownMenuContent
+  //           align="end"
+  //           className="shadow-md rounded-lg bg-white"
+  //         >
+  //           {/* <DropdownMenuItem onClick={() => handleEditLandingPage(item)}> */}
+  //           <DropdownMenuItem>
+  //             <Pencil className="mr-2 h-4 w-4 text-gray-500" />
+  //             Edit
+  //           </DropdownMenuItem>
+  //           {/* <DropdownMenuItem onClick={() => handleShareLandingPage(item)}> */}
+  //           <DropdownMenuItem>
+  //             <Share2 className="mr-2 h-4 w-4 text-gray-500" />
+  //             Share
+  //           </DropdownMenuItem>
+  //           <DropdownMenuItem onClick={() => handleViewLandingPage(item)}>
+  //             <Eye className="mr-2 h-4 w-4 text-gray-500" />
+  //             View
+  //           </DropdownMenuItem>
+  //           <DropdownMenuItem
+  //             onClick={() => handleViewLandingPageSubmision(item)}
+  //           >
+  //             <FileText className="mr-2 h-4 w-4 text-gray-500" />
+  //             Submissions
+  //           </DropdownMenuItem>
+  //           <DropdownMenuItem
+  //             onClick={() => deleteLandingPage(item.id)}
+  //             className="text-red-500 hover:bg-red-100"
+  //           >
+  //             <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+  //             Delete
+  //           </DropdownMenuItem>
+  //         </DropdownMenuContent>
+  //       </DropdownMenu>
+  //     ),
+  //   },
+  // ];
+
+  async function deleteLandingPage(id: string) {
+    try {
+      const response = await fetch("/api/landings", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete landing page");
+      }
+      setLandingPages((prevForms) =>
+        prevForms.filter((form) => form.id !== id)
+      );
+    } catch (error) {
+      console.error("Failed to delete landing page:", error);
+    }
+  }
+
+  // const handleShareLandingPage = (form: any) => {
+  //   const link = `${window.location.origin}/dashboard/forms/view/${form.id}`;
+  //   setShareLink(link);
+  //   setShareDialogOpen(true);
+  // };
+
+  // const handleViewLandingPage = (landing_page: any) => {
+  //   router.push(`/dashboard/landing/view/${landing_page.id}`);
+  // };
+
+  // const handleViewLandingPageSubmision = (landing_page: any) => {
+  //   router.push(`/dashboard/landing/response/${landing_page.id}`);
+  // };
+
+  // function handleEditLandingPage(form: any) {
+  //   setFormToEdit(form);
+  //   router.push(`/dashboard/forms/edit/${form.id}`);
+  // }
 
   const handleUseTemplate = (template: any) => {
     router.push("/dashboard/landing/edit");
+    console.log(template);
   };
 
   return (
@@ -219,21 +358,27 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <Card>
+      {/* Usage Card */}
+      <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-4 max-w-sm">
         <CardHeader>
-          <CardTitle>Usage</CardTitle>
-          <CardDescription>3 of 10 landing pages used</CardDescription>
-          <Progress value={30} className="mt-2" />
+          <CardTitle className="text-gray-900 text-lg">Usage</CardTitle>
+          <CardDescription className="text-gray-600">
+            {usedPages} of {totalPagesAllowed} landing pages used
+          </CardDescription>
+          <Progress value={progressValue} className="mt-2 bg-gray-300" />
         </CardHeader>
       </Card>
 
-      <Card>
+      {/* Landing Pages List */}
+      <Card className="bg-white border-none shadow-sm rounded-lg p-4">
         <CardHeader>
-          <CardTitle>Your Landing Pages</CardTitle>
+          <CardTitle className="text-gray-900 text-xl">
+            Your Landing Pages
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
-            data={pages}
+            data={LandingPages || []}
             columns={columns}
             filters={filters}
             itemsPerPage={5}
