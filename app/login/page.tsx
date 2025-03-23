@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Loader2 } from "lucide-react";
-import supabase from "@/lib/supabaseClient";
+import {supabase} from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
