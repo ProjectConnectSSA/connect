@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import supabase from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { UUID } from "crypto";
 
 interface LandingPage {
@@ -53,10 +53,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const landingPage: LandingPage = await req.json();
-    console.log(
-      "API CREATE landingPageal landingPage",
-      landingPage.isMultiPage
-    );
+    console.log("API CREATE landingPageal landingPage", landingPage.isMultiPage);
 
     const { data, error } = await supabase
       .from("landing_pages")
@@ -83,21 +80,10 @@ export async function POST(req: NextRequest) {
 // Function to update a landingPage
 export async function PUT(req: NextRequest) {
   try {
-    const { id, ...landingPage }: { id: string } & LandingPage =
-      await req.json();
-    console.log(
-      "API UPDATE landingPageal landingPage",
-      id,
-      "data",
-      landingPage
-    );
+    const { id, ...landingPage }: { id: string } & LandingPage = await req.json();
+    console.log("API UPDATE landingPageal landingPage", id, "data", landingPage);
 
-    const { data, error } = await supabase
-      .from("landing_pages")
-      .update(landingPage)
-      .eq("id", id)
-      .select()
-      .single(); // Ensures only one record is fetched
+    const { data, error } = await supabase.from("landing_pages").update(landingPage).eq("id", id).select().single(); // Ensures only one record is fetched
 
     if (error) throw new Error(error.message);
 
@@ -112,16 +98,9 @@ export async function DELETE(req: NextRequest) {
   try {
     const { id }: { id: string } = await req.json();
     console.log("API DELETE landingPageal landingPage", id);
-    const { data, error } = await supabase
-      .from("landing_pages")
-      .delete()
-      .eq("id", id)
-      .single();
+    const { data, error } = await supabase.from("landing_pages").delete().eq("id", id).single();
     if (error) throw new Error(error.message);
-    return NextResponse.json(
-      { message: "LandingPage deleted successfully", data },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "LandingPage deleted successfully", data }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

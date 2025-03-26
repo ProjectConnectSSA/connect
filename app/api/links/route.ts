@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import supabase from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
+
 import { UUID } from "crypto";
 
 import { getCurrentUser } from "@/app/actions";
