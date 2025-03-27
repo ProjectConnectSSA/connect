@@ -1,0 +1,85 @@
+// src/types.ts (Create this file)
+export type BioElementType =
+  | "profile"
+  | "socials"
+  | "link"
+  | "card"
+  | "button"
+  | "header" // Added for simple text headers
+  | "image"; // Added for simple image display
+
+export interface BioElement {
+  id: string;
+  type: BioElementType;
+  order: number; // For potential reordering later
+  // Common
+  title?: string;
+  url?: string;
+  thumbnailUrl?: string;
+  // Profile Specific
+  name?: string;
+  bioText?: string;
+  avatarUrl?: string;
+  // Socials Specific
+  socialLinks?: { platform: string; url: string }[];
+  // Card Specific
+  description?: string;
+  layout?: "single" | "double"; // For card layout
+  // Style overrides? (Optional, can get complex)
+  // style?: Partial<StyleProps>;
+}
+
+export interface StyleProps {
+  theme: string; // e.g., 'light', 'dark', 'custom', 'ocean', 'sunset'
+  backgroundColor: string;
+  backgroundImage: string;
+  textColor: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  buttonStyle: "filled" | "outline";
+  borderRadius: "none" | "sm" | "md" | "lg" | "full";
+  fontFamily: string;
+  // Add more specific styles as needed
+}
+
+// Default Styles
+export const defaultStyles: StyleProps = {
+  theme: "light",
+  backgroundColor: "#FFFFFF",
+  backgroundImage: "",
+  textColor: "#1f2937", // gray-800
+  buttonColor: "#3b82f6", // blue-500
+  buttonTextColor: "#FFFFFF",
+  buttonStyle: "filled",
+  borderRadius: "md",
+  fontFamily: "Inter, sans-serif",
+};
+
+// Color Palettes (Example)
+export const colorPalettes: Record<string, Partial<StyleProps>> = {
+  light: {
+    backgroundColor: "#FFFFFF",
+    textColor: "#1f2937",
+    buttonColor: "#3b82f6",
+    buttonTextColor: "#FFFFFF",
+  },
+  dark: {
+    backgroundColor: "#1f2937", // gray-800
+    textColor: "#f3f4f6", // gray-100
+    buttonColor: "#60a5fa", // blue-400
+    buttonTextColor: "#1f2937",
+  },
+  ocean: {
+    backgroundColor: "#E0F7FA", // cyan-50
+    textColor: "#006064", // cyan-900
+    buttonColor: "#00ACC1", // cyan-600
+    buttonTextColor: "#FFFFFF",
+  },
+  sunset: {
+    backgroundColor: "#FFF3E0", // orange-50
+    textColor: "#E65100", // orange-900
+    buttonColor: "#FB8C00", // orange-600
+    buttonTextColor: "#FFFFFF",
+  },
+  // Add more palettes
+};

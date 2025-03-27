@@ -1,78 +1,96 @@
+// src/app/page.tsx (Or your relevant route)
 "use client";
 
-import React, { useEffect, useState } from "react";
-import LinkEditor, { BioElementType } from "@/components/links/link-editor";
-import LinkPreview, { BioElement } from "@/components/links/link-preview";
-import LinkStyle, { StyleProps } from "@/components/links/link-styles";
-import { toast } from "sonner";
+import React, { useState, useCallback } from "react";
 
-interface EditFormPageProps {
-  params: Promise<{ id: string }>;
-}
+import { Toaster, toast } from "sonner"; // For notifications
 
-export default function Page({ params }: EditFormPageProps) {
-  const unwrappedParams = React.use(params);
-  const { id } = unwrappedParams;
+import LinkEditor from "@/components/links/link-editor";
+import LinkPreview from "@/components/links/link-preview";
+import LinkStyle from "@/components/links/link-styles";
+import Navbar from "@/components/links/navbar";
+import { BioElement, BioElementType, StyleProps, defaultStyles } from "@/app/types/links/types"; // Adjust path
+
+export default function Home() {
   const [elements, setElements] = useState<BioElement[]>([]);
-  const [styles, setStyles] = useState<StyleProps>({
-    backgroundColor: "#ffffff",
-    backgroundImage: "",
-  });
+  const [styles, setStyles] = useState<StyleProps>(defaultStyles);
 
-  // Only fetch form data if id is not "new"
-  useEffect(() => {
-    if (id !== "new") {
-      async function fetchForm() {
-        const res = await fetch(`/api/forms/${id}`);
-        const data = await res.json();
-        // Assume data contains elements and styles
-        setElements(data.elements || []);
-        setStyles(data.styles || styles);
-      }
-      fetchForm();
-    }
-  }, [id]);
+  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, elementType: BioElementType) => {
+    e.dataTransfer.setData("elementType", elementType);
+  }, []);
 
-  function handleDragStart(e: React.DragEvent<HTMLDivElement>, elementType: BioElementType) {
-    e.dataTransfer.setData("text/plain", elementType);
-  }
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const elementType = e.dataTransfer.getData("elementType") as BioElementType;
 
-  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-  }
+      if (!elementType) return;
 
-  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    const elementType = e.dataTransfer.getData("text/plain") as BioElementType;
-    const newElement: BioElement = {
-      id: Date.now().toString(),
-      type: elementType,
-      content: elementType === "card" ? "Bio Card" : `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} Element`,
-    };
-    setElements((prev) => [...prev, newElement]);
-    toast.success("Element added!");
-  }
+      const newElement: BioElement = {
+        id: crypto.randomUUID(), // Generate unique ID
+        type: elementType,
+        order: elements.length, // Simple ordering for now
+        // Add sensible defaults based on type
+        title: elementType === "header" ? "New Header" : undefined,
+        name: elementType === "profile" ? "Your Name" : undefined,
+        bioText: elementType === "profile" ? "Your Bio" : undefined,
+        socialLinks: elementType === "socials" ? [] : undefined,
+      };
+
+      setElements((prevElements) => [...prevElements, newElement]);
+      toast.success(`${elementType.charAt(0).toUpperCase() + elementType.slice(1)} element added!`);
+    },
+    [elements.length]
+  ); // Dependency on length for order
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Necessary to allow dropping
+    e.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const handleUpdateElement = useCallback((id: string, updatedData: Partial<BioElement>) => {
+    setElements((prevElements) => prevElements.map((el) => (el.id === id ? { ...el, ...updatedData } : el)));
+    // Optional: Add toast for updates if needed, but might be too noisy
+    // toast.info("Element updated.");
+  }, []);
+
+  // Allow partial style updates
+  const handleChangeStyle = useCallback((newStyles: Partial<StyleProps>) => {
+    setStyles((prevStyles) => ({ ...prevStyles, ...newStyles }));
+  }, []);
+
+  // Basic delete function (can be triggered from element components later)
+  const handleDeleteElement = useCallback((id: string) => {
+    setElements((prevElements) => prevElements.filter((el) => el.id !== id));
+    toast.success("Element removed.");
+  }, []);
 
   return (
+    // If using react-dnd: <DndProvider backend={HTML5Backend}>
     <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="p-4 bg-gray-200 flex justify-between items-center">
-        <h1 className="text-xl font-bold">{id === "new" ? "Create New Form" : "Edit Form"}</h1>
-      </header>
-      <div className="flex flex-grow">
+      <Navbar />
+      <div className="flex flex-1 overflow-hidden">
+        {" "}
+        {/* Main content area */}
         <LinkEditor onDragStart={handleDragStart} />
         <LinkPreview
           elements={elements}
+          styles={styles}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          styles={styles}
-          updateElement={(id, updatedData) => setElements((prev) => prev.map((el) => (el.id === id ? { ...el, ...updatedData } : el)))}
+          updateElement={handleUpdateElement}
         />
         <LinkStyle
           styles={styles}
-          onChangeStyle={setStyles}
+          onChangeStyle={handleChangeStyle}
         />
       </div>
+      <Toaster
+        richColors
+        position="bottom-right"
+      />{" "}
+      {/* For notifications */}
     </div>
+    // If using react-dnd: </DndProvider>
   );
 }

@@ -9,11 +9,11 @@ import { getCurrentUser } from "@/app/actions";
 import { FormEditor } from "@/components/forms/form-editor";
 import { FormStyles } from "@/components/forms/form-styles";
 import { ConditionTabs } from "@/components/forms/conditions/condition-tabs";
-import { FormContainer } from "@/components/forms/canvas/form-canvas";
+
 import { PreviewForm } from "@/components/forms/form-preview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ElementToolbar } from "@/components/forms/canvas/element-toolbar";
-import { FormCanvasTraditional } from "@/components/forms/canvas/FormCanvasTraditional";
+import { FormContainer } from "@/components/forms/canvas/FormCanvas";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import PublishOptions from "@/components/forms/form-publish";
@@ -182,6 +182,10 @@ export default function EditFormPage({ params }: EditFormPageProps) {
               <FormContainer
                 form={form}
                 setForm={setForm}
+                selectedElement={selectedElement}
+                setSelectedElement={setSelectedElement}
+                currentPageIndex={currentPageIndex}
+                setCurrentPageIndex={setCurrentPageIndex}
               />
             </div>
 
