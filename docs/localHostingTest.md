@@ -1,4 +1,4 @@
-7. Local Testing Setup
+Local Testing Setup
 
 Edit hosts File:
 
@@ -38,10 +38,10 @@ The middleware should intercept the request because the host (mytestdomain.local
 
 It queries Supabase for custom_domain = 'mytestdomain.local:3000'. Correction: The host includes the port. You might need to save mytestdomain.local:3000 in Supabase or strip the port in the middleware before querying. Let's strip the port in middleware for flexibility.
 
-If it finds the record with the slug my-test-page, it rewrites the URL internally to /p/my-test-page.
+If it finds the record with the slug my-test-page, it rewrites the URL internally to /dashboard/links/view/my-test-page.
 
-The /p/[identifier]/page.tsx route handler receives my-test-page as the identifier, fetches the data, and renders your bio link page.
+The /dashboard/links/view/[identifier]/page.tsx route handler receives my-test-page as the identifier, fetches the data, and renders your bio link page.
 
 The URL in the browser remains http://mytestdomain.local:3000.
 
-Test Slug: Navigate to http://localhost:3000/p/my-test-page. This should directly load the public page without middleware intervention.
+Test Slug: Navigate to http://localhost:3000/dashboard/links/view/my-test-page. This should directly load the public page without middleware intervention.

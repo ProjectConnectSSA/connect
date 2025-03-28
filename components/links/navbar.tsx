@@ -41,7 +41,7 @@ export default function Navbar({ onSave, isSaving, pageSlug }: NavbarProps) {
               <Share className="mr-2 h-4 w-4" /> Share
             </button>
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/dashboard/links")}
               className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
               <ArrowLeftToLine className="mr-2 h-4 w-4" /> Exit
             </button>
