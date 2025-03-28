@@ -10,42 +10,18 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient"; // Assuming this path is correct
 import { toast } from "sonner";
 
-// --- Copied Type Definition ---
-// NOTE: Ideally, this should come from a central types file (e.g., @/types/form.ts)
-// Duplicating it here based on the request to "do nothing else".
-export interface ElementType {
-  id: string;
-  title: string;
-  // Added options based on previous suggestions
-  options?: string[];
-  styles: {
-    backgroundColor?: string;
-    width?: string;
-    height?: string;
-    // Allow other style props
-    [key: string]: any;
-  };
-  type: string;
-  required: boolean;
-  value?: string | number | boolean | string[]; // Allow different value types
-  column?: "left" | "right";
-}
-// --- End Copied Type Definition ---
-
-// Copied from original file
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
-};
+// --- Import types from the central definition ---
+import type { ElementType } from "@/app/types/form";
 
 // Props interface for EditableElement
+// It's good practice to define this near the component or import if defined centrally too
 interface EditableElementProps {
   element: ElementType;
-  selectedElement: { element: ElementType; pageIndex: number } | null; // Assuming selectedElement shape
+  selectedElement: { element: ElementType; pageIndex: number } | null;
   updateElement: (id: string, changes: Partial<ElementType>) => void;
   deleteElement: (id: string) => void;
   reorderElements: (draggedId: string, targetId: string) => void;
-  setSelectedElement: (sel: { element: ElementType; pageIndex: number } | null) => void; // Assuming shape
+  setSelectedElement: (sel: { element: ElementType; pageIndex: number } | null) => void;
   currentPageIndex: number;
 }
 
@@ -67,53 +43,59 @@ export const EditableElement = ({
 
     setUploading(true);
     try {
+      // --- Type Check for Image URL ---
+      // Ensure element.value is a string before attempting URL operations
+      const currentImageUrl = typeof element.value === "string" ? element.value : undefined;
+      // --- End Type Check ---
+
       // Remove existing image if present.
-      if (element.value) {
+      if (currentImageUrl) {
+        // Check if it's a valid string URL
         try {
-          const urlObj = new URL(element.value);
-          // Adjust path based on your bucket structure if needed
+          const urlObj = new URL(currentImageUrl);
           const pathParts = urlObj.pathname.split("/");
-          const bucketName = pathParts[pathParts.length - 2]; // e.g., 'formImage'
-          const fileName = decodeURIComponent(pathParts[pathParts.length - 1]); // Ensure decoding
+          const bucketName = pathParts[pathParts.length - 2];
+          const fileName = decodeURIComponent(pathParts[pathParts.length - 1]);
 
           if (bucketName && fileName) {
             console.log(`Attempting delete from bucket: ${bucketName}, file: ${fileName}`);
             const { error: removeError } = await supabase.storage.from(bucketName).remove([fileName]);
             if (removeError) console.error("Error deleting old image:", removeError.message);
           } else {
-            console.warn("Could not parse bucket/filename from URL for deletion:", element.value);
+            console.warn("Could not parse bucket/filename from URL for deletion:", currentImageUrl);
           }
         } catch (error) {
-          console.error("Error parsing/deleting old image URL:", error);
+          // Catch URL parsing errors specifically
+          if (error instanceof TypeError) {
+            console.warn("Value is not a valid URL for deletion:", currentImageUrl, error);
+          } else {
+            console.error("Error processing old image URL:", error);
+          }
         }
       }
 
-      // Use a consistent naming convention, perhaps related to form/page/element ID
       const fileExt = file.name.split(".").pop();
       const newFileName = `${element.id}-${Date.now()}.${fileExt}`;
-      const bucket = "formImage"; // Your bucket name
+      const bucket = "formImage";
 
-      const { error } = await supabase.storage.from(bucket).upload(newFileName, file);
+      const { error: uploadError } = await supabase.storage.from(bucket).upload(newFileName, file);
 
-      if (error) {
-        console.error("Error uploading image:", error.message);
-        toast.error(`Image upload failed: ${error.message}`); // Add user feedback
-        return;
+      if (uploadError) {
+        throw new Error(uploadError.message); // Throw error to be caught below
       }
-      // Construct the public URL manually or use getPublicUrl
-      // Note: Using getPublicUrl is generally preferred as it handles edge cases/config changes better.
-      // const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucket}/${newFileName}`;
+
       const { data } = supabase.storage.from(bucket).getPublicUrl(newFileName);
 
       if (data?.publicUrl) {
-        updateElement(element.id, { value: data.publicUrl });
+        updateElement(element.id, { value: data.publicUrl }); // Update with the new string URL
       } else {
         console.error("Could not get public URL after upload.");
         toast.error("Image uploaded, but failed to get URL.");
       }
     } catch (error) {
-      console.error("Image upload process error:", error);
-      toast.error("An unexpected error occurred during image upload."); // User feedback
+      const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+      console.error("Image upload process error:", message, error);
+      toast.error(`Image upload failed: ${message}`);
     } finally {
       setUploading(false);
     }
@@ -124,11 +106,15 @@ export const EditableElement = ({
   };
 
   const handleDelete = async () => {
+    // --- Type Check for Image URL ---
+    const imageUrlToDelete = typeof element.value === "string" ? element.value : undefined;
+    // --- End Type Check ---
+
     // Attempt to delete the image from storage BEFORE deleting the element data
-    if (element.type === "image" && element.value) {
+    if (element.type === "image" && imageUrlToDelete) {
+      // Only if it's an image AND value is a string
       try {
-        const urlObj = new URL(element.value);
-        // Adjust path based on your bucket structure if needed
+        const urlObj = new URL(imageUrlToDelete);
         const pathParts = urlObj.pathname.split("/");
         const bucketName = pathParts[pathParts.length - 2];
         const fileName = decodeURIComponent(pathParts[pathParts.length - 1]);
@@ -137,44 +123,41 @@ export const EditableElement = ({
           console.log(`Attempting delete from bucket: ${bucketName}, file: ${fileName}`);
           const { error: removeError } = await supabase.storage.from(bucketName).remove([fileName]);
           if (removeError) console.error("Error deleting image from bucket:", removeError.message);
-          // Don't block element deletion if storage deletion fails, but log it.
         } else {
-          console.warn("Could not parse bucket/filename from URL for deletion:", element.value);
+          console.warn("Could not parse bucket/filename from URL for deletion:", imageUrlToDelete);
         }
       } catch (error) {
-        console.error("Error parsing/deleting image URL during element deletion:", error);
+        if (error instanceof TypeError) {
+          console.warn("Value is not a valid URL for deletion during delete:", imageUrlToDelete, error);
+        } else {
+          console.error("Error processing image URL during element deletion:", error);
+        }
       }
     }
-    // Proceed to delete the element from the form state
+    // Proceed to delete the element from the form state regardless of storage deletion success/failure
     deleteElement(element.id);
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    e.dataTransfer.setData("elementId", element.id); // Use specific key "elementId"
-    // Also pass pageIndex if reordering across pages is possible (currently not implemented in drop)
-    // e.dataTransfer.setData("pageIndex", String(currentPageIndex));
+    e.dataTransfer.setData("elementId", element.id);
     e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Necessary to allow dropping
+    e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const draggedId = e.dataTransfer.getData("elementId"); // Get the correct key
-    // const draggedPageIndex = parseInt(e.dataTransfer.getData("pageIndex"), 10); // If needed
-
-    // Ensure drop happens only if IDs are different and maybe on the same page
-    if (draggedId && draggedId !== element.id /* && draggedPageIndex === currentPageIndex */) {
+    const draggedId = e.dataTransfer.getData("elementId");
+    if (draggedId && draggedId !== element.id) {
       reorderElements(draggedId, element.id);
     }
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling up to parent containers
-    // Check if the currently selected element is different from this one
+    e.stopPropagation();
     if (selectedElement?.element?.id !== element.id || selectedElement?.pageIndex !== currentPageIndex) {
       setSelectedElement({ element, pageIndex: currentPageIndex });
     }
@@ -183,74 +166,59 @@ export const EditableElement = ({
   const isSelected = selectedElement?.element?.id === element.id && selectedElement?.pageIndex === currentPageIndex;
 
   return (
-    // Add the drag handlers to the outer div
     <div
       draggable
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      onClick={handleClick} // Handle selection click on the wrapper
+      onClick={handleClick}
       className={cn(
-        "mb-4 p-4 rounded-lg shadow border bg-white relative group", // Added relative and group for potential future styling
-        isSelected ? "ring-2 ring-blue-500 border-blue-500" : "border-transparent hover:border-gray-200", // Improved selection/hover indication
+        "mb-4 p-4 rounded-lg shadow border bg-white relative group",
+        isSelected ? "ring-2 ring-blue-500 border-blue-500" : "border-transparent hover:border-gray-200",
         "transition-all duration-150"
       )}>
-      {/* Motion div for potential animations (though variants aren't strictly needed if layout prop is used) */}
       <motion.div
-        layout // Enable automatic animation for layout changes (like reordering)
-        // variants={itemVariants} // You can keep variants if needed for enter/exit specifically
-        // initial="hidden"
-        // animate="visible"
-        className="flex items-start" // Keep flex layout for handle + content
-      >
-        {/* Drag Handle - Placed absolutely or flex item */}
+        layout
+        className="flex items-start">
         <div
           className="mr-3 flex-shrink-0 cursor-move text-gray-400 hover:text-gray-600 pt-1"
-          // Stop propagation to prevent handle click selecting the element
           onMouseDown={(e) => e.stopPropagation()}
           title="Drag to reorder">
           <GripVertical className="h-5 w-5" />
         </div>
 
-        {/* Element Content */}
         <div className="flex-1">
-          {/* Header: Label Input and Delete Button */}
           <div className="flex items-center justify-between mb-2">
-            {/* Consider making the title non-editable here, edit in properties panel */}
             <span className="font-medium text-sm mr-2 truncate flex-1">{element.title || "Untitled"}</span>
-            {/* Or keep Input if direct editing is desired */}
-            {/* <Input
-              value={element.title}
-              onChange={(e) => updateElement(element.id, { title: e.target.value })}
-              placeholder="Element Label"
-              className="flex-1 mr-2 text-sm font-medium border-none focus:ring-1 focus:ring-blue-300 p-1 rounded"
-              onClick={(e) => e.stopPropagation()} // Prevent selection on input click
-            /> */}
             <Button
               variant="ghost"
-              size="icon-sm" // Smaller icon button
+              size="icon"
               onClick={(e) => {
-                e.stopPropagation(); // Prevent selection
+                e.stopPropagation();
                 handleDelete();
               }}
-              className="text-red-500 hover:text-red-700 opacity-50 group-hover:opacity-100 focus:opacity-100" // Show on hover/focus
+              className="text-red-500 hover:text-red-700 opacity-50 group-hover:opacity-100 focus:opacity-100"
               title="Delete Element">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Element Type Specific Renderer */}
           <div>
             {(() => {
-              // Add more robust rendering based on type
+              // --- Render based on type, handling potential value types ---
               switch (element.type) {
                 case "text":
+                case "phone":
+                case "email":
+                case "date": // Date input value is always string
                   return (
                     <Input
-                      placeholder="Preview text input"
-                      readOnly // Make canvas inputs read-only previews
+                      type={element.type === "text" ? "text" : element.type} // Use correct type for phone, email, date
+                      placeholder={`Preview ${element.type} input`}
+                      value={typeof element.value === "string" ? element.value : ""} // Display only if string
+                      readOnly
                       className="mt-1 w-full p-2 border rounded bg-gray-50 text-sm"
-                      style={element.styles} // Apply element styles
+                      style={element.styles}
                     />
                   );
                 case "checkbox":
@@ -258,66 +226,56 @@ export const EditableElement = ({
                     <label className="flex items-center space-x-2 mt-1 text-sm">
                       <input
                         type="checkbox"
+                        checked={!!element.value} // Handle boolean value
                         disabled
                         className="h-4 w-4"
                       />
-                      <span>{element.title || "Checkbox"}</span> {/* Use title or generic */}
+                      <span>{element.title || "Checkbox"}</span>
                     </label>
                   );
-                case "date":
-                  return (
-                    <Input
-                      type="date"
-                      readOnly
-                      className="mt-1 w-full p-2 border rounded bg-gray-50 text-sm"
-                      style={element.styles}
-                    />
-                  );
                 case "rating":
+                  // Rating might store a number, but display is visual
+                  const ratingValue = typeof element.value === "number" ? element.value : 0;
                   return (
                     <div className="flex space-x-1 mt-1">
                       {Array.from({ length: 5 }).map((_, index) => (
                         <span
                           key={index}
-                          className="text-gray-300 text-xl cursor-default">
+                          className={`text-xl cursor-default ${index < ratingValue ? "text-yellow-400" : "text-gray-300"}`}>
                           ★
                         </span>
                       ))}
                     </div>
                   );
                 case "select":
+                  // Select value is typically a string
                   return (
                     <select
+                      value={typeof element.value === "string" ? element.value : ""}
                       disabled
                       className="mt-1 w-full p-2 border rounded bg-gray-50 text-sm"
                       style={element.styles}>
-                      {/* Add options if available in element data */}
-                      {(element.options || ["Option 1", "Option 2"]).map((opt, i) => (
-                        <option key={i}>{opt}</option>
+                      {/* Render placeholder if no value */}
+                      {!element.value && <option value="">Select...</option>}
+                      {(element.options || []).map((opt, i) => (
+                        <option
+                          key={i}
+                          value={opt}>
+                          {opt}
+                        </option>
                       ))}
+                      {/* Add default options if element.options is empty and no value */}
+                      {!element.options?.length && !element.value && (
+                        <>
+                          <option>Option 1</option>
+                          <option>Option 2</option>
+                        </>
+                      )}
                     </select>
                   );
-                case "phone":
-                  return (
-                    <Input
-                      type="tel"
-                      placeholder="Preview phone input"
-                      readOnly
-                      className="mt-1 w-full p-2 border rounded bg-gray-50 text-sm"
-                      style={element.styles}
-                    />
-                  );
-                case "email":
-                  return (
-                    <Input
-                      type="email"
-                      placeholder="Preview email input"
-                      readOnly
-                      className="mt-1 w-full p-2 border rounded bg-gray-50 text-sm"
-                      style={element.styles}
-                    />
-                  );
                 case "image":
+                  // --- Ensure value is a string for src ---
+                  const imageUrl = typeof element.value === "string" ? element.value : null;
                   return (
                     <div className="mt-2 space-y-2">
                       {uploading ? (
@@ -325,27 +283,28 @@ export const EditableElement = ({
                           <Loader className="animate-spin h-4 w-4" />
                           <span>Uploading...</span>
                         </div>
-                      ) : element.value ? (
+                      ) : imageUrl ? ( // Check if imageUrl is a valid string
                         <div className="relative group/image">
-                          {" "}
-                          {/* Differentiate group name */}
                           <img
-                            src={element.value}
+                            src={imageUrl} // Use the validated string URL
                             alt={element.title || "Uploaded image"}
-                            // Apply styles intelligently (width, height, object-fit?)
                             style={{ maxWidth: "100%", maxHeight: "200px", display: "block", ...element.styles }}
                             className="rounded border"
+                            // Add onError handler for broken images
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none"; /* hide broken img */
+                            }}
                           />
-                          {/* Overlay buttons for replace/delete */}
                           <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover/image:opacity-100 transition-opacity">
                             <Button
-                              size="icon-xs"
+                              size="sm"
                               variant="outline"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 triggerFileSelect();
                               }}
                               title="Replace Image">
+                              {/* Replace Icon SVG */}
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="h-3 w-3"
@@ -373,47 +332,51 @@ export const EditableElement = ({
                           Upload Image
                         </Button>
                       )}
-                      {/* Hidden file input */}
                       <input
                         ref={fileInputRef}
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
-                        onClick={(e) => e.stopPropagation()} // Prevent selection
+                        onClick={(e) => e.stopPropagation()}
                         className="hidden"
                       />
                     </div>
                   );
-                case "yesno": // Example rendering
+                case "yesno":
+                  // Yes/No might store a boolean or specific strings
+                  const yesNoValue = typeof element.value === "boolean" ? element.value : undefined; // Or check for 'yes'/'no' strings
                   return (
                     <div className="flex space-x-2 mt-1">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant={yesNoValue === true ? "default" : "outline"}
                         disabled>
                         Yes
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant={yesNoValue === false ? "default" : "outline"}
                         disabled>
                         No
                       </Button>
                     </div>
                   );
                 case "link":
+                  // Link value should be a string
+                  const linkHref = typeof element.value === "string" ? element.value : "#";
                   return (
                     <a
-                      href={element.value || "#"}
+                      href={linkHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.preventDefault()} // Prevent navigation in builder
+                      onClick={(e) => e.preventDefault()}
                       className="mt-1 text-blue-600 underline text-sm break-all"
                       style={element.styles}>
-                      {element.title || element.value || "Link"}
+                      {element.title || (typeof element.value === "string" ? element.value : "Link")}
                     </a>
                   );
                 case "button":
+                  // Button doesn't usually have a 'value' in the traditional sense
                   return (
                     <Button
                       disabled
@@ -424,7 +387,13 @@ export const EditableElement = ({
                     </Button>
                   );
                 default:
-                  return <div className="mt-1 text-xs text-red-500">(Unsupported Type: {element.type})</div>;
+                  // Attempt to display non-string values for unsupported types if needed
+                  const displayValue = element.value !== undefined && element.value !== null ? String(element.value) : "";
+                  return (
+                    <div className="mt-1 text-xs text-red-500">
+                      (Unsupported Type: {element.type}) {displayValue && `Value: ${displayValue}`}
+                    </div>
+                  );
               }
             })()}
           </div>

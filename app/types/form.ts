@@ -20,12 +20,23 @@ export interface ElementStyle {
 export interface ElementType {
   id: string;
   title: string;
-  type: string; // e.g., 'text', 'image', 'rating'
+  // --- Add options based on previous suggestions ---
+  options?: string[];
+  // --- End Add options ---
+  styles: {
+    backgroundColor?: string;
+    width?: string;
+    height?: string;
+    // --- Allow other style props ---
+    [key: string]: any;
+    // --- End Allow other style props ---
+  };
+  type: string;
   required: boolean;
-  value?: string | number | boolean | string[]; // Allow different value types
-  options?: string[]; // For select, radio, checkbox groups
-  styles: ElementStyle;
-  column?: "left" | "right"; // Example for multi-column layout
+  // --- FIX IS HERE: Make this match the FormContainer definition ---
+  value?: string | number | boolean | string[] | undefined;
+  // --- End FIX ---
+  column?: "left" | "right";
 }
 
 export interface Page {

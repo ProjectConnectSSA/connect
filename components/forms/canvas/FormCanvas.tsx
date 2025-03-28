@@ -1,145 +1,103 @@
 "use client";
 
-import { useState, useCallback } from "react"; // Removed useRef as it's now in EditableElement
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, ArrowLeft, ArrowRight } from "lucide-react"; // Removed unused icons
-// import { cn } from "@/lib/utils"; // Removed if not used directly here
-// import { motion } from "framer-motion"; // Removed if not used directly here
-// import { supabase } from "@/lib/supabaseClient"; // Removed, handled in EditableElement
+import { Plus, ArrowLeft, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { produce, enableMapSet } from "immer";
+
+// --- Import types from the central definition ---
+import type { Form, Page, ElementType } from "@/app/types/form";
 
 // --- Import the separated component ---
 import { EditableElement } from "./EditableElement";
-import { toast } from "sonner"; // Added for potential user feedback
 
-// --- Original Interfaces ---
-// NOTE: These should ideally be moved to a central types file.
-export interface Form {
-  id?: string; // Added ID based on previous suggestions
-  title: string;
-  description: string;
-  pages: Page[];
-  background?: string;
-  formType?: string;
-  styles?: {
-    width?: string;
-    height?: string;
-    columns?: number;
-  };
-  isActive?: boolean;
-  isMultiPage?: boolean;
-}
+enableMapSet(); // If you use Maps or Sets in your state
 
-export interface Page {
-  id: string;
-  title: string;
-  elements: ElementType[];
-  styles?: Record<string, any>;
-  background?: string;
-}
-
-export interface ElementType {
-  id: string;
-  title: string;
-  // Added options based on previous suggestions
-  options?: string[];
-  styles: {
-    backgroundColor?: string;
-    width?: string;
-    height?: string;
-    // Allow other style props
-    [key: string]: any;
-  };
-  type: string;
-  required: boolean;
-  value?: string | number | boolean | string[]; // Allow different value types
-  column?: "left" | "right";
-}
-// --- End Original Interfaces ---
-
-// Props for the container component
+// --- Define Prop Types using Imported Types ---
 export interface FormContainerProps {
-  // Renamed interface to match component
   form: Form;
-  setForm: (form: Form) => void;
-  selectedElement: any;
-  setSelectedElement: (element: any) => void;
+  setForm: (form: Form) => void; // Or React.Dispatch<React.SetStateAction<Form>> if using useState directly
+  selectedElement: { element: ElementType; pageIndex: number } | null; // Use imported ElementType
+  setSelectedElement: (selected: { element: ElementType; pageIndex: number } | null) => void; // Use imported ElementType
   currentPageIndex: number;
   setCurrentPageIndex: (index: number) => void;
 }
 
-// Renamed component to FormContainer as requested
+// Renamed component to FormContainer
 export function FormContainer({ form, setForm, selectedElement, setSelectedElement, currentPageIndex, setCurrentPageIndex }: FormContainerProps) {
-  const [draggedOverDropZone, setDraggedOverDropZone] = useState(false); // State for the main drop zone
+  const [draggedOverDropZone, setDraggedOverDropZone] = useState(false);
 
   // Guard against invalid currentPageIndex
   if (currentPageIndex < 0 || currentPageIndex >= form.pages.length) {
     console.error("Invalid currentPageIndex:", currentPageIndex, "Form pages:", form.pages.length);
-    // Optionally reset to 0 or show error
-    // setCurrentPageIndex(0);
+    // setCurrentPageIndex(0); // Option: Reset to first page
     return <div className="p-4 text-red-500">Error: Invalid page index detected.</div>;
   }
+  // Now safely access currentPage
   const currentPage = form.pages[currentPageIndex];
 
-  // --- Element/Page Update Functions (using Immer for safety/simplicity) ---
-  // npm install immer
-  // yarn add immer
-  // If you don't want immer, revert to the map-based updates as before.
+  // --- Element/Page Update Functions ---
   const updateElement = useCallback(
     (elementId: string, changes: Partial<ElementType>) => {
       try {
         const nextState = produce(form, (draft) => {
+          // Added checks for draft validity
+          if (!draft || !draft.pages || !draft.pages[currentPageIndex]) return;
           const page = draft.pages[currentPageIndex];
-          if (!page) return;
           const elementIndex = page.elements.findIndex((el) => el.id === elementId);
           if (elementIndex !== -1) {
-            // Merge styles carefully
             const existingStyles = page.elements[elementIndex].styles || {};
             const newStyles = { ...existingStyles, ...(changes.styles || {}) };
+            // Safely merge properties onto the draft element
             page.elements[elementIndex] = {
               ...page.elements[elementIndex],
               ...changes,
-              styles: newStyles, // Ensure styles are merged
+              styles: newStyles,
             };
           }
         });
-        setForm(nextState);
+        // Only update state if produce returned a new state
+        if (nextState !== form) {
+          setForm(nextState);
+        }
       } catch (error) {
         console.error("Failed to update element:", error);
         toast.error("Failed to update element properties.");
       }
     },
-    [currentPageIndex, form, setForm]
+    [currentPageIndex, form, setForm] // Keep dependencies
   );
 
   const deleteElement = useCallback(
     (elementId: string) => {
       try {
         const nextState = produce(form, (draft) => {
+          if (!draft || !draft.pages || !draft.pages[currentPageIndex]) return;
           const page = draft.pages[currentPageIndex];
-          if (!page) return;
           page.elements = page.elements.filter((el) => el.id !== elementId);
         });
-        setForm(nextState);
-        // Clear selection if the deleted element was selected
-        if (selectedElement?.element.id === elementId && selectedElement.pageIndex === currentPageIndex) {
-          setSelectedElement(null);
+        if (nextState !== form) {
+          setForm(nextState);
+          if (selectedElement?.element.id === elementId && selectedElement.pageIndex === currentPageIndex) {
+            setSelectedElement(null);
+          }
         }
       } catch (error) {
         console.error("Failed to delete element:", error);
         toast.error("Failed to delete element.");
       }
     },
-    [currentPageIndex, form, setForm, selectedElement, setSelectedElement] // Add dependencies
+    [currentPageIndex, form, setForm, selectedElement, setSelectedElement]
   );
 
   const reorderElements = useCallback(
     (draggedId: string, targetId: string) => {
       try {
         const nextState = produce(form, (draft) => {
+          if (!draft || !draft.pages || !draft.pages[currentPageIndex]) return;
           const page = draft.pages[currentPageIndex];
-          if (!page) return;
-
           const elements = page.elements;
           const draggedIndex = elements.findIndex((el) => el.id === draggedId);
           const targetIndex = elements.findIndex((el) => el.id === targetId);
@@ -147,12 +105,11 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
           if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) return;
 
           const [draggedItem] = elements.splice(draggedIndex, 1);
-          // Insert *before* the target element
           elements.splice(targetIndex > draggedIndex ? targetIndex - 1 : targetIndex, 0, draggedItem);
-          // If you want to insert *after*, adjust the splice index:
-          // elements.splice(targetIndex > draggedIndex ? targetIndex : targetIndex + 1, 0, draggedItem);
         });
-        setForm(nextState);
+        if (nextState !== form) {
+          setForm(nextState);
+        }
       } catch (error) {
         console.error("Failed to reorder elements:", error);
         toast.error("Failed to reorder elements.");
@@ -164,12 +121,13 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
   const updatePageTitle = (title: string) => {
     try {
       const nextState = produce(form, (draft) => {
+        if (!draft || !draft.pages || !draft.pages[currentPageIndex]) return;
         const page = draft.pages[currentPageIndex];
-        if (page) {
-          page.title = title;
-        }
+        page.title = title;
       });
-      setForm(nextState);
+      if (nextState !== form) {
+        setForm(nextState);
+      }
     } catch (error) {
       console.error("Failed to update page title:", error);
       toast.error("Failed to update page title.");
@@ -178,14 +136,16 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
 
   const addElement = useCallback(
     (element: ElementType) => {
+      // Use imported ElementType
       try {
         const nextState = produce(form, (draft) => {
+          if (!draft || !draft.pages || !draft.pages[currentPageIndex]) return;
           const page = draft.pages[currentPageIndex];
-          if (page) {
-            page.elements.push(element);
-          }
+          page.elements.push(element);
         });
-        setForm(nextState);
+        if (nextState !== form) {
+          setForm(nextState);
+        }
       } catch (error) {
         console.error("Failed to add element:", error);
         toast.error("Failed to add element.");
@@ -196,28 +156,34 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
 
   const addNewPage = () => {
     try {
+      // Store length *before* mutation for navigation
+      const nextPageIndex = form.pages.length;
       const nextState = produce(form, (draft) => {
+        if (!draft) return;
         const newPage: Page = {
-          id: Date.now().toString(), // Consider uuid for more robust IDs
+          // Use imported Page type
+          id: Date.now().toString(), // Consider uuid
           title: `Page ${draft.pages.length + 1}`,
           elements: [],
         };
         draft.pages.push(newPage);
       });
-      setForm(nextState);
-      // Optionally navigate to the new page
-      setCurrentPageIndex(form.pages.length); // Index will be length before push
-      setSelectedElement(null); // Clear selection when adding page
+      if (nextState !== form) {
+        setForm(nextState);
+        setCurrentPageIndex(nextPageIndex); // Navigate to the new page index
+        setSelectedElement(null);
+      }
     } catch (error) {
       console.error("Failed to add page:", error);
       toast.error("Failed to add new page.");
     }
   };
+
   // --- End Update Functions ---
 
   // Helper to get default styles
   const getDefaultElementStyles = (type: string): ElementType["styles"] => {
-    // Basic default styles, customize as needed
+    // Use imported ElementType
     switch (type) {
       case "text":
       case "email":
@@ -242,26 +208,25 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
     }
   };
 
-  // Drop handler for the main drop zone (adds new elements)
+  // Drop handler for the main drop zone
   const handleNewElementDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDraggedOverDropZone(false);
-    const elementType = e.dataTransfer.getData("elementType"); // Type from toolbar
-    const elementId = e.dataTransfer.getData("elementId"); // ID if dragging existing element
+    const elementType = e.dataTransfer.getData("elementType");
+    const elementId = e.dataTransfer.getData("elementId");
 
-    // Only add if it's a NEW element type from the toolbar
     if (elementType && !elementId) {
       const newElement: ElementType = {
-        id: Date.now().toString(), // Consider uuid
+        // Use imported ElementType
+        id: Date.now().toString(),
         type: elementType,
         title: `New ${elementType.charAt(0).toUpperCase() + elementType.slice(1)}`,
-        required: false, // Default required to false
+        required: false,
         styles: getDefaultElementStyles(elementType),
-        // Add default options for relevant types
         options: ["select", "radio", "checkbox"].includes(elementType) ? ["Option 1", "Option 2"] : undefined,
-        value: elementType === "link" ? "#" : "", // Default value for link
+        value: elementType === "link" ? "#" : "",
       };
-      addElement(newElement); // Use the addElement action
+      addElement(newElement);
     }
   };
 
@@ -269,18 +234,15 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
     const newIndex = currentPageIndex + direction;
     if (newIndex >= 0 && newIndex < form.pages.length) {
       setCurrentPageIndex(newIndex);
-      setSelectedElement(null); // Clear selection on page change
+      setSelectedElement(null);
     }
   };
 
-  // Clear selection when clicking canvas background
   const handleCanvasBackgroundClick = () => {
     setSelectedElement(null);
   };
 
   return (
-    // Removed outer div, adjust layout in parent component (EditFormPage)
-    // Page Navigation (conditional on multi-page)
     <>
       {form.isMultiPage && (
         <div className="bg-gray-100 border-b p-2 flex items-center justify-center gap-4 sticky top-0 z-10">
@@ -306,7 +268,7 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
           <Button
             variant="outline"
             size="sm"
-            className="ml-auto" // Push Add Page button to the right
+            className="ml-auto"
             onClick={addNewPage}
             title="Add New Page">
             <Plus className="h-4 w-4 mr-1" /> Add Page
@@ -314,18 +276,14 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
         </div>
       )}
 
-      {/* Form Canvas Area - Make it scrollable and clear selection on click */}
       <div
-        className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50" // Allow canvas content to scroll
-        style={{ background: currentPage?.background || form.background || "#f9fafb" }} // Apply page or form background
+        className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50"
+        style={{}}
         onClick={handleCanvasBackgroundClick}>
-        {/* Inner container for the form appearance */}
         <div
-          className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md border border-gray-200 min-h-[300px]" // Added min-height
-          style={{ ...form.styles, ...currentPage?.styles }} // Apply form/page styles (width, etc.)
-          onClick={(e) => e.stopPropagation()} // Prevent background click when clicking form area itself
-        >
-          {/* Page Title Input */}
+          className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md border border-gray-200 min-h-[300px]"
+          style={{ background: currentPage?.background || form.background || "#f9fafb" }}
+          onClick={(e) => e.stopPropagation()}>
           <Input
             value={currentPage?.title || ""}
             onChange={(e) => updatePageTitle(e.target.value)}
@@ -333,12 +291,8 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
             placeholder="Page Title"
           />
 
-          {/* Render Elements */}
           <div className="space-y-1">
-            {" "}
-            {/* Adjust spacing as needed */}
             {currentPage?.elements?.length === 0 ? (
-              // Placeholder when empty, also acts as part of the drop zone
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -353,10 +307,11 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
                 Drag your first element here
               </div>
             ) : (
+              // Pass props matching EditableElementProps
               currentPage?.elements?.map((el) => (
                 <EditableElement
                   key={el.id}
-                  element={el}
+                  element={el} // This 'el' is now correctly typed via imported ElementType
                   selectedElement={selectedElement}
                   updateElement={updateElement}
                   deleteElement={deleteElement}
@@ -368,7 +323,6 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
             )}
           </div>
 
-          {/* Drop Zone for adding new elements (only shown if elements exist) */}
           {currentPage?.elements?.length > 0 && (
             <div
               onDragOver={(e) => {
@@ -389,11 +343,3 @@ export function FormContainer({ form, setForm, selectedElement, setSelectedEleme
     </>
   );
 }
-
-// --- Utility or Hook for Immer (Optional but recommended) ---
-// You can place this in a separate hooks file or keep it here if simple
-import { produce, enableMapSet } from "immer";
-
-enableMapSet(); // If you use Maps or Sets in your state
-
-// --- End Immer Utility ---

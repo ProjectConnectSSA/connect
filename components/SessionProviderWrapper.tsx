@@ -1,6 +1,6 @@
 // components/SessionProviderWrapper.tsx
-'use client';
-import { SessionContextProvider } from '@supabase/auth-helpers-react';
+
+import { SessionContextProvider } from "@supabase/auth-helpers-react";
 
 interface SessionProviderWrapperProps {
   children: React.ReactNode;
@@ -8,13 +8,11 @@ interface SessionProviderWrapperProps {
   supabaseClient: any;
 }
 
-export default function SessionProviderWrapper({
-  children,
-  initialSession,
-  supabaseClient,
-}: SessionProviderWrapperProps) {
+export default function SessionProviderWrapper({ children, initialSession, supabaseClient }: SessionProviderWrapperProps) {
   return (
-    <SessionContextProvider supabaseClient={supabaseClient} initialSession={initialSession}>
+    <SessionContextProvider
+      supabaseClient={supabaseClient}
+      initialSession={initialSession}>
       {children}
     </SessionContextProvider>
   );
