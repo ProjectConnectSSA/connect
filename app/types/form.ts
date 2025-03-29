@@ -20,22 +20,11 @@ export interface ElementStyle {
 export interface ElementType {
   id: string;
   title: string;
-  // --- Add options based on previous suggestions ---
   options?: string[];
-  // --- End Add options ---
-  styles: {
-    backgroundColor?: string;
-    width?: string;
-    height?: string;
-    // --- Allow other style props ---
-    [key: string]: any;
-    // --- End Allow other style props ---
-  };
+  styles?: Record<string, any>; // Allow various styles
   type: string;
   required: boolean;
-  // --- FIX IS HERE: Make this match the FormContainer definition ---
   value?: string | number | boolean | string[] | undefined;
-  // --- End FIX ---
   column?: "left" | "right";
 }
 
@@ -55,11 +44,7 @@ export interface Form {
   pages: Page[];
   conditions?: Condition[];
   background?: string;
-  styles?: {
-    width?: string;
-    height?: string;
-    columns?: number;
-  };
+  styles?: Record<string, any>;
   isActive?: boolean;
   isMultiPage?: boolean;
 }

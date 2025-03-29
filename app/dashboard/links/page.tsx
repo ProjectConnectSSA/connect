@@ -183,7 +183,7 @@ export default function BioPagesDashboard() {
     router.push(`/dashboard/links/edit/${page.slug}`);
   }
   const handleViewPage = (page: BioPageListItem) => {
-    const url = page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/p/${page.slug}`;
+    const url = page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/dashboard/links/view/${page.slug}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 

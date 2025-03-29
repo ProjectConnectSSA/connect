@@ -1,7 +1,7 @@
 // src/app/forms/[id]/edit/page.tsx (or your actual path)
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -46,8 +46,9 @@ const DEFAULT_NEW_FORM: Form = {
   isActive: false,
 };
 
-export default function EditFormPage({ params }: EditFormPageProps) {
-  const { id } = params;
+export default function EditFormPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const { id } = resolvedParams;
   const router = useRouter();
 
   // --- State Variables ---
@@ -237,13 +238,20 @@ export default function EditFormPage({ params }: EditFormPageProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    // Main container takes full screen height
+    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
+      {" "}
+      {/* Prevent body scroll */}
       <Tabs
         value={activeMode}
         onValueChange={setActiveMode}
-        className="flex flex-col flex-1">
-        {/* Header */}
-        <div className="flex items-center justify-between w-full bg-white shadow-md border-b p-2 sticky top-0 z-20">
+        // Use flex layout to make Tabs fill remaining space
+        className="flex flex-col flex-1 overflow-hidden">
+        {" "}
+        {/* Prevent Tabs scroll */}
+        {/* Header (Fixed Height) */}
+        <div className="flex items-center justify-between w-full bg-white shadow-md border-b p-2 sticky top-0 z-20 flex-shrink-0">
+          {/* ... header content ... */}
           <span
             className="text-sm font-medium text-gray-700 hidden md:block truncate max-w-[200px] pl-2"
             title={form.title}>
@@ -271,13 +279,15 @@ export default function EditFormPage({ params }: EditFormPageProps) {
             </Button>
           </div>
         </div>
-
-        {/* Tab Content Area */}
+        {/* Tab Content Area (Takes remaining space and handles its own scroll) */}
+        {/* Use flex-1 to make this div take remaining vertical space */}
+        {/* Use overflow-hidden to contain child overflows */}
         <div className="flex-1 overflow-hidden">
           {/* Design Tab */}
+          {/* Ensure h-full is applied and children manage their own overflow */}
           <TabsContent
             value="design"
-            className="h-full p-0 m-0">
+            className="h-full p-0 m-0 outline-none focus:ring-0">
             <div className="flex h-full gap-4 p-4 overflow-hidden">
               {/* Toolbar */}
               <div className="w-60 flex-shrink-0 bg-white shadow-lg rounded-lg border overflow-y-auto">
@@ -296,23 +306,25 @@ export default function EditFormPage({ params }: EditFormPageProps) {
               </div>
               {/* Properties Panel */}
               <div className="w-80 flex-shrink-0 bg-white shadow-lg rounded-lg border overflow-hidden flex flex-col">
+                {/* ... Properties Panel Tabs ... */}
                 <div className="flex border-b flex-shrink-0">
                   <Button
                     variant={rightTab === "editor" ? "secondary" : "ghost"}
-                    onClick={() => setRightTab("editor")}
-                    className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500"
-                    data-state={rightTab === "editor" ? "active" : "inactive"}>
-                    Properties
+                    onClick={() => setRightTab("editor")} /* ... */
+                  >
+                    {" "}
+                    Properties{" "}
                   </Button>
                   <Button
                     variant={rightTab === "style" ? "secondary" : "ghost"}
-                    onClick={() => setRightTab("style")}
-                    className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500"
-                    data-state={rightTab === "style" ? "active" : "inactive"}>
-                    Style
+                    onClick={() => setRightTab("style")} /* ... */
+                  >
+                    {" "}
+                    Style{" "}
                   </Button>
                 </div>
-                <div className="p-4 flex-1 overflow-y-auto">
+                {/* Make content area scrollable */}
+                <div className="flex-1 overflow-y-auto p-4">
                   {rightTab === "editor" && (
                     <FormEditor
                       form={form}
@@ -330,46 +342,55 @@ export default function EditFormPage({ params }: EditFormPageProps) {
                       selectedElement={selectedElement}
                     />
                   )}
-                  {!selectedElement && (
-                    <div className="text-center text-gray-500 mt-10 text-sm px-2">
-                      {rightTab === "editor"
-                        ? "Select an element to edit its properties, or configure global form settings."
-                        : "Select an element to edit its styles, or configure global form/page styles."}
-                    </div>
-                  )}
+                  {!selectedElement && <div /* ...placeholder... */ />}
                 </div>
               </div>
             </div>
           </TabsContent>
 
-          {/* Other Tabs (Preview, Condition, Publish) - Remain the same */}
+          {/* Preview Tab */}
+          {/* Apply h-full and overflow-auto to the direct child div */}
           <TabsContent
             value="preview"
-            className="h-full p-0 m-0">
-            <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-200 flex justify-center">
-              <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full p-6 border">
-                <h2 className="text-xl font-semibold mb-6 text-center">Form Preview</h2>
+            className="h-full p-0 m-0 outline-none focus:ring-0">
+            {/* This div takes full height and scrolls its content */}
+            <div className="h-full overflow-y-auto bg-gray-200 p-4 md:p-8 flex justify-center">
+              {/* Max-width container for the preview itself */}
+              <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl border">
+                {/* Let PreviewForm manage its internal structure */}
                 <PreviewForm form={form} />
               </div>
             </div>
           </TabsContent>
+
+          {/* Condition Tab */}
+          {/* Apply h-full and overflow-auto to the direct child div */}
           <TabsContent
             value="condition"
-            className="h-full p-0 m-0">
-            <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-200">
-              <div className="bg-white rounded-lg shadow-lg max-w-4xl mx-auto p-6 border">
-                <h2 className="text-xl font-semibold mb-4">Logic & Conditions</h2>
+            className="h-full p-0 m-0 outline-none focus:ring-0">
+            {/* This div takes full height and scrolls its content */}
+            <div className="h-full overflow-y-auto bg-gray-200 p-4 md:p-8">
+              {/* Centered max-width container */}
+              <div className="bg-white rounded-lg shadow-lg max-w-5xl mx-auto p-6 border">
+                {/* Let ConditionTabs/ConditionFlow manage internal structure */}
+                {/* Choose one: */}
                 <ConditionTabs
                   form={form}
                   setForm={setForm}
                 />
+                {/* <ConditionFlow form={form} setForm={setForm} /> */}
               </div>
             </div>
           </TabsContent>
+
+          {/* Publish Tab */}
+          {/* Apply h-full and overflow-auto to the direct child div */}
           <TabsContent
             value="publish"
-            className="h-full p-0 m-0">
-            <div className="p-4 md:p-8 h-full overflow-y-auto bg-gray-200">
+            className="h-full p-0 m-0 outline-none focus:ring-0">
+            {/* This div takes full height and scrolls its content */}
+            <div className="h-full overflow-y-auto bg-gray-200 p-4 md:p-8">
+              {/* Centered max-width container */}
               <div className="bg-white rounded-lg shadow-lg max-w-2xl mx-auto p-6 border">
                 <h2 className="text-xl font-semibold mb-4">Publish & Share</h2>
                 {formId ? (

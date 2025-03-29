@@ -1,251 +1,270 @@
+// src/components/forms/form-styles.tsx (Adjust path if needed)
 "use client";
 
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
+import { produce } from "immer";
+
+// --- Import Central Types ---
+// Make sure this path points to your actual types file
+import type { Form, Page, ElementType } from "@/app/types/form";
 
 interface FormStylesProps {
   form: Form;
-  setForm: (form: Form) => void;
+  setForm: (updatedForm: Form) => void; // Or React.Dispatch<React.SetStateAction<Form>>
   currentPageIndex: number;
-  selectedElement: SelectedElement | null;
+  // SelectedElement type defined inline for clarity, or import if defined elsewhere
+  selectedElement: { element: ElementType; pageIndex: number } | null;
 }
 
-interface Form {
-  title: string;
-  description: string;
-  pages: Pages[];
-}
-
-interface Pages {
-  id: string;
-  title: string;
-  elements: Elements[];
-  styles?: Record<string, any>;
-  background?: string;
-}
-
-interface Elements {
-  id: string;
-  title: string;
-  styles: {
-    backgroundColor?: string;
-    width?: string;
-    height?: string;
-    opacity?: number;
+// --- Helper to Update Form State using Immer ---
+const useUpdateForm = (form: Form, setForm: (updatedForm: Form) => void) => {
+  const updateForm = (updater: (draft: Form) => void) => {
+    try {
+      const nextState = produce(form, updater);
+      if (nextState !== form) {
+        // Only update if Immer produced a new state
+        setForm(nextState);
+      }
+    } catch (e) {
+      console.error("Failed to update form style state:", e);
+      toast.error("An error occurred while applying styles.");
+    }
   };
-  type: string;
-  required: boolean;
-}
-
-interface SelectedElement {
-  element: Elements;
-  pageIndex: number;
-}
+  return updateForm;
+};
 
 export function FormStyles({ form, setForm, currentPageIndex, selectedElement }: FormStylesProps) {
-  // If an element on the current page is selected, we'll update that element.
-  const isElementSelected = selectedElement && selectedElement.pageIndex === currentPageIndex;
-  const currentPage = form.pages[currentPageIndex];
+  const updateForm = useUpdateForm(form, setForm);
 
-  const colorPalette = {
+  // Determine the target for styling
+  const elementToEdit = selectedElement?.element;
+  const elementPageIndex = selectedElement?.pageIndex;
+  // Style the element only if it's selected AND on the currently viewed page in the editor
+  const styleTarget: "element" | "page" = elementToEdit && elementPageIndex === currentPageIndex ? "element" : "page";
+  const targetPage = form.pages[currentPageIndex]; // Page being viewed in editor
+
+  if (!targetPage) {
+    return <div className="p-4 text-sm text-red-500">Error: Current page data not found.</div>;
+  }
+
+  // --- Consolidated Style Update Handler ---
+  const handleStyleChange = (property: keyof React.CSSProperties | string, value: string | number | undefined) => {
+    let finalValue = value;
+    if (property === "opacity" && typeof value === "number") {
+      finalValue = value / 100; // Convert opacity percentage to decimal
+    }
+    if ((property === "width" || property === "height") && value !== "" && value !== undefined && !isNaN(Number(value))) {
+      finalValue = `${value}px`; // Add 'px' suffix
+    }
+
+    updateForm((draft) => {
+      if (styleTarget === "element" && elementToEdit) {
+        const pageDraft = draft.pages[elementPageIndex!];
+        if (!pageDraft) return;
+        const elementIndex = pageDraft.elements.findIndex((el) => el.id === elementToEdit.id);
+        if (elementIndex !== -1) {
+          const elDraft = pageDraft.elements[elementIndex];
+          if (!elDraft.styles) elDraft.styles = {};
+          (elDraft.styles as any)[property] = finalValue;
+        }
+      } else {
+        // Update page styles
+        const pageDraft = draft.pages[currentPageIndex];
+        if (!pageDraft.styles) pageDraft.styles = {};
+        if (property === "backgroundColor") {
+          // Page background is top-level property
+          pageDraft.background = typeof finalValue === "string" ? finalValue : undefined;
+          // Optionally clear page style background if setting page background directly
+          // if (pageDraft.styles?.backgroundColor) delete pageDraft.styles.backgroundColor;
+        } else {
+          // Other page styles go in 'styles' object
+          (pageDraft.styles as any)[property] = finalValue;
+          // If setting page opacity, maybe clear page background color? Depends on desired behavior
+          // if (property === 'opacity' && pageDraft.background) {
+          //    pageDraft.background = undefined; // Example: Prefer styles.backgroundColor if opacity is set
+          // }
+        }
+      }
+    });
+  };
+
+  // --- Derive Controlled Values from State ---
+  const targetStyles = styleTarget === "element" ? elementToEdit?.styles : targetPage?.styles;
+  const targetBackground = styleTarget === "element" ? elementToEdit?.styles?.backgroundColor : targetPage?.background;
+
+  // Width/Height only applicable to elements in this setup
+  const currentWidth = styleTarget === "element" ? parseInt(elementToEdit?.styles?.width?.replace("px", "") || "0") || "" : "";
+  const currentHeight = styleTarget === "element" ? parseInt(elementToEdit?.styles?.height?.replace("px", "") || "0") || "" : "";
+
+  // Opacity (get from target, convert to 0-100 for slider/input)
+  const currentOpacityValue = targetStyles?.opacity ?? 1; // Default to 1 (100%) if undefined
+  const currentOpacityPercent = Math.round(currentOpacityValue * 100);
+
+  // Background Color
+  const currentBgColor = targetBackground || "#ffffff"; // Default to white
+
+  // --- Color Palettes (Explicitly Typed) ---
+  const colorPalette: Record<string, string[]> = {
     primary: ["#FF0000", "#FF6A00", "#FFD700", "#00BF5F", "#0099FF", "#172554", "#000000"],
     neutral: ["#F5F5F5", "#E5E5E5", "#D4D4D4", "#A3A3A3", "#737373", "#404040", "#171717"],
     accent: ["#FF69B4", "#9747FF", "#00C7B0", "#FF5630", "#36B37E", "#00B8D9", "#6554C0"],
   };
 
-  // Update background color (for element if selected; otherwise, for page background)
-  const updateBackgroundColor = (color: string) => {
-    if (isElementSelected && selectedElement) {
-      const updatedPages = [...form.pages];
-      const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
-      if (elementIndex !== -1) {
-        const element = updatedPages[currentPageIndex].elements[elementIndex];
-        updatedPages[currentPageIndex].elements[elementIndex] = {
-          ...element,
-          styles: {
-            ...element.styles,
-            backgroundColor: color,
-          },
-        };
-        setForm({ ...form, pages: updatedPages });
-      }
-    } else {
-      const updatedPages = [...form.pages];
-      updatedPages[currentPageIndex] = {
-        ...updatedPages[currentPageIndex],
-        background: color,
-      };
-      setForm({ ...form, pages: updatedPages });
-    }
-  };
-
-  // Update width for selected element.
-  const updateWidth = (width: string) => {
-    if (isElementSelected && selectedElement) {
-      const updatedPages = [...form.pages];
-      const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
-      if (elementIndex !== -1) {
-        const element = updatedPages[currentPageIndex].elements[elementIndex];
-        updatedPages[currentPageIndex].elements[elementIndex] = {
-          ...element,
-          styles: {
-            ...element.styles,
-            width: width ? width + "px" : "",
-          },
-        };
-        setForm({ ...form, pages: updatedPages });
-      }
-    }
-  };
-
-  // Update height for selected element.
-  const updateHeight = (height: string) => {
-    if (isElementSelected && selectedElement) {
-      const updatedPages = [...form.pages];
-      const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
-      if (elementIndex !== -1) {
-        const element = updatedPages[currentPageIndex].elements[elementIndex];
-        updatedPages[currentPageIndex].elements[elementIndex] = {
-          ...element,
-          styles: {
-            ...element.styles,
-            height: height ? height + "px" : "",
-          },
-        };
-        setForm({ ...form, pages: updatedPages });
-      }
-    }
-  };
-
-  // Update opacity for selected element or page.
-  const updateOpacity = (opacity: string) => {
-    const opacityValue = parseFloat(opacity) / 100;
-    if (isElementSelected && selectedElement) {
-      const updatedPages = [...form.pages];
-      const elementIndex = updatedPages[currentPageIndex].elements.findIndex((el) => el.id === selectedElement.element.id);
-      if (elementIndex !== -1) {
-        const element = updatedPages[currentPageIndex].elements[elementIndex];
-        updatedPages[currentPageIndex].elements[elementIndex] = {
-          ...element,
-          styles: {
-            ...element.styles,
-            opacity: opacityValue,
-          },
-        };
-        setForm({ ...form, pages: updatedPages });
-      }
-    } else {
-      // For page opacity, we store it in the page styles.
-      const updatedPages = [...form.pages];
-      updatedPages[currentPageIndex] = {
-        ...updatedPages[currentPageIndex],
-        styles: {
-          ...(updatedPages[currentPageIndex].styles || {}),
-          opacity: opacityValue,
-        },
-      };
-      setForm({ ...form, pages: updatedPages });
-    }
-  };
-
-  // Derive controlled values from the form state
-  const currentWidth = isElementSelected && selectedElement?.element.styles.width ? selectedElement.element.styles.width.replace("px", "") : "";
-  const currentHeight = isElementSelected && selectedElement?.element.styles.height ? selectedElement.element.styles.height.replace("px", "") : "";
-  const currentOpacity = isElementSelected
-    ? selectedElement.element.styles.opacity !== undefined
-      ? Math.round(selectedElement.element.styles.opacity * 100)
-      : 100
-    : currentPage.styles && currentPage.styles.opacity !== undefined
-    ? Math.round(currentPage.styles.opacity * 100)
-    : 100;
-
-  const currentBgColor = isElementSelected ? selectedElement?.element.styles.backgroundColor || "#ffffff" : currentPage.background || "#ffffff";
-
   return (
-    <Card className="border-dotted border-blue-500">
-      <CardContent className="space-y-6 pt-6">
-        <div className="mb-4">
-          <Label className="text-lg font-bold">{isElementSelected ? "Element Attributes" : "Page Attributes"}</Label>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {isElementSelected && (
-            <>
-              <div className="space-y-2">
-                <Label>Width (px)</Label>
-                <Input
-                  type="number"
-                  min={200}
-                  max={800}
-                  className="border-black"
-                  value={currentWidth}
-                  onChange={(e) => updateWidth(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Height (px)</Label>
-                <Input
-                  type="number"
-                  min={40}
-                  max={400}
-                  className="border-black"
-                  value={currentHeight}
-                  onChange={(e) => updateHeight(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-        </div>
-
+    <div className="space-y-6 p-1">
+      {" "}
+      {/* Added padding */}
+      {/* --- Title --- */}
+      <div className="pb-2 border-b">
+        <Label className="text-base font-semibold">
+          {styleTarget === "element" ? `Element Styles (${elementToEdit?.title || "Untitled"})` : `Page Styles (Page ${currentPageIndex + 1})`}
+        </Label>
+        <p className="text-xs text-muted-foreground">
+          {styleTarget === "element" ? "Modify appearance of the selected element." : "Modify appearance of the current page."}
+        </p>
+      </div>
+      {/* --- Dimensions (Element Only) --- */}
+      {styleTarget === "element" && (
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="background-color">{isElementSelected ? "Element Background Color" : "Page Background Color"}</Label>
+          <h4 className="text-sm font-medium text-muted-foreground">Dimensions</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="style-width"
+                className="text-xs">
+                Width (px)
+              </Label>
+              <Input
+                id="style-width"
+                type="number"
+                min={10}
+                placeholder="auto"
+                className="h-9 text-sm"
+                value={currentWidth}
+                onChange={(e) => handleStyleChange("width", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="style-height"
+                className="text-xs">
+                Height (px)
+              </Label>
+              <Input
+                id="style-height"
+                type="number"
+                min={10}
+                placeholder="auto"
+                className="h-9 text-sm"
+                value={currentHeight}
+                onChange={(e) => handleStyleChange("height", e.target.value)}
+              />
+            </div>
+          </div>
+          <Separator />
+        </div>
+      )}
+      {/* --- Background Color --- */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-muted-foreground">Background Color</h4>
+        <div className="flex items-center gap-4">
+          <div className="space-y-1.5 flex-1">
+            <Label
+              htmlFor="background-color"
+              className="text-xs">
+              Custom Color
+            </Label>
             <Input
               type="color"
               id="background-color"
               value={currentBgColor}
-              onChange={(e) => updateBackgroundColor(e.target.value)}
+              onChange={(e) => handleStyleChange("backgroundColor", e.target.value)}
+              className="h-9 w-full p-1 cursor-pointer" // Added cursor-pointer
             />
           </div>
-        </div>
-        <Separator className="my-4" />
-        <div className="space-y-4">
-          <Label className="text-base">Background Color Palette</Label>
-          <div className="space-y-4">
-            {Object.entries(colorPalette).map(([group, colors]) => (
-              <div
-                key={group}
-                className="space-y-2">
-                <Label className="text-xs capitalize text-muted-foreground">{group}</Label>
-                <div className="grid grid-cols-7 gap-2">
-                  {colors.map((color) => (
-                    <button
-                      key={color}
-                      className="w-8 h-8 rounded-lg border border-gray-300 shadow-sm transition-all duration-200 hover:scale-110 hover:shadow-lg"
-                      style={{ background: color }}
-                      onClick={() => updateBackgroundColor(color)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="pt-5">
+            {" "}
+            {/* Align preview box */}
+            <div
+              className="w-8 h-8 rounded border border-gray-300"
+              style={{ backgroundColor: currentBgColor }}></div>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-base">Opacity (%)</Label>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            className="border-black"
-            value={currentOpacity}
-            onChange={(e) => updateOpacity(e.target.value)}
-          />
+        {/* Palette */}
+        <div className="space-y-2 pt-2">
+          <Label className="text-xs text-muted-foreground block mb-1">Color Palette</Label>
+          {Object.entries(colorPalette).map(
+            (
+              [group, colors] // Type inference works now
+            ) => (
+              <div
+                key={group}
+                className="space-y-1">
+                <Label className="text-[10px] capitalize text-muted-foreground">{group}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {colors.map(
+                    (
+                      color // colors is string[]
+                    ) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-6 h-6 rounded-full border border-gray-300 shadow-sm transition-transform duration-100 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
+                          currentBgColor === color ? "ring-2 ring-offset-1 ring-blue-600" : ""
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => handleStyleChange("backgroundColor", color)}
+                        title={color}
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+            )
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <Separator />
+      {/* --- Opacity --- */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <Label
+            htmlFor="style-opacity"
+            className="text-sm font-medium text-muted-foreground">
+            Opacity
+          </Label>
+          <span className="text-xs text-muted-foreground">{currentOpacityPercent}%</span>
+        </div>
+        <Slider
+          id="style-opacity"
+          min={0}
+          max={100}
+          step={1}
+          value={[currentOpacityPercent]} // Slider expects an array value
+          onValueChange={(value) => handleStyleChange("opacity", value[0])} // Pass the single number value
+          className="w-full"
+        />
+      </div>
+      {/* --- Add more style properties here as needed --- */}
+      {/* Example: Padding (Element Only) */}
+      {/* {styleTarget === 'element' && (
+         <>
+            <Separator />
+            <div className="space-y-3">
+                <h4 className="text-sm font-medium text-muted-foreground">Padding</h4>
+                 <div className="grid grid-cols-4 gap-2">
+                     // Add inputs for Top, Right, Bottom, Left padding
+                 </div>
+            </div>
+         </>
+       )} */}
+    </div>
   );
 }
