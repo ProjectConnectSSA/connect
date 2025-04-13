@@ -6,8 +6,8 @@ import { useParams } from "next/navigation"; // Use params hook
 import { Toaster, toast } from "sonner";
 import { createClient } from "@supabase/supabase-js";
 // Adjust component import paths if they are nested differently under /components
-import LinkEditor from "@/components/links/link-editor";
-import LinkPreview from "@/components/links/link-preview";
+import LinkEditor from "@/components/links/link-element";
+import LinkCanvas from "@/components/links/link-canvas";
 import LinkStyle from "@/components/links/link-styles";
 import Navbar from "@/components/links/navbar";
 // Adjust type import path if it's nested differently under /app
@@ -315,7 +315,7 @@ export default function EditPage() {
         </div>
 
         {/* Center Column: Preview */}
-        <LinkPreview
+        <LinkCanvas
           elements={pageData.elements}
           styles={pageData.styles}
           onDrop={handleDrop}

@@ -9,13 +9,13 @@ import { toast, Toaster } from "sonner"; // Added toast
 import { PageData, BioElement, StyleProps, defaultStyles } from "@/app/types/links/types"; // Adjust path
 
 // Import necessary rendering components (ProfileElement, etc.)
-import ProfileElement from "@/components/links/preview/ProfileElement"; // Adjust path
-import SocialsElement from "@/components/links/preview/SocialsElement"; // Adjust path
-import LinkElement from "@/components/links/preview/LinkElement"; // Adjust path
-import CardElement from "@/components/links/preview/CardElement"; // Adjust path
-import ButtonElement from "@/components/links/preview/ButtonElement"; // Adjust path
-import HeaderElement from "@/components/links/preview/HeaderElement"; // Adjust path
-import ImageElement from "@/components/links/preview/ImageElement"; // Adjust path
+import ProfileElement from "@/components/links/canvas-element/ProfileElement"; // Adjust path
+import SocialsElement from "@/components/links/canvas-element/SocialsElement"; // Adjust path
+import LinkElement from "@/components/links/canvas-element/LinkElement"; // Adjust path
+import CardElement from "@/components/links/canvas-element/CardElement"; // Adjust path
+import ButtonElement from "@/components/links/canvas-element/ButtonElement"; // Adjust path
+import HeaderElement from "@/components/links/canvas-element/HeaderElement"; // Adjust path
+import ImageElement from "@/components/links/canvas-element/ImageElement"; // Adjust path
 
 // Import Dashboard specific UI if needed
 import DashboardSidebar from "@/components/dashboard/sidebar"; // Adjust path

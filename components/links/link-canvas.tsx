@@ -6,13 +6,13 @@ import { BioElement, StyleProps } from "@/app/types/links/types";
 import { Smartphone, Monitor } from "lucide-react";
 
 // Import the element components
-import ProfileElement from "./preview/ProfileElement";
-import SocialsElement from "./preview/SocialsElement";
-import LinkElement from "./preview/LinkElement";
-import CardElement from "./preview/CardElement"; // Import CardElement
-import ButtonElement from "./preview/ButtonElement"; // Import ButtonElement
-import HeaderElement from "./preview/HeaderElement"; // Import HeaderElement
-import ImageElement from "./preview/ImageElement"; // Import ImageElement
+import ProfileElement from "./canvas-element/ProfileElement";
+import SocialsElement from "./canvas-element/SocialsElement";
+import LinkElement from "./canvas-element/LinkElement";
+import CardElement from "./canvas-element/CardElement"; // Import CardElement
+import ButtonElement from "./canvas-element/ButtonElement"; // Import ButtonElement
+import HeaderElement from "./canvas-element/HeaderElement"; // Import HeaderElement
+import ImageElement from "./canvas-element/ImageElement"; // Import ImageElement
 
 interface LinkPreviewProps {
   elements: BioElement[];
@@ -23,7 +23,7 @@ interface LinkPreviewProps {
   // Add deleteElement prop later if needed
 }
 
-export default function LinkPreview({ elements, onDrop, onDragOver, styles, updateElement }: LinkPreviewProps) {
+export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updateElement }: LinkPreviewProps) {
   const [previewMode, setPreviewMode] = useState<"mobile" | "desktop">("mobile");
 
   // Apply styles using CSS variables for easier cascading
