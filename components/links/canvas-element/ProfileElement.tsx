@@ -31,9 +31,10 @@ interface ProfileElementProps {
   element: BioElement;
   styles: StyleProps;
   updateElement: (id: string, updatedData: Partial<BioElement>) => void;
+  deleteElement: (id: string) => void;
 }
 
-export default function ProfileElement({ element, styles, updateElement }: ProfileElementProps) {
+export default function ProfileElement({ element, styles, updateElement, deleteElement }: ProfileElementProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState(element.name || "");
@@ -57,6 +58,10 @@ export default function ProfileElement({ element, styles, updateElement }: Profi
     }
   };
 
+  const handleDelete = () => {
+    deleteElement(element.id);
+  };
+
   const handleSave = () => {
     updateElement(element.id, { name: name, bioText: bio });
     setIsEditing(false);
@@ -66,10 +71,7 @@ export default function ProfileElement({ element, styles, updateElement }: Profi
 
   return (
     <div className="flex flex-col items-center mb-6 text-center relative group">
-      <button
-        onClick={() => setIsEditing(!isEditing)}
-        className="absolute top-0 right-0 p-1 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
-        aria-label="Edit Profile">
+      <button onClick={() => setIsEditing(!isEditing)} className="absolute top-0 right-0 p-1 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Edit Profile">
         <Edit2 size={16} />
       </button>
 
@@ -83,35 +85,16 @@ export default function ProfileElement({ element, styles, updateElement }: Profi
             style={{ borderColor: styles.buttonColor }} // Use button color for border?
           />
         ) : (
-          <div
-            className={`w-24 h-24 bg-gray-300 flex items-center justify-center border-2 border-gray-300 ${
-              radiusClass === "rounded-full" ? "rounded-full" : radiusClass
-            }`}
-            style={{ borderColor: styles.buttonColor }}>
-            <User
-              size={40}
-              className="text-gray-500"
-            />
+          <div className={`w-24 h-24 bg-gray-300 flex items-center justify-center border-2 border-gray-300 ${radiusClass === "rounded-full" ? "rounded-full" : radiusClass}`} style={{ borderColor: styles.buttonColor }}>
+            <User size={40} className="text-gray-500" />
           </div>
         )}
         {isEditing && (
           <div className="absolute bottom-0 right-0">
-            <label
-              htmlFor={`avatar-upload-${element.id}`}
-              className="cursor-pointer bg-white rounded-full p-1 shadow border">
-              <Edit2
-                size={14}
-                className="text-gray-600"
-              />
+            <label htmlFor={`avatar-upload-${element.id}`} className="cursor-pointer bg-white rounded-full p-1 shadow border">
+              <Edit2 size={14} className="text-gray-600" />
             </label>
-            <input
-              id={`avatar-upload-${element.id}`}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              disabled={uploading}
-              className="hidden"
-            />
+            <input id={`avatar-upload-${element.id}`} type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} className="hidden" />
             {uploading && <span className="text-xs">Uploading...</span>}
           </div>
         )}
@@ -120,38 +103,18 @@ export default function ProfileElement({ element, styles, updateElement }: Profi
       {/* Name and Bio */}
       {isEditing ? (
         <div className="w-full max-w-xs flex flex-col items-center space-y-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your Name"
-            className="text-center text-xl font-semibold p-1 border rounded w-full"
-            style={{ color: styles.textColor }}
-          />
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="Your Bio"
-            className="text-center text-sm p-1 border rounded w-full resize-none"
-            rows={2}
-            style={{ color: styles.textColor }}
-          />
-          <button
-            onClick={handleSave}
-            className="px-3 py-1 bg-blue-500 text-white rounded text-sm">
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" className="text-center text-xl font-semibold p-1 border rounded w-full" style={{ color: styles.textColor }} />
+          <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Your Bio" className="text-center text-sm p-1 border rounded w-full resize-none" rows={2} style={{ color: styles.textColor }} />
+          <button onClick={handleSave} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">
             Save
           </button>
         </div>
       ) : (
         <>
-          <h1
-            className="text-xl font-semibold"
-            style={{ color: styles.textColor }}>
+          <h1 className="text-xl font-semibold" style={{ color: styles.textColor }}>
             {element.name || "Your Name"}
           </h1>
-          <p
-            className="text-sm mt-1"
-            style={{ color: styles.textColor }}>
+          <p className="text-sm mt-1" style={{ color: styles.textColor }}>
             {element.bioText || "Your bio goes here. Click edit to change."}
           </p>
         </>

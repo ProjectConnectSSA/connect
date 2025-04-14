@@ -34,18 +34,7 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
         "--text-color": styles.textColor,
         "--button-color": styles.buttonColor,
         "--button-text-color": styles.buttonTextColor,
-        "--border-radius-val":
-          styles.borderRadius === "none"
-            ? "0px"
-            : styles.borderRadius === "sm"
-            ? "0.125rem"
-            : styles.borderRadius === "md"
-            ? "0.375rem"
-            : styles.borderRadius === "lg"
-            ? "0.5rem"
-            : styles.borderRadius === "full"
-            ? "9999px"
-            : "0.375rem", // Default md
+        "--border-radius-val": styles.borderRadius === "none" ? "0px" : styles.borderRadius === "sm" ? "0.125rem" : styles.borderRadius === "md" ? "0.375rem" : styles.borderRadius === "lg" ? "0.5rem" : styles.borderRadius === "full" ? "9999px" : "0.375rem", // Default md
         fontFamily: styles.fontFamily,
       } as React.CSSProperties & { "--border-radius-val": string }),
     [styles]
@@ -59,74 +48,22 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
   const renderElement = (elem: BioElement) => {
     switch (elem.type) {
       case "profile":
-        return (
-          <ProfileElement
-            key={elem.id}
-            element={elem}
-            styles={styles}
-            updateElement={updateElement}
-          />
-        );
+        return <ProfileElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "socials":
-        return (
-          <SocialsElement
-            key={elem.id}
-            element={elem}
-            styles={styles}
-            updateElement={updateElement}
-          />
-        );
+        return <SocialsElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "link":
-        return (
-          <LinkElement
-            key={elem.id}
-            element={elem}
-            styles={styles}
-            updateElement={updateElement}
-            deleteElement={deleteElement}
-          />
-        );
+        return <LinkElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "card":
-        return (
-          <CardElement
-            key={elem.id}
-            element={elem}
-            styles={styles}
-            updateElement={updateElement}
-          />
-        );
+        return <CardElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "button":
-        return (
-          <ButtonElement
-            key={elem.id}
-            element={elem}
-            styles={styles}
-            updateElement={updateElement}
-          />
-        );
+        return <ButtonElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "header":
-        return (
-          <HeaderElement
-            key={elem.id}
-            element={elem}
-            styles={styles}
-            updateElement={updateElement}
-          />
-        );
+        return <HeaderElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "image":
-        return (
-          <ImageElement
-            key={elem.id}
-            element={elem}
-            styles={styles}
-            updateElement={updateElement}
-          />
-        );
+        return <ImageElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       default:
         return (
-          <div
-            key={elem.id}
-            className={`p-4 my-3 shadow border bg-gray-100 border-gray-300 rounded-${styles.borderRadius === "none" ? "none" : styles.borderRadius}`}>
+          <div key={elem.id} className={`p-4 my-3 shadow border bg-gray-100 border-gray-300 rounded-${styles.borderRadius === "none" ? "none" : styles.borderRadius}`}>
             Unknown Element Type: {elem.type}
           </div>
         );
@@ -172,22 +109,16 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
     <div className="flex-1 p-4 flex flex-col items-center bg-gray-100 overflow-hidden">
       {/* Preview Mode Toggle */}
       <div className="mb-4 flex justify-center space-x-2 flex-shrink-0">
-        <button
-          onClick={() => setPreviewMode("mobile")}
-          className={`p-2 rounded ${previewMode === "mobile" ? "bg-blue-500 text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}>
+        <button onClick={() => setPreviewMode("mobile")} className={`p-2 rounded ${previewMode === "mobile" ? "bg-blue-500 text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}>
           <Smartphone size={20} />
         </button>
-        <button
-          onClick={() => setPreviewMode("desktop")}
-          className={`p-2 rounded ${previewMode === "desktop" ? "bg-blue-500 text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}>
+        <button onClick={() => setPreviewMode("desktop")} className={`p-2 rounded ${previewMode === "desktop" ? "bg-blue-500 text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}>
           <Monitor size={20} />
         </button>
       </div>
       {/* Preview Container */}
       <div
-        className={`overflow-y-auto overflow-x-hidden border border-gray-300 shadow-lg transition-all duration-300 ease-in-out ${
-          previewMode === "mobile" ? "w-full max-w-[375px] h-[75vh]" : "w-full max-w-3xl h-[75vh]"
-        } rounded-lg`}
+        className={`overflow-y-auto overflow-x-hidden border border-gray-300 shadow-lg transition-all duration-300 ease-in-out ${previewMode === "mobile" ? "w-full max-w-[375px] h-[75vh]" : "w-full max-w-3xl h-[75vh]"} rounded-lg`}
         style={{
           ...dynamicStyles,
           backgroundImage: styles.backgroundImage ? `url(${styles.backgroundImage})` : "none",
@@ -197,12 +128,11 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
           borderRadius: dynamicStyles["--border-radius-val"],
         }}
         onDrop={onDrop}
-        onDragOver={onDragOver}>
+        onDragOver={onDragOver}
+      >
         <div className="p-4 md:p-6">
           {elements.length === 0 ? (
-            <p
-              className="text-center py-20"
-              style={{ color: styles.textColor, opacity: 0.7 }}>
+            <p className="text-center py-20" style={{ color: styles.textColor, opacity: 0.7 }}>
               Drop elements here to build your page.
             </p>
           ) : (
@@ -213,17 +143,13 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
               if (isDouble) {
                 return (
                   // Render double column cards in a flex container
-                  <div
-                    key={`group-${groupIndex}`}
-                    className="flex flex-wrap gap-4 mb-3">
+                  <div key={`group-${groupIndex}`} className="flex flex-wrap gap-4 mb-3">
                     {group}
                   </div>
                 );
               } else {
                 // Render single column elements sequentially
-                return group.map((el, elIndex) => (
-                  <React.Fragment key={(el as React.ReactElement)?.key || `el-${groupIndex}-${elIndex}`}>{el}</React.Fragment>
-                ));
+                return group.map((el, elIndex) => <React.Fragment key={(el as React.ReactElement)?.key || `el-${groupIndex}-${elIndex}`}>{el}</React.Fragment>);
               }
             })
           )}
