@@ -19,9 +19,7 @@ export default function LinkElement({ element, styles, updateElement, deleteElem
   };
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this link?")) {
-      deleteElement(element.id);
-    }
+    deleteElement(element.id);
   };
 
   const radiusClass = `rounded-${styles.borderRadius === "none" ? "none" : styles.borderRadius}`;

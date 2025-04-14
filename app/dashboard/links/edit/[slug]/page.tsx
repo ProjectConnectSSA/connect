@@ -114,6 +114,12 @@ export default function EditPage() {
     []
   );
 
+  const handleDeleteElement = useCallback(
+    /* ... */ (id: string) => {
+      setPageData((prev) => ({ ...prev, elements: prev.elements.filter((el) => el.id !== id) }));
+    },
+    []
+  );
   const handleChangeStyle = useCallback(
     /* ... */ (newStyles: Partial<StyleProps>) => {
       setPageData((prev) => ({ ...prev, styles: { ...prev.styles, ...newStyles } }));
@@ -321,6 +327,7 @@ export default function EditPage() {
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           updateElement={handleUpdateElement}
+          deleteElement={handleDeleteElement}
         />
 
         {/* Right Column: Style & Settings Tabs */}
