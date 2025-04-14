@@ -1,15 +1,9 @@
 import React, { useState } from "react";
 import { BioElement, StyleProps } from "@/app/types/links/types";
-import { Share2, Edit2, Plus, Trash2, Facebook, Twitter, Instagram, Linkedin, Youtube, Twitch, Github, Mail } from "lucide-react"; // Add more icons as needed
+import { Share2, Edit2, Plus, Trash2, Facebook, Twitter, Instagram, Linkedin, Youtube, Twitch, Github, Mail } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
 
-interface SocialsElementProps {
-  element: BioElement;
-  styles: StyleProps;
-  updateElement: (id: string, updatedData: Partial<BioElement>) => void;
-  deleteElement: (id: string) => void;
-}
-
-// Map platform names to icons (you can expand this)
+// Map platform names to icons (expand as needed)
 const platformIcons: Record<string, React.ReactNode> = {
   facebook: <Facebook size={24} />,
   twitter: <Twitter size={24} />,
@@ -22,8 +16,14 @@ const platformIcons: Record<string, React.ReactNode> = {
   default: <Share2 size={24} />,
 };
 
+interface SocialsElementProps {
+  element: BioElement;
+  styles: StyleProps;
+  updateElement: (id: string, updatedData: Partial<BioElement>) => void;
+  deleteElement: (id: string) => void;
+}
+
 export default function SocialsElement({ element, styles, updateElement, deleteElement }: SocialsElementProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [socialLinks, setSocialLinks] = useState(element.socialLinks || []);
 
   const handleAddLink = () => {
@@ -42,7 +42,10 @@ export default function SocialsElement({ element, styles, updateElement, deleteE
 
   const handleSave = () => {
     updateElement(element.id, { socialLinks });
-    setIsEditing(false);
+  };
+
+  const handleDelete = () => {
+    deleteElement(element.id);
   };
 
   const getIcon = (platform: string) => {
@@ -50,63 +53,112 @@ export default function SocialsElement({ element, styles, updateElement, deleteE
     return platformIcons[lowerPlatform] || platformIcons.default;
   };
 
-  const handleDelete = () => {
-    deleteElement(element.id);
-  };
-
   return (
     <div className="my-6 relative group">
-      <button onClick={() => setIsEditing(!isEditing)} className="absolute top-0 right-0 p-1 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Edit Socials">
-        <Edit2 size={16} />
-      </button>
-
       <div className="flex justify-center space-x-4">
-        {(element.socialLinks || []).map((link, index) => (
-          <a
-            key={index}
-            href={link.url || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:opacity-75 transition-opacity"
-            style={{ color: styles.textColor }} // Icons inherit text color
-            aria-label={link.platform}
-          >
-            {getIcon(link.platform)}
-          </a>
-        ))}
-        {(element.socialLinks || []).length === 0 && !isEditing && <p className="text-sm text-gray-500">Add social links</p>}
+        {socialLinks.length > 0 ? (
+          socialLinks.map((link, index) => (
+            <a
+              key={index}
+              href={link.url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-75 transition-opacity"
+              style={{ color: styles.textColor }}
+              aria-label={link.platform}>
+              {getIcon(link.platform)}
+            </a>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500">Add social links</p>
+        )}
       </div>
-
-      {isEditing && (
-        <div className="mt-4 p-3 border rounded bg-gray-100 space-y-3">
-          <h4 className="text-sm font-medium">Edit Social Links</h4>
-          {socialLinks.map((link, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <select value={link.platform} onChange={(e) => handleUpdateLink(index, "platform", e.target.value)} className="p-1 border rounded text-sm bg-white w-24">
-                {/* Add more platform options */}
-                {Object.keys(platformIcons)
-                  .filter((k) => k !== "default")
-                  .map((p) => (
-                    <option key={p} value={p} className="capitalize">
-                      {p}
-                    </option>
-                  ))}
-                <option value="other">Other</option>
-              </select>
-              <input type="url" value={link.url} onChange={(e) => handleUpdateLink(index, "url", e.target.value)} placeholder="https://..." className="flex-grow p-1 border rounded text-sm" />
-              <button onClick={() => handleRemoveLink(index)} className="text-red-500 hover:text-red-700">
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
-          <button onClick={handleAddLink} className="flex items-center text-sm text-blue-600 hover:underline">
-            <Plus size={16} className="mr-1" /> Add Link
-          </button>
-          <button onClick={handleSave} className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-sm">
-            Save Links
-          </button>
-        </div>
-      )}
+      {/* Hover controls: Edit and Delete buttons */}
+      <div className="absolute top-0 right-0 flex space-x-2 opacity-0 group-hover:opacity-100 transition z-10">
+        <Dialog.Root>
+          <Dialog.Trigger asChild>
+            <button
+              className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
+              aria-label="Edit Socials">
+              <Edit2 size={16} />
+            </button>
+          </Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+            <Dialog.Content className="fixed top-1/2 left-1/2 max-w-md w-full p-6 bg-white rounded shadow-lg transform -translate-x-1/2 -translate-y-1/2">
+              <Dialog.Title className="text-xl font-semibold mb-4">Edit Social Links</Dialog.Title>
+              <div className="space-y-4">
+                {socialLinks.map((link, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center space-x-2">
+                    <select
+                      value={link.platform}
+                      onChange={(e) => handleUpdateLink(index, "platform", e.target.value)}
+                      className="p-1 border rounded text-sm bg-white w-24">
+                      {Object.keys(platformIcons)
+                        .filter((k) => k !== "default")
+                        .map((p) => (
+                          <option
+                            key={p}
+                            value={p}
+                            className="capitalize">
+                            {p}
+                          </option>
+                        ))}
+                      <option value="other">Other</option>
+                    </select>
+                    <input
+                      type="url"
+                      value={link.url}
+                      onChange={(e) => handleUpdateLink(index, "url", e.target.value)}
+                      placeholder="https://..."
+                      className="flex-grow p-1 border rounded text-sm"
+                    />
+                    <button
+                      onClick={() => handleRemoveLink(index)}
+                      className="text-red-500 hover:text-red-700">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={handleAddLink}
+                  className="flex items-center text-sm text-blue-600 hover:underline">
+                  <Plus
+                    size={16}
+                    className="mr-1"
+                  />{" "}
+                  Add Link
+                </button>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <Dialog.Close asChild>
+                  <button
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                    aria-label="Cancel">
+                    Cancel
+                  </button>
+                </Dialog.Close>
+                <Dialog.Close asChild>
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                    aria-label="Save">
+                    Save Links
+                  </button>
+                </Dialog.Close>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+        <button
+          onClick={handleDelete}
+          className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+          aria-label="Delete Socials">
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 }

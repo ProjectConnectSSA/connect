@@ -63,12 +63,6 @@ export default function LinkEditor({ onDragStart }: LinkEditorProps) {
         onDragStart={onDragStart}
       />
       <ElementItem
-        type="button"
-        label="Button"
-        icon={<MousePointer size={20} />}
-        onDragStart={onDragStart}
-      />
-      <ElementItem
         type="header"
         label="Header Text"
         icon={<Heading1 size={20} />}
