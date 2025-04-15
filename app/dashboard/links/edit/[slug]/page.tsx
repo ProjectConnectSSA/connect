@@ -162,16 +162,7 @@ export default function EditPage() {
           id: crypto.randomUUID(),
           type: elementType,
           order: prev.elements.length,
-          title:
-            elementType === "header"
-              ? "New Header"
-              : elementType === "link"
-              ? "Link Title"
-              : elementType === "button"
-              ? "Button Text"
-              : elementType === "card"
-              ? "Card Title"
-              : undefined,
+          title: elementType === "header" ? "New Header" : elementType === "link" ? "Link Title" : elementType === "button" ? "Button Text" : elementType === "card" ? "Card Title" : undefined,
           name: elementType === "profile" ? "Your Name" : undefined,
           bioText: elementType === "profile" ? "Your Bio" : undefined,
           socialLinks: elementType === "socials" ? [] : undefined,
@@ -219,7 +210,7 @@ export default function EditPage() {
     try {
       // --- !!! CHANGE TABLE NAME HERE !!! ---
       const { data, error } = await supabase
-        .from("bio_pages") // Use "bio_pages" table
+        .from("link_forms") // Use "bio_pages" table
         .upsert(dataToSave, { onConflict: "slug" })
         .select()
         .single();
@@ -229,10 +220,7 @@ export default function EditPage() {
         // --- !!! CHECK CONSTRAINT NAME HERE !!! ---
         if (error.message.includes('duplicate key value violates unique constraint "bio_pages_custom_domain_key"')) {
           toast.error("Save failed: Custom domain is already in use by another page.");
-        } else if (
-          error.message.includes('duplicate key value violates unique constraint "bio_pages_slug_key"') ||
-          error.message.includes('duplicate key value violates unique constraint "bio_pages_pkey"')
-        ) {
+        } else if (error.message.includes('duplicate key value violates unique constraint "bio_pages_slug_key"') || error.message.includes('duplicate key value violates unique constraint "bio_pages_pkey"')) {
           // This might happen if the slug changed to one that already exists AND the original ID wasn't passed correctly for update
           toast.error("Save failed: This Page Slug might already be taken.");
         } else {
@@ -265,36 +253,19 @@ export default function EditPage() {
         <label className="block text-sm font-medium mb-1 text-gray-700">Page Slug (URL Path)</label>
         <div className="flex items-center">
           <span className="text-sm text-gray-500 mr-1">your-app.com/p/</span> {/* Updated prefix */}
-          <input
-            type="text"
-            value={pageData.slug}
-            onChange={(e) => handleSlugChange(e.target.value)}
-            className="flex-grow p-2 border rounded text-sm"
-            placeholder="your-unique-slug"
-            disabled={isSaving || isLoading}
-          />
+          <input type="text" value={pageData.slug} onChange={(e) => handleSlugChange(e.target.value)} className="flex-grow p-2 border rounded text-sm" placeholder="your-unique-slug" disabled={isSaving || isLoading} />
         </div>
         <p className="text-xs text-gray-500 mt-1">Unique identifier. Use letters, numbers, hyphens.</p>
       </div>
       {/* Custom Domain Input */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1 text-gray-700">Custom Domain (Optional)</label>
-        <input
-          type="text"
-          placeholder="yourdomain.com"
-          value={pageData.customDomain || ""}
-          onChange={(e) => handleCustomDomainChange(e.target.value)}
-          className="w-full p-2 border rounded text-sm"
-          disabled={isSaving || isLoading}
-        />
+        <input type="text" placeholder="yourdomain.com" value={pageData.customDomain || ""} onChange={(e) => handleCustomDomainChange(e.target.value)} className="w-full p-2 border rounded text-sm" disabled={isSaving || isLoading} />
         <p className="text-xs text-gray-500 mt-1">Point CNAME/A record to our server.</p>
         <p className="text-xs text-blue-600 mt-1">Local test: Edit hosts file (`127.0.0.1 mytest.local`) & enter `mytest.local`.</p>
       </div>
       {/* Save Button in Settings */}
-      <button
-        onClick={handleSave}
-        disabled={isSaving || isLoading}
-        className="w-full mt-6 inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
+      <button onClick={handleSave} disabled={isSaving || isLoading} className="w-full mt-6 inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
         {isSaving ? "Saving..." : "Save Page Settings"}
       </button>
     </div>
@@ -309,62 +280,35 @@ export default function EditPage() {
   // --- Render Editor ---
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      <Navbar
-        onSave={handleSave}
-        isSaving={isSaving}
-        pageSlug={pageData.slug}
-      />
+      <Navbar onSave={handleSave} isSaving={isSaving} pageSlug={pageData.slug} />
       <div className="flex flex-1 overflow-hidden">
         {/* Left Column: Elements */}
         <div className="w-64 flex-shrink-0 border-r bg-white shadow-sm h-full overflow-y-auto">
           <LinkEditor onDragStart={handleDragStart} />
         </div>
 
-        {/* Center Column: Preview */}
-        <LinkCanvas
-          elements={pageData.elements}
-          styles={pageData.styles}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          updateElement={handleUpdateElement}
-          deleteElement={handleDeleteElement}
-        />
+        {/* Center Column: Preview (updated LinkCanvas with reorder functionality) */}
+        <LinkCanvas elements={pageData.elements} styles={pageData.styles} onDrop={handleDrop} onDragOver={handleDragOver} updateElement={handleUpdateElement} deleteElement={handleDeleteElement} onReorderElements={(newOrder) => setPageData((prev) => ({ ...prev, elements: newOrder }))} />
 
         {/* Right Column: Style & Settings Tabs */}
         <div className="w-72 flex-shrink-0 border-l bg-white shadow-sm flex flex-col h-full">
           {/* Tab Navigation */}
           <div className="flex border-b flex-shrink-0">
-            <button
-              onClick={() => setRightPanelTab("style")}
-              className={`flex-1 p-3 text-sm font-medium text-center flex items-center justify-center gap-2 ${
-                rightPanelTab === "style" ? "bg-gray-50 text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-100"
-              }`}>
+            <button onClick={() => setRightPanelTab("style")} className={`flex-1 p-3 text-sm font-medium text-center flex items-center justify-center gap-2 ${rightPanelTab === "style" ? "bg-gray-50 text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-100"}`}>
               <Palette size={16} /> Style
             </button>
-            <button
-              onClick={() => setRightPanelTab("settings")}
-              className={`flex-1 p-3 text-sm font-medium text-center flex items-center justify-center gap-2 ${
-                rightPanelTab === "settings" ? "bg-gray-50 text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-100"
-              }`}>
+            <button onClick={() => setRightPanelTab("settings")} className={`flex-1 p-3 text-sm font-medium text-center flex items-center justify-center gap-2 ${rightPanelTab === "settings" ? "bg-gray-50 text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-100"}`}>
               <Settings size={16} /> Settings
             </button>
           </div>
           {/* Tab Content Area */}
           <div className="flex-1 overflow-y-auto">
-            {rightPanelTab === "style" && (
-              <LinkStyle
-                styles={pageData.styles}
-                onChangeStyle={handleChangeStyle}
-              />
-            )}
+            {rightPanelTab === "style" && <LinkStyle styles={pageData.styles} onChangeStyle={handleChangeStyle} />}
             {rightPanelTab === "settings" && <SettingsContent />}
           </div>
         </div>
       </div>
-      <Toaster
-        richColors
-        position="bottom-right"
-      />
+      <Toaster richColors position="bottom-right" />
     </div>
   );
 }

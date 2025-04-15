@@ -14,12 +14,12 @@ async function uploadImage(file: File): Promise<string> {
   const fileExt = file.name.split(".").pop();
   const fileName = `${Date.now()}.${fileExt}`;
   const filePath = `${fileName}`;
-  const { data, error } = await supabase.storage.from("avatars").upload(filePath, file);
+  const { data, error } = await supabase.storage.from("linkimage").upload(filePath, file);
   if (error) {
     console.error("Upload error", error);
     throw error;
   }
-  const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(data.path);
+  const { data: publicUrlData } = supabase.storage.from("linkimage").getPublicUrl(data.path);
   if (!publicUrlData) {
     console.error("Failed to get public URL for path:", data.path);
     throw new Error("Failed to get public URL");
@@ -76,9 +76,7 @@ export default function ProfileElement({ element, styles, updateElement, deleteE
       <div className="absolute top-0 right-0 flex space-x-2 opacity-0 group-hover:opacity-100 transition z-10">
         <Dialog.Root>
           <Dialog.Trigger asChild>
-            <button
-              className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
-              aria-label="Edit Profile">
+            <button className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition" aria-label="Edit Profile">
               <Edit2 size={16} />
             </button>
           </Dialog.Trigger>
@@ -92,90 +90,43 @@ export default function ProfileElement({ element, styles, updateElement, deleteE
                   <label className="block text-sm font-medium text-gray-700 mb-1">Avatar</label>
                   <div className="w-24 h-24">
                     {editedAvatarUrl ? (
-                      <img
-                        src={editedAvatarUrl}
-                        alt="Avatar"
-                        className={`w-24 h-24 object-cover border-2 ${radiusClass}`}
-                        style={{ borderColor: styles.buttonColor }}
-                      />
+                      <img src={editedAvatarUrl} alt="Avatar" className={`w-24 h-24 object-cover border-2 ${radiusClass}`} style={{ borderColor: styles.buttonColor }} />
                     ) : (
-                      <div
-                        className={`w-24 h-24 bg-gray-300 flex items-center justify-center border-2 ${radiusClass}`}
-                        style={{ borderColor: styles.buttonColor }}>
-                        <User
-                          size={40}
-                          className="text-gray-500"
-                        />
+                      <div className={`w-24 h-24 bg-gray-300 flex items-center justify-center border-2 ${radiusClass}`} style={{ borderColor: styles.buttonColor }}>
+                        <User size={40} className="text-gray-500" />
                       </div>
                     )}
                   </div>
                   {/* Upload button positioned below the avatar preview */}
-                  <button
-                    onClick={() => document.getElementById(`avatar-upload-${element.id}`)?.click()}
-                    className="mt-2 flex items-center px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">
-                    <Upload
-                      size={16}
-                      className="mr-1 text-gray-600"
-                    />
+                  <button onClick={() => document.getElementById(`avatar-upload-${element.id}`)?.click()} className="mt-2 flex items-center px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">
+                    <Upload size={16} className="mr-1 text-gray-600" />
                     <span className="text-sm text-gray-700">Upload</span>
                   </button>
-                  <input
-                    id={`avatar-upload-${element.id}`}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    disabled={uploading}
-                    className="hidden"
-                  />
+                  <input id={`avatar-upload-${element.id}`} type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} className="hidden" />
                 </div>
                 {/* Name Section */}
                 <div className="w-full">
-                  <label
-                    htmlFor={`profile-name-${element.id}`}
-                    className="block text-sm font-medium text-gray-700">
+                  <label htmlFor={`profile-name-${element.id}`} className="block text-sm font-medium text-gray-700">
                     Name
                   </label>
-                  <input
-                    id={`profile-name-${element.id}`}
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    placeholder="Your Name"
-                    className="text-center text-xl font-semibold p-2 border rounded w-full"
-                    style={{ color: styles.textColor }}
-                  />
+                  <input id={`profile-name-${element.id}`} type="text" value={editedName} onChange={(e) => setEditedName(e.target.value)} placeholder="Your Name" className="text-center text-xl font-semibold p-2 border rounded w-full" style={{ color: styles.textColor }} />
                 </div>
                 {/* Bio Section */}
                 <div className="w-full">
-                  <label
-                    htmlFor={`profile-bio-${element.id}`}
-                    className="block text-sm font-medium text-gray-700">
+                  <label htmlFor={`profile-bio-${element.id}`} className="block text-sm font-medium text-gray-700">
                     Bio
                   </label>
-                  <textarea
-                    id={`profile-bio-${element.id}`}
-                    value={editedBio}
-                    onChange={(e) => setEditedBio(e.target.value)}
-                    placeholder="Your Bio"
-                    className="text-center text-sm p-2 border rounded w-full resize-none"
-                    rows={3}
-                    style={{ color: styles.textColor }}
-                  />
+                  <textarea id={`profile-bio-${element.id}`} value={editedBio} onChange={(e) => setEditedBio(e.target.value)} placeholder="Your Bio" className="text-center text-sm p-2 border rounded w-full resize-none" rows={3} style={{ color: styles.textColor }} />
                 </div>
               </div>
               <div className="mt-6 flex justify-end space-x-3">
                 <Dialog.Close asChild>
-                  <button
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                    aria-label="Cancel">
+                  <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition" aria-label="Cancel">
                     Cancel
                   </button>
                 </Dialog.Close>
                 <Dialog.Close asChild>
-                  <button
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                    aria-label="Save">
+                  <button onClick={handleSave} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition" aria-label="Save">
                     Save
                   </button>
                 </Dialog.Close>
@@ -183,10 +134,7 @@ export default function ProfileElement({ element, styles, updateElement, deleteE
             </Dialog.Content>
           </Dialog.Portal>
         </Dialog.Root>
-        <button
-          onClick={handleDelete}
-          className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-          aria-label="Delete Profile">
+        <button onClick={handleDelete} className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition" aria-label="Delete Profile">
           <Trash2 size={16} />
         </button>
       </div>
@@ -194,33 +142,17 @@ export default function ProfileElement({ element, styles, updateElement, deleteE
       {/* Profile Preview */}
       <div className="mb-3">
         {element.avatarUrl ? (
-          <img
-            src={element.avatarUrl}
-            alt="Avatar"
-            className={`w-24 h-24 object-cover border-2 ${radiusClass === "rounded-full" ? "rounded-full" : radiusClass}`}
-            style={{ borderColor: styles.buttonColor }}
-          />
+          <img src={element.avatarUrl} alt="Avatar" className={`w-24 h-24 object-cover border-2 ${radiusClass === "rounded-full" ? "rounded-full" : radiusClass}`} style={{ borderColor: styles.buttonColor }} />
         ) : (
-          <div
-            className={`w-24 h-24 bg-gray-300 flex items-center justify-center border-2 ${
-              radiusClass === "rounded-full" ? "rounded-full" : radiusClass
-            }`}
-            style={{ borderColor: styles.buttonColor }}>
-            <User
-              size={40}
-              className="text-gray-500"
-            />
+          <div className={`w-24 h-24 bg-gray-300 flex items-center justify-center border-2 ${radiusClass === "rounded-full" ? "rounded-full" : radiusClass}`} style={{ borderColor: styles.buttonColor }}>
+            <User size={40} className="text-gray-500" />
           </div>
         )}
       </div>
-      <h1
-        className="text-xl font-semibold"
-        style={{ color: styles.textColor }}>
+      <h1 className="text-xl font-semibold" style={{ color: styles.textColor }}>
         {element.name || "Your Name"}
       </h1>
-      <p
-        className="text-sm mt-1"
-        style={{ color: styles.textColor }}>
+      <p className="text-sm mt-1" style={{ color: styles.textColor }}>
         {element.bioText || "Your bio goes here. Click edit to change."}
       </p>
     </div>
