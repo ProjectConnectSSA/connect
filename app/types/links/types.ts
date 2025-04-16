@@ -1,12 +1,5 @@
 // src/types.ts (Create this file)
-export type BioElementType =
-  | "profile"
-  | "socials"
-  | "link"
-  | "card"
-  | "button"
-  | "header" // Added for simple text headers
-  | "image"; // Added for simple image display
+export type BioElementType = "profile" | "socials" | "link" | "card" | "button" | "header" | "image" | "calendly" | "shopify";
 
 export interface BioElement {
   id: string;

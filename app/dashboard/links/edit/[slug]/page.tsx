@@ -195,35 +195,6 @@ export default function EditPage() {
     }
   };
 
-  // --- Settings Content (Keep as is) ---
-  const SettingsContent = () => (
-    <div className="p-4">
-      {" "}
-      {/* Add padding inside the scrollable area */}
-      <h2 className="text-lg font-semibold mb-4 text-gray-800">Page Settings</h2>
-      {/* Slug Input */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1 text-gray-700">Page Slug (URL Path)</label>
-        <div className="flex items-center">
-          <span className="text-sm text-gray-500 mr-1">your-app.com/p/</span> {/* Updated prefix */}
-          <input type="text" value={pageData.slug} onChange={(e) => handleSlugChange(e.target.value)} className="flex-grow p-2 border rounded text-sm" placeholder="your-unique-slug" disabled={isSaving || isLoading} />
-        </div>
-        <p className="text-xs text-gray-500 mt-1">Unique identifier. Use letters, numbers, hyphens.</p>
-      </div>
-      {/* Custom Domain Input */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1 text-gray-700">Custom Domain (Optional)</label>
-        <input type="text" placeholder="yourdomain.com" value={pageData.customDomain || ""} onChange={(e) => handleCustomDomainChange(e.target.value)} className="w-full p-2 border rounded text-sm" disabled={isSaving || isLoading} />
-        <p className="text-xs text-gray-500 mt-1">Point CNAME/A record to our server.</p>
-        <p className="text-xs text-blue-600 mt-1">Local test: Edit hosts file (`127.0.0.1 mytest.local`) & enter `mytest.local`.</p>
-      </div>
-      {/* Save Button in Settings */}
-      <button onClick={handleSave} disabled={isSaving || isLoading} className="w-full mt-6 inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
-        {isSaving ? "Saving..." : "Save Page Settings"}
-      </button>
-    </div>
-  );
-
   // --- Loading Indicator ---
   // Use isLoading state directly for clarity
   if (isLoading) {

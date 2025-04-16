@@ -10,9 +10,10 @@ import ProfileElement from "./canvas-element/ProfileElement";
 import SocialsElement from "./canvas-element/SocialsElement";
 import LinkElement from "./canvas-element/LinkElement";
 import CardElement from "./canvas-element/CardElement";
-
+import CalendlyElement from "./canvas-element/CalendlyElement";
 import HeaderElement from "./canvas-element/HeaderElement";
 import ImageElement from "./canvas-element/ImageElement";
+import ShopifyElement from "./canvas-element/ShopifyElement";
 
 interface LinkPreviewProps {
   elements: BioElement[];
@@ -77,6 +78,11 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
         return <HeaderElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "image":
         return <ImageElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
+      case "calendly":
+        return <CalendlyElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
+      case "shopify":
+        return <ShopifyElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
+
       default:
         return (
           <div key={elem.id} className={`p-4 my-3 shadow border bg-gray-100 border-gray-300 rounded-${styles.borderRadius === "none" ? "none" : styles.borderRadius}`}>
