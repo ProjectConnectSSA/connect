@@ -1,5 +1,5 @@
 // src/types.ts (Create this file)
-export type BioElementType = "profile" | "socials" | "link" | "card" | "button" | "header" | "image" | "calendly" | "shopify";
+export type BioElementType = "profile" | "socials" | "link" | "card" | "button" | "header" | "image" | "calendly" | "shopify" | "countdown";
 
 export interface BioElement {
   id: string;
@@ -17,6 +17,7 @@ export interface BioElement {
   socialLinks?: { platform: string; url: string }[];
   // Card Specific
   description?: string;
+  targetDate?: string;
   layout?: "single" | "double"; // For card layout
   // Style overrides? (Optional, can get complex)
   // style?: Partial<StyleProps>;

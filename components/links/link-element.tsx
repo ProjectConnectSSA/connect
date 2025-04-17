@@ -7,7 +7,8 @@ import {
   User,
   Share2,
   Heading1,
-  Image as ImageIcon, // Alias because Image is a common name
+  Image as ImageIcon,
+  Clock, // Alias because Image is a common name
 } from "lucide-react";
 import { BioElementType } from "@/app/types/links/types"; // Adjust path if needed
 
@@ -51,6 +52,12 @@ export default function LinkEditor({ onDragStart }: LinkEditorProps) {
         type="shopify"
         label="Shopify Product"
         icon={<CreditCard size={20} />} // or use any ecommerce icon
+        onDragStart={onDragStart}
+      />
+      <ElementItem
+        type="countdown"
+        label="Countdown Timer"
+        icon={<Clock size={20} />} // import Clock from lucide-react
         onDragStart={onDragStart}
       />
       {/* Add more elements here */}

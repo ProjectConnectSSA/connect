@@ -14,7 +14,7 @@ import CalendlyElement from "./canvas-element/CalendlyElement";
 import HeaderElement from "./canvas-element/HeaderElement";
 import ImageElement from "./canvas-element/ImageElement";
 import ShopifyElement from "./canvas-element/ShopifyElement";
-
+import CountdownElement from "./canvas-element/CountdownTimerElement";
 interface LinkPreviewProps {
   elements: BioElement[];
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -82,7 +82,8 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
         return <CalendlyElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       case "shopify":
         return <ShopifyElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
-
+      case "countdown":
+        return <CountdownElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} />;
       default:
         return (
           <div key={elem.id} className={`p-4 my-3 shadow border bg-gray-100 border-gray-300 rounded-${styles.borderRadius === "none" ? "none" : styles.borderRadius}`}>
