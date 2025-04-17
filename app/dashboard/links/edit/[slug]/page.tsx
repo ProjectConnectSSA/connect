@@ -7,8 +7,8 @@ import { createClient } from "@supabase/supabase-js";
 import LinkEditor from "@/components/links/link-element";
 import LinkCanvas from "@/components/links/link-canvas";
 import LinkStyle from "@/components/links/link-styles";
+import LinkSettings from "@/components/links/link-settings";
 import Navbar from "@/components/links/navbar";
-import LinkSettings from "@/components/links/link-settings"; // New import
 import { BioElement, BioElementType, PageData, StyleProps, defaultStyles } from "@/app/types/links/types";
 import { Palette, Settings } from "lucide-react";
 
@@ -26,6 +26,7 @@ export default function EditPage() {
     elements: [],
     styles: defaultStyles,
     customDomain: null,
+    active: true,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -33,56 +34,39 @@ export default function EditPage() {
 
   // --- Data Fetching ---
   useEffect(() => {
-    if (!pageSlug || pageSlug === "new" || pageSlug === "new-bio-page") {
-      console.log("Detected new page creation for slug:", pageSlug);
+    if (!pageSlug || ["new", "new-bio-page"].includes(pageSlug)) {
       setPageData((prev) => ({
         ...prev,
-        slug: pageSlug && pageSlug !== "new" && pageSlug !== "new-bio-page" ? pageSlug : "new-page",
+        slug: pageSlug && !["new", "new-bio-page"].includes(pageSlug) ? pageSlug : "new-page",
         elements: [],
         styles: defaultStyles,
         customDomain: null,
+        active: true,
       }));
       setIsLoading(false);
-      if (pageSlug === "new" || pageSlug === "new-bio-page" || !pageSlug) {
-        toast.info("Creating a new page. Please set a unique slug in Settings.");
-      }
+      toast.info("Creating a new page. Please set a unique slug in Settings.");
       return;
     }
 
     const fetchPageData = async () => {
       setIsLoading(true);
-      console.log(`Fetching data for slug: ${pageSlug}`);
       const { data, error } = await supabase.from("link_forms").select("*").eq("slug", pageSlug).single();
+
       if (error && error.code !== "PGRST116") {
-        console.error("Error fetching page data:", error);
+        console.error(error);
         toast.error(`Error loading page: ${error.message}`);
-        setPageData((prev) => ({
-          ...prev,
-          slug: pageSlug,
-          elements: [],
-          styles: defaultStyles,
-          customDomain: null,
-        }));
       } else if (data) {
-        console.log("Data fetched:", data);
         setPageData({
           id: data.id,
           slug: data.slug,
           elements: Array.isArray(data.elements) ? data.elements : [],
-          styles: typeof data.styles === "object" && data.styles !== null ? { ...defaultStyles, ...data.styles } : defaultStyles,
+          styles: { ...defaultStyles, ...data.styles },
           customDomain: data.custom_domain,
+          active: data.active,
         });
         toast.success("Page data loaded.");
       } else {
-        console.log("No existing data found for slug, initializing editor.");
         toast.info("No saved data found for this slug. Starting fresh.");
-        setPageData((prev) => ({
-          ...prev,
-          slug: pageSlug,
-          elements: [],
-          styles: defaultStyles,
-          customDomain: null,
-        }));
       }
       setIsLoading(false);
     };
@@ -90,14 +74,21 @@ export default function EditPage() {
     fetchPageData();
   }, [pageSlug]);
 
-  // --- State Update Handlers ---
+  // --- State Handlers ---
   const handleUpdateElement = useCallback((id: string, updatedData: Partial<BioElement>) => {
-    setPageData((prev) => ({ ...prev, elements: prev.elements.map((el) => (el.id === id ? { ...el, ...updatedData } : el)) }));
+    setPageData((prev) => ({
+      ...prev,
+      elements: prev.elements.map((el) => (el.id === id ? { ...el, ...updatedData } : el)),
+    }));
   }, []);
 
   const handleDeleteElement = useCallback((id: string) => {
-    setPageData((prev) => ({ ...prev, elements: prev.elements.filter((el) => el.id !== id) }));
+    setPageData((prev) => ({
+      ...prev,
+      elements: prev.elements.filter((el) => el.id !== id),
+    }));
   }, []);
+
   const handleChangeStyle = useCallback((newStyles: Partial<StyleProps>) => {
     setPageData((prev) => ({ ...prev, styles: { ...prev.styles, ...newStyles } }));
   }, []);
@@ -114,122 +105,129 @@ export default function EditPage() {
     setPageData((prev) => ({ ...prev, slug: validSlug }));
   }, []);
 
-  // --- Drag and Drop Handlers ---
+  const handleActiveChange = useCallback((active: boolean) => {
+    setPageData((prev) => ({ ...prev, active }));
+  }, []);
+
+  // --- Drag & Drop ---
   const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, elementType: BioElementType) => {
     e.dataTransfer.setData("elementType", elementType);
   }, []);
+
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const elementType = e.dataTransfer.getData("elementType") as BioElementType;
     if (!elementType) return;
-    setPageData((prev) => {
-      const newElement: BioElement = {
-        id: crypto.randomUUID(),
-        type: elementType,
-        order: prev.elements.length,
-        title: elementType === "header" ? "New Header" : elementType === "link" ? "Link Title" : elementType === "button" ? "Button Text" : elementType === "card" ? "Card Title" : undefined,
-        name: elementType === "profile" ? "Your Name" : undefined,
-        bioText: elementType === "profile" ? "Your Bio" : undefined,
-        socialLinks: elementType === "socials" ? [] : undefined,
-        url: elementType === "image" ? "" : undefined,
-      };
-      return { ...prev, elements: [...prev.elements, newElement] };
-    });
+    setPageData((prev) => ({
+      ...prev,
+      elements: [
+        ...prev.elements,
+        {
+          id: crypto.randomUUID(),
+          type: elementType,
+          order: prev.elements.length,
+        } as BioElement,
+      ],
+    }));
     toast.success(`${elementType.charAt(0).toUpperCase() + elementType.slice(1)} added!`);
   }, []);
+
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = "copy";
   }, []);
 
-  // --- Saving Data ---
+  // --- Save Page ---
   const handleSave = async () => {
-    if (!pageData.slug || pageData.slug === "new-page" || pageData.slug === "new") {
-      toast.error("Cannot save: Please set a valid Page Slug in Settings first.");
+    if (!pageData.slug || pageData.slug === "new-page") {
+      toast.error("Set a valid Page Slug in Settings first.");
       setRightPanelTab("settings");
       return;
     }
     if (isSaving) return;
 
     setIsSaving(true);
-    toast.loading("Saving page...");
-
     const dataToSave = {
       ...(pageData.id && { id: pageData.id }),
       slug: pageData.slug,
       custom_domain: pageData.customDomain || null,
-      elements: pageData.elements || [],
-      styles: pageData.styles || defaultStyles,
+      elements: pageData.elements,
+      styles: pageData.styles,
+      active: pageData.active,
     };
 
-    console.log("Attempting to save:", dataToSave);
+    const { data, error } = await supabase.from("link_forms").upsert(dataToSave, { onConflict: "slug" }).select().single();
 
-    try {
-      // --- !!! CHANGE TABLE NAME HERE !!! ---
-      const { data, error } = await supabase
-        .from("link_forms") // Use "bio_pages" table
-        .upsert(dataToSave, { onConflict: "slug" })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Save error:", error);
-        if (error.message.includes('duplicate key value violates unique constraint "bio_pages_custom_domain_key"')) {
-          toast.error("Save failed: Custom domain is already in use by another page.");
-        } else if (error.message.includes('duplicate key value violates unique constraint "bio_pages_slug_key"') || error.message.includes('duplicate key value violates unique constraint "bio_pages_pkey"')) {
-          // This might happen if the slug changed to one that already exists AND the original ID wasn't passed correctly for update
-          toast.error("Save failed: This Page Slug might already be taken.");
-        } else {
-          toast.error(`Save failed: ${error.message}`);
-        }
-      } else {
-        console.log("Save successful:", data);
-        toast.success("Page saved successfully!");
-        setPageData((prev) => ({ ...prev, id: data.id, slug: data.slug }));
-      }
-    } catch (err) {
-      console.error("Unexpected save error:", err);
-      toast.error("An unexpected error occurred during save.");
-    } finally {
-      setIsSaving(false);
+    if (error) {
+      console.error(error);
+      toast.error(`Save failed: ${error.message}`);
+    } else {
+      setPageData((prev) => ({ ...prev, id: data.id, slug: data.slug }));
+      toast.success("Page saved successfully!");
     }
+    setIsSaving(false);
   };
 
-  // --- Loading Indicator ---
-  // Use isLoading state directly for clarity
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading Editor...</div>;
   }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      <Navbar onSave={handleSave} isSaving={isSaving} pageSlug={pageData.slug} />
+      <Navbar
+        onSave={handleSave}
+        isSaving={isSaving}
+        pageSlug={pageData.slug}
+      />
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Column: Elements */}
-        <div className="w-64 flex-shrink-0 border-r bg-white shadow-sm h-full overflow-y-auto">
+        <div className="w-64 border-r bg-white overflow-y-auto">
           <LinkEditor onDragStart={handleDragStart} />
         </div>
-
-        {/* Center Column: Preview (updated LinkCanvas with reorder functionality) */}
-        <LinkCanvas elements={pageData.elements} styles={pageData.styles} onDrop={handleDrop} onDragOver={handleDragOver} updateElement={handleUpdateElement} deleteElement={handleDeleteElement} onReorderElements={(newOrder) => setPageData((prev) => ({ ...prev, elements: newOrder }))} />
-
-        {/* Right Column: Style & Settings Tabs */}
-        <div className="w-72 flex-shrink-0 border-l bg-white shadow-sm flex flex-col h-full">
-          <div className="flex border-b flex-shrink-0">
-            <button onClick={() => setRightPanelTab("style")} className={`flex-1 p-3 text-sm font-medium text-center flex items-center justify-center gap-2 ${rightPanelTab === "style" ? "bg-gray-50 text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-100"}`}>
+        <LinkCanvas
+          elements={pageData.elements}
+          styles={pageData.styles}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          updateElement={handleUpdateElement}
+          deleteElement={handleDeleteElement}
+          onReorderElements={(order) => setPageData((prev) => ({ ...prev, elements: order }))}
+        />
+        <div className="w-72 border-l bg-white flex flex-col">
+          <div className="flex">
+            <button
+              onClick={() => setRightPanelTab("style")}
+              className={`flex-1 p-3 text-center ${rightPanelTab === "style" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}>
               <Palette size={16} /> Style
             </button>
-            <button onClick={() => setRightPanelTab("settings")} className={`flex-1 p-3 text-sm font-medium text-center flex items-center justify-center gap-2 ${rightPanelTab === "settings" ? "bg-gray-50 text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-100"}`}>
+            <button
+              onClick={() => setRightPanelTab("settings")}
+              className={`flex-1 p-3 text-center ${rightPanelTab === "settings" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}>
               <Settings size={16} /> Settings
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            {rightPanelTab === "style" && <LinkStyle styles={pageData.styles} onChangeStyle={handleChangeStyle} />}
-            {rightPanelTab === "settings" && <LinkSettings slug={pageData.slug} customDomain={pageData.customDomain} isSaving={isSaving} isLoading={isLoading} onSlugChange={handleSlugChange} onCustomDomainChange={handleCustomDomainChange} onSave={handleSave} />}
-          </div>
+          {rightPanelTab === "style" ? (
+            <LinkStyle
+              styles={pageData.styles}
+              onChangeStyle={handleChangeStyle}
+            />
+          ) : (
+            <LinkSettings
+              slug={pageData.slug}
+              customDomain={pageData.customDomain}
+              active={pageData.active}
+              isSaving={isSaving}
+              isLoading={isLoading}
+              onSlugChange={handleSlugChange}
+              onCustomDomainChange={handleCustomDomainChange}
+              onActiveChange={handleActiveChange}
+              onSave={handleSave}
+            />
+          )}
         </div>
       </div>
-      <Toaster richColors position="bottom-right" />
+      <Toaster
+        richColors
+        position="bottom-right"
+      />
     </div>
   );
 }
