@@ -1,56 +1,74 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
+// File: src/app/api/leads/route.ts
+
+import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabaseClient";
+import { getCurrentUser } from "@/app/actions";
 import { Lead } from "@/app/types/LeadType";
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string; // use service role for server-side
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "POST") {
-    try {
-      const { userId, email, sourceType, sourceId, createdAt, status, campaignTag } = req.body;
-      // Insert into Supabase 'leads' table
-      const { data, error } = await supabase
-        .from("leads")
-        .insert([
-          {
-            user_id: userId,
-            email,
-            source_type: sourceType,
-            source_id: sourceId,
-            created_at: createdAt,
-            status: status || "pending",
-            campaign_tag: campaignTag || null,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error || !data) {
-        console.error("Supabase insert error:", error);
-        return res.status(500).json({ error: error?.message || "Failed to save lead" });
-      }
-
-      // Map returned record to Lead interface
-      const lead: Lead = {
-        id: data.id,
-        userId: data.user_id,
-        email: data.email,
-        sourceType: data.source_type,
-        sourceId: data.source_id,
-        createdAt: data.created_at,
-        status: data.status,
-        campaignTag: data.campaign_tag || undefined,
-      };
-
-      return res.status(201).json(lead);
-    } catch (err) {
-      console.error("API handler error:", err);
-      return res.status(500).json({ error: "Internal server error" });
+/**
+ * GET /api/leads
+ * Retrieves all leads for the authenticated tenant, most recent first.
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { data, error } = await supabase.from("leads").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (err: any) {
+    console.error("Error fetching leads:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-  res.setHeader("Allow", ["POST"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
+}
+
+/**
+ * POST /api/leads
+ * Creates a new lead under the authenticated tenant.
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      email,
+      sourceType,
+      sourceId,
+      status = "pending",
+      campaignTag = null,
+    }: {
+      email: string;
+      sourceType: Lead["sourceType"];
+      sourceId: string;
+      status?: Lead["status"];
+      campaignTag?: string | null;
+    } = body;
+
+    const record = {
+      email,
+      source_type: sourceType,
+      source_id: sourceId,
+      created_at: new Date().toISOString(),
+      status,
+      campaign_tag: campaignTag,
+    };
+
+    const { data, error } = await supabase.from("leads").insert([record]).select().single();
+
+    if (error || !data) {
+      console.error("Supabase insert error:", error);
+      return NextResponse.json({ error: error?.message || "Failed to save lead" }, { status: 500 });
+    }
+
+    return NextResponse.json(data, { status: 201 });
+  } catch (err: any) {
+    console.error("Error creating lead:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }

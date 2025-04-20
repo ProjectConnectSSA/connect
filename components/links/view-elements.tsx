@@ -276,13 +276,13 @@ export function SubscribeElementView({ element, styles }: { element: BioElement;
     setSubmitting(true);
     try {
       // Replace with real API call
-      await fetch("/api/leads", {
+      await fetch("/api/Leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: "",
           email,
-          sourceType: element.type,
+          sourceType: "linktree",
           sourceId: element.id,
           createdAt: new Date().toISOString(),
           status: "pending",

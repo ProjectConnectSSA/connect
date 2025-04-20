@@ -18,13 +18,13 @@ export default function SubscribeElement({ element, styles, updateElement, delet
     setSubmitting(true);
     try {
       // Replace with real API call
-      await fetch("/api/leads", {
+      await fetch("/api/Leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: "",
           email,
-          sourceType: "link",
+          sourceType: "linktree",
           sourceId: element.id,
           createdAt: new Date().toISOString(),
           status: "pending",
