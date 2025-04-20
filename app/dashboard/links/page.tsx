@@ -140,7 +140,7 @@ export default function BioPagesDashboard() {
 
   const handleEditPage = (page: PageData) => router.push(`/dashboard/links/edit/${page.slug}`);
   const handleViewPage = (page: PageData) =>
-    window.open(page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/p/${page.slug}`, "_blank");
+    window.open(page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/dashboard/links/view/${page.slug}`, "_blank");
 
   if (isLoading) {
     return (

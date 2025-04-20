@@ -8,7 +8,8 @@ import {
   Share2,
   Heading1,
   Image as ImageIcon,
-  Clock, // Alias because Image is a common name
+  Clock,
+  Mail, // Alias because Image is a common name
 } from "lucide-react";
 import { BioElementType } from "@/app/types/links/types"; // Adjust path if needed
 
@@ -24,7 +25,10 @@ interface ElementItemProps {
 }
 
 const ElementItem: React.FC<ElementItemProps> = ({ type, label, icon, onDragStart }) => (
-  <div className="flex items-center p-3 mb-2 bg-gray-100 rounded-lg cursor-move hover:bg-blue-100 hover:shadow transition duration-150 ease-in-out border border-gray-200" draggable onDragStart={(e) => onDragStart(e, type)}>
+  <div
+    className="flex items-center p-3 mb-2 bg-gray-100 rounded-lg cursor-move hover:bg-blue-100 hover:shadow transition duration-150 ease-in-out border border-gray-200"
+    draggable
+    onDragStart={(e) => onDragStart(e, type)}>
     <div className="mr-3 text-blue-500">{icon}</div>
     <span className="text-sm font-medium text-gray-700">{label}</span>
   </div>
@@ -36,12 +40,42 @@ export default function LinkEditor({ onDragStart }: LinkEditorProps) {
       {" "}
       {/* Fixed width */}
       <h2 className="text-lg font-semibold mb-4 text-gray-800">Add Elements</h2>
-      <ElementItem type="profile" label="Profile Header" icon={<User size={20} />} onDragStart={onDragStart} />
-      <ElementItem type="socials" label="Social Icons" icon={<Share2 size={20} />} onDragStart={onDragStart} />
-      <ElementItem type="link" label="Link" icon={<Link size={20} />} onDragStart={onDragStart} />
-      <ElementItem type="card" label="Card" icon={<CreditCard size={20} />} onDragStart={onDragStart} />
-      <ElementItem type="header" label="Header Text" icon={<Heading1 size={20} />} onDragStart={onDragStart} />
-      <ElementItem type="image" label="Image" icon={<ImageIcon size={20} />} onDragStart={onDragStart} />
+      <ElementItem
+        type="profile"
+        label="Profile Header"
+        icon={<User size={20} />}
+        onDragStart={onDragStart}
+      />
+      <ElementItem
+        type="socials"
+        label="Social Icons"
+        icon={<Share2 size={20} />}
+        onDragStart={onDragStart}
+      />
+      <ElementItem
+        type="link"
+        label="Link"
+        icon={<Link size={20} />}
+        onDragStart={onDragStart}
+      />
+      <ElementItem
+        type="card"
+        label="Card"
+        icon={<CreditCard size={20} />}
+        onDragStart={onDragStart}
+      />
+      <ElementItem
+        type="header"
+        label="Header Text"
+        icon={<Heading1 size={20} />}
+        onDragStart={onDragStart}
+      />
+      <ElementItem
+        type="image"
+        label="Image"
+        icon={<ImageIcon size={20} />}
+        onDragStart={onDragStart}
+      />
       <ElementItem
         type="calendly"
         label="Calendly"
@@ -58,6 +92,12 @@ export default function LinkEditor({ onDragStart }: LinkEditorProps) {
         type="countdown"
         label="Countdown Timer"
         icon={<Clock size={20} />} // import Clock from lucide-react
+        onDragStart={onDragStart}
+      />
+      <ElementItem
+        type="subscribe"
+        label="Subscribe"
+        icon={<Mail size={20} />}
         onDragStart={onDragStart}
       />
       {/* Add more elements here */}
