@@ -30,6 +30,7 @@ export interface BioElement {
   description?: string;
   targetDate?: string;
   layout?: "single" | "double"; // For card layout
+  campaignTag?: string;
   // Style overrides? (Optional, can get complex)
   // style?: Partial<StyleProps>;
 }

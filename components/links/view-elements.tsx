@@ -267,11 +267,12 @@ export function ShopifyElementView({ element, styles }: { element: BioElement; s
   );
 }
 
-export function SubscribeElementView({ element, styles }: { element: BioElement; styles: StyleProps }) {
+export function SubscribeElementView({ element, styles, slug }: { element: BioElement; styles: StyleProps; slug: string }) {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    console.log("Submitting email:", element);
     if (!email) return;
     setSubmitting(true);
     try {
@@ -283,9 +284,10 @@ export function SubscribeElementView({ element, styles }: { element: BioElement;
           userId: "",
           email,
           sourceType: "linktree",
-          sourceId: element.id,
+          sourceId: slug,
           createdAt: new Date().toISOString(),
           status: "pending",
+          campaignTag: element.campaignTag || null,
         }),
       });
       setEmail("");

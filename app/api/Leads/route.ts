@@ -11,12 +11,7 @@ import { Lead } from "@/app/types/LeadType";
  */
 export async function GET(req: NextRequest) {
   try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data, error } = await supabase.from("leads").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("leads").select("*").order("createdAt", { ascending: false });
 
     if (error) {
       throw error;
@@ -52,11 +47,11 @@ export async function POST(req: NextRequest) {
 
     const record = {
       email,
-      source_type: sourceType,
-      source_id: sourceId,
-      created_at: new Date().toISOString(),
+      sourceType: sourceType,
+      sourceId: sourceId,
+      createdAt: new Date().toISOString(),
       status,
-      campaign_tag: campaignTag,
+      campaignTag: campaignTag,
     };
 
     const { data, error } = await supabase.from("leads").insert([record]).select().single();
@@ -69,6 +64,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, { status: 201 });
   } catch (err: any) {
     console.error("Error creating lead:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, campaignTag }: { id: string; campaignTag: string | null } = body;
+    if (!id) {
+      return NextResponse.json({ error: "Missing lead ID" }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from("leads")
+      .update({ campaignTag: campaignTag })
+      .eq("id", id)
+
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error("Supabase update error:", error);
+      return NextResponse.json({ error: error?.message || "Failed to update lead" }, { status: 500 });
+    }
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (err: any) {
+    console.error("Error patching lead:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

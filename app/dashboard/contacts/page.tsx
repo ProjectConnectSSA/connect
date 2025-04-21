@@ -31,6 +31,12 @@ export default function ContactsPage() {
           </Button>
           <Button
             variant="outline"
+            onClick={() => setShowImport(true)}>
+            <FileUp className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => setShowSegment(true)}>
             <Tags className="mr-2 h-4 w-4" />
             Create Segment

@@ -221,6 +221,7 @@ export default function ViewPage() {
             key={elem.id}
             element={elem}
             styles={styles}
+            slug={pageData.slug}
           />
         );
       default:
