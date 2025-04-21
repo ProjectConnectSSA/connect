@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Lead } from "@/app/types/LeadType";
 import { X } from "lucide-react";
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 interface ExportContactsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,49 +24,70 @@ export function ExportContacts({ open, onOpenChange }: ExportContactsProps) {
   const [campaignTag, setCampaignTag] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const handleExport = async () => {
+  // Fetch & filter in‑memory
+  const fetchAndFilter = async (): Promise<Lead[]> => {
+    const res = await fetch("/api/Leads");
+    if (!res.ok) throw new Error("Failed to fetch leads");
+    const allLeads: Lead[] = await res.json();
+    return allLeads.filter((lead) => {
+      const created = new Date(lead.createdAt);
+      if (startDate && created < new Date(startDate)) return false;
+      if (endDate && created > new Date(endDate)) return false;
+      if (sourceType !== "any" && lead.sourceType !== sourceType) return false;
+      if (status !== "any" && lead.status !== status) return false;
+      if (campaignTag && (lead.campaignTag || "").toLowerCase().indexOf(campaignTag.toLowerCase()) === -1) return false;
+      return true;
+    });
+  };
+
+  // PDF download using jsPDF + autoTable
+  const exportPDF = async () => {
+    const data = await fetchAndFilter();
+    const doc = new jsPDF();
+    // Column headers
+    const head = [["Email", "SourceType", "SourceName", "CampaignTag", "Status", "Date"]];
+    // Body rows
+    const body = data.map((r) => [r.email, r.sourceType, r.sourceId, r.campaignTag || "", r.status, new Date(r.createdAt).toISOString()]);
+    // Auto-table
+    autoTable(doc, {
+      head: [["Email", "SourceType", "SourceName", "CampaignTag", "Status", "Date"]],
+      body: data.map((r) => [
+        r.email ?? "",
+        r.sourceType ?? "",
+        r.sourceId ?? "",
+        r.campaignTag ?? "",
+        r.status ?? "",
+        new Date(r.createdAt).toISOString(),
+      ]),
+      startY: 20,
+    });
+    doc.text("Leads Export", 14, 15);
+    doc.save(`leads_${Date.now()}.pdf`);
+  };
+
+  // CSV download
+  const exportCSV = async () => {
+    const data = await fetchAndFilter();
+    const rows = [
+      ["Email", "SourceType", "SourceName", "CampaignTag", "Status", "Date"],
+      ...data.map((r) => [r.email, r.sourceType, r.sourceId, r.campaignTag || "", r.status, new Date(r.createdAt).toISOString()]),
+    ];
+    const csv = rows.map((row) => row.map((v) => `"${(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_${Date.now()}.csv`;
+    link.click();
+  };
+
+  const handleExport = async (format: "csv" | "pdf") => {
     setLoading(true);
     try {
-      // 1) Fetch all leads
-      const res = await fetch("/api/Leads");
-      if (!res.ok) throw new Error("Failed to fetch leads");
-      const allLeads: Lead[] = await res.json();
-
-      // 2) Filter client‑side
-      const filtered = allLeads.filter((lead) => {
-        // by start/end date
-        const created = new Date(lead.createdAt);
-        if (startDate && created < new Date(startDate)) return false;
-        if (endDate && created > new Date(endDate)) return false;
-        // by source
-        if (sourceType !== "any" && lead.sourceType !== sourceType) return false;
-        // by status
-        if (status !== "any" && lead.status !== status) return false;
-        // by tag substring
-        if (campaignTag && (lead.campaignTag || "").toLowerCase().indexOf(campaignTag.toLowerCase()) === -1) return false;
-        return true;
-      });
-
-      // 3) Build CSV
-      const rows: string[] = [];
-      rows.push(["Email", "SourceType", "SourceName", "CampaignTag", "Status", "Date"].join(","));
-      filtered.forEach((row) => {
-        rows.push(
-          [row.email, row.sourceType, row.sourceId, row.campaignTag || "", row.status, new Date(row.createdAt).toISOString()]
-            .map((v) => `"${(v ?? "").replace(/"/g, '""')}"`)
-            .join(",")
-        );
-      });
-
-      // 4) Download CSV
-      const blob = new Blob([rows.join("\n")], { type: "text/csv" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `leads_export_${Date.now()}.csv`;
-      link.click();
+      if (format === "csv") await exportCSV();
+      else await exportPDF();
     } catch (err) {
       console.error(err);
-      alert("Error exporting leads");
+      alert("Error exporting");
     } finally {
       setLoading(false);
       onOpenChange(false);
@@ -153,7 +175,12 @@ export function ExportContacts({ open, onOpenChange }: ExportContactsProps) {
               <Button variant="outline">Cancel</Button>
             </Dialog.Close>
             <Button
-              onClick={handleExport}
+              onClick={() => handleExport("csv")}
+              disabled={loading}>
+              {loading ? "Exporting…" : "Export"}
+            </Button>
+            <Button
+              onClick={() => handleExport("pdf")}
               disabled={loading}>
               {loading ? "Exporting…" : "Export"}
             </Button>
