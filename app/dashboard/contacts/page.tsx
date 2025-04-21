@@ -9,12 +9,12 @@ import { ContactStats } from "@/components/contacts/contact-stats";
 import { ImportContacts } from "@/components/contacts/import-contacts";
 import { SegmentBuilder } from "@/components/contacts/segment-builder";
 import { Plus, FileUp, Tags } from "lucide-react";
-
+import { ExportContacts } from "@/components/contacts/export-contacts";
 export default function ContactsPage() {
   const router = useRouter();
   const [showImport, setShowImport] = useState(false);
   const [showSegment, setShowSegment] = useState(false);
-
+  const [showExport, setShowExport] = useState(false);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -31,9 +31,8 @@ export default function ContactsPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setShowImport(true)}>
-            <FileUp className="mr-2 h-4 w-4" />
-            Export
+            onClick={() => setShowExport(true)}>
+            <FileUp className="mr-2 h-4 w-4" /> Export
           </Button>
           <Button
             variant="outline"
@@ -58,6 +57,11 @@ export default function ContactsPage() {
       <SegmentBuilder
         open={showSegment}
         onOpenChange={setShowSegment}
+      />
+
+      <ExportContacts
+        open={showExport}
+        onOpenChange={setShowExport}
       />
     </div>
   );
