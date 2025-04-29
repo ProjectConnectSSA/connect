@@ -1,9 +1,26 @@
-export default async function Layout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// app/layout.tsx
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { SessionContextProvider } from "@supabase/auth-helpers-react";
+import SessionProviderWrapper from "@/components/SessionProviderWrapper";
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Use the latest helper for server components.
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   return (
-    <div className="max-w-7xl flex flex-col gap-12 items-start">{children}</div>
+    <html>
+      <head />
+      <body>
+        <SessionProviderWrapper
+          supabaseClient={supabase}
+          initialSession={session}>
+          {children}
+        </SessionProviderWrapper>
+      </body>
+    </html>
   );
 }

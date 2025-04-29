@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2, FileText, Copy, QrCode } from "lucide-react";
+// --- Added Loader2 ---
+import { Plus, MoreVertical, Share2, Eye, Pencil, Trash2, FileText, Copy, QrCode, Loader2 } from "lucide-react";
 import { DataTable } from "@/components/forms/data-table";
 import { setFormToEdit, clearFormToEdit } from "@/services/formService";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,10 @@ const filters = [
 export default function FormsPage() {
   const router = useRouter();
   const [Forms, setForms] = useState<any[]>([]);
+  // --- Add isLoading State ---
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // --- End Add isLoading State ---
+
   const totalLinksAllowed = 10;
   const usedLinks = Forms?.length ?? 0;
   const progressValue = (usedLinks / totalLinksAllowed) * 100;
@@ -185,18 +190,23 @@ export default function FormsPage() {
   }
 
   async function fetchFormData() {
+    // --- Set loading true ---
+    setIsLoading(true);
     try {
       const response = await fetch("/api/forms");
       if (!response.ok) {
         throw new Error("Failed to fetch forms");
       }
       const data = await response.json();
-      // Sort forms so that the latest ones appear first
       data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setForms(data);
     } catch (error) {
       console.error("Error fetching forms:", error);
-      setForms([]);
+      setForms([]); // Clear forms on error
+      // Optionally set an error state here if you add one later
+    } finally {
+      // --- Set loading false ---
+      setIsLoading(false);
     }
   }
 
@@ -210,14 +220,16 @@ export default function FormsPage() {
   return (
     <div className="flex h-screen">
       <DashboardSidebar />
-      {/* Main content taking full width */}
-      <div className="space-y-6 flex-1 p-6">
-        {/* Header with title and actions */}
-        <div className="flex items-center justify-between">
+      {/* Main content */}
+      {/* Use flex-col to allow header and content area */}
+      <div className="space-y-6 flex-1 p-6 flex flex-col overflow-hidden">
+        {/* Header section - Remains visible */}
+        <div className="flex items-center justify-between flex-shrink-0">
+          {" "}
+          {/* Prevent header shrinking */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Forms</h1>
           </div>
-          {/* Actions and usage indicator */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Button
@@ -233,7 +245,6 @@ export default function FormsPage() {
                 Templates
               </Button>
             </div>
-            {/* Usage indicator styled to be about the same size as a button */}
             <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-2 w-32 h-12 flex flex-col justify-center">
               <span className="text-sm font-medium text-gray-900">
                 {usedLinks}/{totalLinksAllowed}
@@ -246,17 +257,34 @@ export default function FormsPage() {
           </div>
         </div>
 
-        {/* Forms List */}
-        <Card className="bg-white border-none shadow-sm rounded-lg p-4 w-full">
-          <div>
-            <DataTable
-              data={Forms || []}
-              columns={columns}
-              filters={filters}
-              itemsPerPage={5}
-            />
-          </div>
-        </Card>
+        {/* Content Area: Loading or Forms List */}
+        {/* Make this part scrollable and grow */}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            // --- Loading Indicator ---
+            <div className="flex justify-center items-center h-full pt-10">
+              {" "}
+              {/* Adjust padding/height as needed */}
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Loading forms...</span>
+            </div>
+          ) : (
+            // --- End Loading Indicator ---
+            // --- Forms List (Rendered when not loading) ---
+            <Card className="bg-white border-none shadow-sm rounded-lg p-4 w-full">
+              <div>
+                {/* Render DataTable only if not loading */}
+                <DataTable
+                  data={Forms || []}
+                  columns={columns}
+                  filters={filters}
+                  itemsPerPage={5}
+                />
+              </div>
+            </Card>
+            // --- End Forms List ---
+          )}
+        </div>
 
         {/* Share Dialog */}
         <Dialog

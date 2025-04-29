@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import supabase from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
+
 import { UUID } from "crypto";
 
 import { getCurrentUser } from "@/app/actions";
@@ -14,7 +15,7 @@ export async function GET() {
   try {
     console.log("API GET forms");
     const currentUser = await getCurrentUser();
-    const { data, error: formsError } = await supabase.from("link_forms").select("*").eq("user_id", currentUser.id);
+    const { data, error: formsError } = await supabase.from("link_forms").select("*");
     if (formsError) {
       throw new Error(formsError.message);
     }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Link as LinkIcon, FileText, Mail, User, LogOut, BarChart, ChevronRight, LayoutTemplate, Contact } from "lucide-react";
+import { Link as LinkIcon, FileText, Mail, User, LogOut, BarChart, ChevronRight, LayoutTemplate, Contact, Atom } from "lucide-react";
 import { useState } from "react";
 
 interface User {
@@ -37,7 +37,7 @@ export function DashboardSidebar() {
     },
     {
       href: "/dashboard/landing",
-      label: "Create Landing Page",
+      label: "Landing Page",
       icon: LayoutTemplate,
     },
     {
@@ -54,6 +54,11 @@ export function DashboardSidebar() {
       href: "/dashboard/profile",
       label: "Profile",
       icon: User,
+    },
+    {
+      href: "/dashboard/Generative-Ai",
+      label: "AI (Beta)",
+      icon: Atom,
     },
   ];
 

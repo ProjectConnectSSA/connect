@@ -80,6 +80,10 @@ const config: Config = {
       },
     },
   },
+  safelist: [
+    { pattern: /rounded-(none|sm|md|lg|full)/ }, // Safelist border radius classes
+    // Add other dynamic patterns if needed
+  ],
   plugins: [require("tailwindcss-animate")],
 };
 export default config;
