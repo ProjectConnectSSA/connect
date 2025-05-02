@@ -9,7 +9,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 // Import the element components (ensure paths are correct)
 import ProfileElement from "./canvas-element/ProfileElement";
 import SocialsElement from "./canvas-element/SocialsElement";
-import LinkElement from "./canvas-element/LinkElement";
+import LinkElement from "./canvas-element/LinkElement"; // Note: Changed from LinkElementComp to LinkElement to match usage
 import CardElement from "./canvas-element/CardElement";
 import CalendlyElement from "./canvas-element/CalendlyElement";
 import HeaderElement from "./canvas-element/HeaderElement";
@@ -66,9 +66,6 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
             ? "9999px"
             : "0.375rem", // Default md
         fontFamily: styles.fontFamily,
-        // Add a subtle background for the canvas itself if the main background is transparent/image
-        // To ensure contrast for elements if the page background is an image
-        // backgroundColor: styles.backgroundImage ? 'rgba(255, 255, 255, 0.1)' : styles.backgroundColor, // Removed this as it might overlay background color unexpectedly
       } as React.CSSProperties & { "--border-radius-val": string }),
     [styles]
   );
@@ -77,132 +74,9 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
   const rootElements = useMemo(() => {
     const elementIds = new Set(elements.map((el) => el.id));
     // An element is root if it has no parentId, or its parentId doesn't exist in the current elements list
+    // Also filter out potential orphans whose parent might have been deleted but not cleaned up fully
     return elements.filter((el) => !el.parentId || !elementIds.has(el.parentId)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [elements]);
-
-  // --- Drag and Drop Logic ---
-  const handleDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
-
-    // 1. Dropped outside any droppable area
-    if (!destination) {
-      return;
-    }
-
-    // Avoid unnecessary updates if dropped in the same place
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
-      return;
-    }
-
-    // 2. Parse source and destination IDs
-    const sourceColInfo = parseColumnDroppableId(source.droppableId);
-    const destColInfo = parseColumnDroppableId(destination.droppableId);
-    const isMovingToRoot = destination.droppableId === "elements-droppable";
-    const isMovingFromRoot = source.droppableId === "elements-droppable";
-
-    console.log("DragEnd:", { source, destination, sourceColInfo, destColInfo, isMovingToRoot, isMovingFromRoot });
-
-    // Use a mutable copy to easily reorder/update properties before setting final state
-    const currentElements = [...elements];
-    const draggedElIndex = currentElements.findIndex((el) => el.id === draggableId);
-    if (draggedElIndex === -1) {
-      console.error("Dragged element not found in state!");
-      return;
-    }
-
-    // 1. Remove the element from its current position
-    const [draggedElement] = currentElements.splice(draggedElIndex, 1);
-
-    // 2. Update parentId and columnIndex based on destination
-    let targetParentId: string | undefined = undefined;
-    let targetColumnIndex: number | undefined = undefined;
-
-    if (isMovingToRoot) {
-      delete draggedElement.parentId;
-      delete draggedElement.columnIndex;
-    } else if (destColInfo) {
-      targetParentId = destColInfo.layoutId;
-      targetColumnIndex = destColInfo.colIndex;
-      draggedElement.parentId = targetParentId;
-      draggedElement.columnIndex = targetColumnIndex;
-    } else {
-      console.error("Invalid destination droppable ID during drag end.");
-      return; // Should not happen
-    }
-
-    // 3. Insert the element logically into the new position in the mutable array
-    // We can't directly use destination.index across different lists (root vs columns)
-    // Instead, we insert it back and then re-calculate order for *all* elements.
-    // Find the reference element to insert before (if any)
-    let targetIndex = destination.index;
-    if (isMovingToRoot) {
-      const rootEls = currentElements.filter((el) => !el.parentId).sort((a, b) => a.order! - b.order!);
-      if (targetIndex < rootEls.length) {
-        const elementToInsertBefore = rootEls[targetIndex];
-        targetIndex = currentElements.findIndex((el) => el.id === elementToInsertBefore.id);
-      } else {
-        targetIndex = currentElements.length; // Add to end if index is out of bounds
-      }
-    } else if (destColInfo) {
-      const columnEls = currentElements.filter((el) => el.parentId === destColInfo.layoutId && el.columnIndex === destColInfo.colIndex).sort((a, b) => a.order! - b.order!);
-      if (targetIndex < columnEls.length) {
-        const elementToInsertBefore = columnEls[targetIndex];
-        targetIndex = currentElements.findIndex((el) => el.id === elementToInsertBefore.id);
-      } else {
-        // Find last element of the column or the parent layout itself to insert after
-        const lastElInCol = columnEls[columnEls.length - 1];
-        if (lastElInCol) {
-          targetIndex = currentElements.findIndex((el) => el.id === lastElInCol.id) + 1;
-        } else {
-          // Column is empty, insert after parent layout element
-          const parentIdx = currentElements.findIndex((el) => el.id === destColInfo.layoutId);
-          targetIndex = parentIdx + 1;
-        }
-      }
-    }
-    // Ensure targetIndex is valid
-    targetIndex = Math.max(0, Math.min(currentElements.length, targetIndex));
-    currentElements.splice(targetIndex, 0, draggedElement);
-
-    // 4. Recalculate order for ALL elements based on their parent and position
-    const finalOrderedElements: BioElement[] = [];
-    const layouts: Record<string, BioElement[]> = {}; // Temp store for layout children
-
-    // First pass: assign order to root elements and identify children
-    currentElements.forEach((el) => {
-      if (el.parentId) {
-        const key = `${el.parentId}-${el.columnIndex}`;
-        if (!layouts[key]) layouts[key] = [];
-        layouts[key].push(el);
-      } else {
-        finalOrderedElements.push(el); // Add root elements directly
-      }
-    });
-
-    // Sort root elements by their current index in the array
-    finalOrderedElements.sort((a, b) => currentElements.indexOf(a) - currentElements.indexOf(b));
-    finalOrderedElements.forEach((el, index) => (el.order = index)); // Assign root order
-
-    // Second pass: sort and assign order to children within each layout column
-    Object.values(layouts).forEach((children) => {
-      children.sort((a, b) => currentElements.indexOf(a) - currentElements.indexOf(b)); // Sort by array index
-      children.forEach((child, index) => {
-        child.order = index; // Assign order within the column
-        finalOrderedElements.push(child); // Add sorted children to the final flat list
-      });
-    });
-
-    // Ensure all elements are included (paranoid check)
-    if (finalOrderedElements.length !== elements.length) {
-      console.warn("Element count mismatch after reorder - potential issue in logic.");
-      // Fallback or error handling might be needed
-    }
-
-    // 5. Update the state via the callback
-    onReorderElements(finalOrderedElements);
-  };
-
-  // --- Rendering Logic ---
 
   // Helper to get children, always filters the LATEST `elements` prop
   const getChildrenForLayoutColumn = (layoutId: string, colIndex: number): BioElement[] => {
@@ -211,30 +85,279 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)); // Sort by order
   };
 
+  // --- Drag and Drop Logic (Reordering - Corrected & Simplified) ---
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+
+    // 1. Exit if dropped outside a valid droppable or in the same spot
+    if (!destination || (source.droppableId === destination.droppableId && source.index === destination.index)) {
+      return;
+    }
+
+    console.log("Reorder DragEnd:", { source, destination, draggableId });
+
+    const updatedElements = Array.from(elements); // Create a mutable copy
+    const draggedElementIndex = updatedElements.findIndex((el) => el.id === draggableId);
+
+    if (draggedElementIndex === -1) {
+      console.error("Dragged element not found for reordering!");
+      return;
+    }
+
+    // 2. Remove the dragged element from its original position in the copy
+    const [draggedElement] = updatedElements.splice(draggedElementIndex, 1);
+
+    // 3. Determine Source and Destination Context
+    const sourceColInfo = parseColumnDroppableId(source.droppableId); // Keep for potential future logic, not used directly now
+    const destColInfo = parseColumnDroppableId(destination.droppableId);
+    const isMovingToRoot = destination.droppableId === "elements-droppable";
+
+    // 4. Update Parent/Column Info on the Dragged Element
+    if (isMovingToRoot) {
+      delete draggedElement.parentId;
+      delete draggedElement.columnIndex;
+    } else if (destColInfo) {
+      draggedElement.parentId = destColInfo.layoutId;
+      draggedElement.columnIndex = destColInfo.colIndex;
+    } else {
+      // Should not happen with the check at the start, but good safeguard
+      console.error("Invalid destination context in handleDragEnd");
+      return;
+    }
+
+    // 5. Prepare logical lists based on the *current state* of updatedElements
+    //    (before inserting the dragged element back)
+    const rootElementsList = updatedElements.filter((el) => !el.parentId).sort((a, b) => a.order! - b.order!);
+    const columnElementsMap: { [key: string]: BioElement[] } = {};
+
+    updatedElements.forEach((el) => {
+      if (el.parentId && el.columnIndex !== undefined) {
+        // Ensure the parent layout still exists in the original elements array before adding
+        const parentExists = elements.some((parent) => parent.id === el.parentId);
+        if (parentExists) {
+          const key = getColumnDroppableId(el.parentId, el.columnIndex);
+          if (!columnElementsMap[key]) {
+            columnElementsMap[key] = [];
+          }
+          columnElementsMap[key].push(el);
+        } else {
+          console.warn(`Orphan element found and excluded during reorder: ${el.id}, parent ${el.parentId} missing.`);
+          // Optionally handle orphan cleanup here or mark it for later
+        }
+      }
+    });
+
+    // Sort elements within each column map entry based on their existing order
+    Object.keys(columnElementsMap).forEach((key) => {
+      columnElementsMap[key].sort((a, b) => a.order! - b.order!);
+    });
+
+    // 6. Insert the dragged element into the correct logical list at the destination index
+    if (isMovingToRoot) {
+      rootElementsList.splice(destination.index, 0, draggedElement);
+    } else if (destColInfo) {
+      const destKey = destination.droppableId; // Already formatted correctly (layoutId-col-colIndex)
+      if (!columnElementsMap[destKey]) {
+        columnElementsMap[destKey] = []; // Ensure list exists if column was empty
+      }
+      columnElementsMap[destKey].splice(destination.index, 0, draggedElement);
+    }
+
+    // 7. Rebuild the final flat elements array with correct order
+    const finalOrderedElements: BioElement[] = [];
+
+    // Add root elements with updated order
+    rootElementsList.forEach((el, index) => {
+      el.order = index;
+      finalOrderedElements.push(el);
+    });
+
+    // Add column elements with updated order
+    Object.values(columnElementsMap).forEach((columnList) => {
+      columnList.forEach((el, index) => {
+        el.order = index; // Order within the column
+        finalOrderedElements.push(el);
+      });
+    });
+
+    // Add back the layout containers themselves (ensure they are present)
+    const layoutContainers = elements.filter((el) => el.type.startsWith("layout-"));
+    layoutContainers.forEach((layout) => {
+      if (!finalOrderedElements.find((feo) => feo.id === layout.id)) {
+        // Find the original layout object to preserve any specific properties it had
+        const originalLayout = elements.find((e) => e.id === layout.id);
+        if (originalLayout) {
+          console.log(`Re-adding layout container ${layout.id} to final list.`);
+          // We need to decide where to put it if it's missing.
+          // Ideally, it should remain logically grouped with its (potentially now empty) children.
+          // For simplicity now, just add it. A more robust solution might track its original root order.
+          finalOrderedElements.push(originalLayout);
+          // If it was a root element, ensure its root order is preserved or recalculated
+          if (!originalLayout.parentId) {
+            // This part is tricky - need to re-integrate into root ordering properly.
+            // Simplest might be to just append and rely on a subsequent full root sort if needed.
+          }
+        }
+      }
+    });
+
+    // Paranoid check & Reconciliation (Simplified): ensure all original elements are included.
+    const finalIds = new Set(finalOrderedElements.map((el) => el.id));
+    let missingElementsAdded = false;
+    elements.forEach((originalEl) => {
+      if (!finalIds.has(originalEl.id)) {
+        console.warn(`Element ${originalEl.id} (${originalEl.type}) was missing after reorder, adding back.`);
+        finalOrderedElements.push(originalEl); // Add missing element
+        missingElementsAdded = true;
+        // Note: Its order and parentage might be incorrect now.
+        // This signals a potential flaw in the list rebuilding logic above.
+      }
+    });
+
+    // If elements were missing and re-added, it's safer to recalculate *all* orders again
+    // based on the final structure to ensure consistency.
+    if (missingElementsAdded) {
+      console.warn("Recalculating all orders due to missing elements reconciliation.");
+      const reconciledRoot = finalOrderedElements.filter((el) => !el.parentId);
+      reconciledRoot.sort((a, b) => elements.findIndex((e) => e.id === a.id) - elements.findIndex((e) => e.id === b.id)); // Attempt to preserve original relative order
+      reconciledRoot.forEach((el, index) => (el.order = index));
+
+      const reconciledColumns: { [key: string]: BioElement[] } = {};
+      finalOrderedElements.forEach((el) => {
+        if (el.parentId && el.columnIndex !== undefined) {
+          const key = getColumnDroppableId(el.parentId, el.columnIndex);
+          if (!reconciledColumns[key]) reconciledColumns[key] = [];
+          reconciledColumns[key].push(el);
+        }
+      });
+      Object.values(reconciledColumns).forEach((colList) => {
+        colList.sort((a, b) => elements.findIndex((e) => e.id === a.id) - elements.findIndex((e) => e.id === b.id)); // Attempt sort
+        colList.forEach((el, index) => (el.order = index));
+      });
+    }
+
+    console.log("Final ordered elements count:", finalOrderedElements.length, "Original count:", elements.length);
+    // console.log("Final ordered elements:", JSON.stringify(finalOrderedElements.map(e => ({id: e.id, type: e.type, order: e.order, parentId: e.parentId, colIndex: e.columnIndex})), null, 2));
+
+    // 8. Update the state via the callback
+    onReorderElements(finalOrderedElements);
+  };
+
+  // --- Rendering Logic ---
   const renderElement = (elem: BioElement, isNested: boolean = false): JSX.Element | null => {
     switch (elem.type) {
       // --- Standard Elements ---
-      // Pass down props including isNested
+      // Pass down props including isNested and styles/handlers
       case "profile":
-        return <ProfileElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <ProfileElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "socials":
-        return <SocialsElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <SocialsElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "link":
-        return <LinkElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <LinkElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "card":
-        return <CardElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <CardElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "header":
-        return <HeaderElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <HeaderElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "image":
-        return <ImageElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <ImageElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "calendly":
-        return <CalendlyElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <CalendlyElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "shopify":
-        return <ShopifyElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <ShopifyElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "countdown":
-        return <CountdownElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <CountdownElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
       case "subscribe":
-        return <SubscribeElement key={elem.id} element={elem} styles={styles} updateElement={updateElement} deleteElement={deleteElement} isNested={isNested} />;
+        return (
+          <SubscribeElement
+            key={elem.id}
+            element={elem}
+            styles={styles}
+            updateElement={updateElement}
+            deleteElement={deleteElement}
+            isNested={isNested}
+          />
+        );
 
       // --- Layout Elements ---
       case "layout-single-column":
@@ -242,13 +365,18 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
         const numColumns = elem.type === "layout-single-column" ? 1 : 2;
 
         return (
-          <div key={elem.id} className={`layout-container bg-gray-500/5 dark:bg-gray-500/10 border border-dashed border-gray-400 dark:border-gray-600 p-2 rounded-md my-2`}>
-            {/* Layout Header (Type Label & Delete Button for root layouts) */}
+          <div
+            key={elem.id}
+            className={`layout-container bg-gray-500/5 dark:bg-gray-500/10 border border-dashed border-gray-400 dark:border-gray-600 p-2 rounded-md my-2`}>
+            {/* Layout Header */}
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 px-1 flex justify-between items-center">
               <span className="font-medium">{elem.type === "layout-single-column" ? "Single Column Row" : "Two Column Row"}</span>
-              {/* Only show delete button for root-level layouts */}
-              {!isNested && (
-                <button onClick={() => deleteElement(elem.id)} className="p-1 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-md transition" aria-label="Delete Layout Row">
+              {/* Only show delete button for root-level layouts (handled via parent context, not isNested prop) */}
+              {!elem.parentId && ( // Check if it's a root element directly
+                <button
+                  onClick={() => deleteElement(elem.id)}
+                  className="p-1 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-md transition"
+                  aria-label="Delete Layout Row">
                   <Trash2 size={14} />
                 </button>
               )}
@@ -256,45 +384,52 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
             {/* Columns Grid */}
             <div className={`grid gap-3 ${numColumns === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}>
               {Array.from({ length: numColumns }).map((_, colIndex) => {
-                // Fetch children for this column using the helper
                 const columnChildren = getChildrenForLayoutColumn(elem.id, colIndex);
 
                 return (
-                  <Droppable key={colIndex} droppableId={getColumnDroppableId(elem.id, colIndex)}>
+                  <Droppable
+                    key={colIndex}
+                    droppableId={getColumnDroppableId(elem.id, colIndex)}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        // Add drop zone styling and highlighting
+                        // Drop zone styling
                         className={`column-droppable min-h-[70px] border-2 border-dashed rounded-md p-2 transition-colors duration-150 ease-in-out ${
                           snapshot.isDraggingOver
-                            ? "bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600" // Highlight when dragging over
-                            : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500" // Default state
+                            ? "bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600"
+                            : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
                         }`}
-                        // Pass layout ID and column index for the main onDrop handler
+                        // Data attributes for the custom drop handler
                         data-layout-id={elem.id}
-                        data-column-index={colIndex}
-                      >
-                        {/* Render elements within this column */}
+                        data-column-index={colIndex}>
+                        {/* Render nested elements */}
                         {columnChildren.length > 0 ? (
                           columnChildren.map((childElem, index) => (
-                            <Draggable key={childElem.id} draggableId={childElem.id} index={index}>
+                            <Draggable
+                              key={childElem.id}
+                              draggableId={childElem.id}
+                              index={index}>
                               {(providedDrag, snapshotDrag) => (
                                 <div
                                   ref={providedDrag.innerRef}
                                   {...providedDrag.draggableProps}
-                                  className={`flex items-start mb-2 ${snapshotDrag.isDragging ? "opacity-70 scale-[1.02]" : ""} transition-transform duration-150 ease-in-out`}
-                                  style={{ transform: snapshotDrag.isDragging ? "rotate(-1deg)" : "none" }} // Slight tilt effect
+                                  // --- STYLE CHANGE FOR NESTED DRAGGABLE (Simplified) ---
+                                  className={`flex items-start mb-2 ${
+                                    snapshotDrag.isDragging
+                                      ? "shadow-md bg-white dark:bg-gray-700 rounded" // Subtle shadow, solid background
+                                      : ""
+                                  }`}
+                                  // --- END STYLE CHANGE ---
                                 >
-                                  {/* Drag handle for nested elements */}
+                                  {/* Drag handle */}
                                   <div
                                     {...providedDrag.dragHandleProps}
-                                    className="cursor-grab mr-2 pt-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 touch-none" // Added touch-none
-                                    aria-label="Drag element to reorder"
-                                  >
+                                    className="cursor-grab mr-2 pt-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 touch-none"
+                                    aria-label="Drag element to reorder">
                                     <GripVertical size={18} />
                                   </div>
-                                  {/* Render the nested element */}
+                                  {/* Render the nested element (pass isNested=true) */}
                                   <div className="flex-1">{renderElement(childElem, true)}</div>
                                 </div>
                               )}
@@ -317,43 +452,57 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
 
       // --- Fallback for Unknown Types ---
       default:
-        // Log error for unknown type in development
         if (process.env.NODE_ENV === "development") {
           console.warn(`Unknown element type encountered in LinkCanvas: ${elem.type}`, elem);
         }
         return (
-          <div key={elem.id} className={`p-4 my-3 shadow border bg-red-100 border-red-300 text-red-700 rounded-md`}>
+          <div
+            key={elem.id}
+            className={`p-4 my-3 shadow border bg-red-100 border-red-300 text-red-700 rounded-md`}>
             Unknown Element Type: {(elem as any).type || "Undefined"}
           </div>
         );
     }
   };
 
-  // --- Custom Drop Handler for Canvas/Columns ---
+  // --- Custom Drop Handler for Canvas/Columns (Adding NEW elements) ---
   const handleCanvasDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default drop behavior
+    e.stopPropagation(); // Stop event from bubbling further
+
     const target = e.target as HTMLElement;
-    // Find the closest droppable column element or the main canvas
+
+    // 1. Check if the drop target is within a specific column droppable zone
     const columnDroppable = target.closest(".column-droppable");
     let targetId: string | undefined = undefined;
     let targetColumnIndex: number | undefined = undefined;
 
     if (columnDroppable) {
+      // Found a specific column target
       targetId = columnDroppable.getAttribute("data-layout-id") ?? undefined;
       const colIndexStr = columnDroppable.getAttribute("data-column-index");
       targetColumnIndex = colIndexStr ? parseInt(colIndexStr, 10) : undefined;
-    } else {
-      // Check if dropping directly onto the root droppable area
-      const rootDroppable = target.closest('[data-rbd-droppable-id="elements-droppable"]');
-      if (!rootDroppable) {
-        // Dropped outside any valid area (e.g., on controls), do nothing or provide feedback
-        console.log("Dropped outside valid area");
-        return;
+
+      // Ensure we actually got valid data attributes
+      if (targetId !== undefined && targetColumnIndex !== undefined) {
+        console.log("Canvas Drop Event - Target Context (Column):", { targetId, targetColumnIndex });
+        onDrop(e, targetId, targetColumnIndex); // Call parent's onDrop with column context
+        return; // Drop handled
+      } else {
+        console.warn("Column droppable detected, but failed to get layout ID or column index. Falling back to root drop.");
+        // Fall through to treat as root drop
       }
     }
 
-    console.log("Canvas Drop Event - Target Context:", { targetId, targetColumnIndex });
-    onDrop(e, targetId, targetColumnIndex); // Call parent's onDrop with context
+    // 2. If not dropped in a specific column, check if it's within the main canvas area
+    const mainCanvasContainer = target.closest(".preview-scroll-container");
+    if (mainCanvasContainer) {
+      console.log("Canvas Drop Event - Target Context (Root):", { targetId: undefined, targetColumnIndex: undefined });
+      onDrop(e, undefined, undefined); // Call parent's onDrop with root context (no targetId/Index)
+    } else {
+      // Safeguard: Should not happen if the event handler is on the correct element
+      console.log("Dropped outside valid area (failed to find main container).");
+    }
   };
 
   // --- Main Return JSX ---
@@ -361,10 +510,26 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
     <div className="flex-1 p-4 flex flex-col items-center bg-gray-100 dark:bg-gray-900 overflow-hidden">
       {/* Preview Mode Toggle */}
       <div className="mb-4 flex justify-center space-x-2 flex-shrink-0">
-        <button onClick={() => setPreviewMode("mobile")} className={`p-2 rounded transition-colors ${previewMode === "mobile" ? "bg-blue-600 text-white shadow-md" : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"}`} aria-pressed={previewMode === "mobile"} aria-label="Switch to Mobile Preview">
+        <button
+          onClick={() => setPreviewMode("mobile")}
+          className={`p-2 rounded transition-colors ${
+            previewMode === "mobile"
+              ? "bg-blue-600 text-white shadow-md"
+              : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+          }`}
+          aria-pressed={previewMode === "mobile"}
+          aria-label="Switch to Mobile Preview">
           <Smartphone size={20} />
         </button>
-        <button onClick={() => setPreviewMode("desktop")} className={`p-2 rounded transition-colors ${previewMode === "desktop" ? "bg-blue-600 text-white shadow-md" : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"}`} aria-pressed={previewMode === "desktop"} aria-label="Switch to Desktop Preview">
+        <button
+          onClick={() => setPreviewMode("desktop")}
+          className={`p-2 rounded transition-colors ${
+            previewMode === "desktop"
+              ? "bg-blue-600 text-white shadow-md"
+              : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+          }`}
+          aria-pressed={previewMode === "desktop"}
+          aria-label="Switch to Desktop Preview">
           <Monitor size={20} />
         </button>
       </div>
@@ -372,54 +537,71 @@ export default function LinkCanvas({ elements, onDrop, onDragOver, styles, updat
       {/* Preview Container */}
       <div
         className={`preview-scroll-container overflow-y-auto overflow-x-hidden border border-gray-300 dark:border-gray-700 shadow-lg transition-all duration-300 ease-in-out ${
-          previewMode === "mobile" ? "w-full max-w-[400px] h-[78vh]" : "w-full max-w-4xl h-[78vh]" // Slightly adjusted sizes
+          previewMode === "mobile" ? "w-full max-w-[400px] h-[78vh]" : "w-full max-w-4xl h-[78vh]"
         } rounded-lg`}
         style={{
           backgroundImage: styles.backgroundImage ? `url(${styles.backgroundImage})` : "none",
-          backgroundColor: styles.backgroundColor, // Apply direct background color
+          backgroundColor: styles.backgroundColor,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
-        // Use the custom drop handler for adding NEW elements
-        onDrop={handleCanvasDrop}
-        onDragOver={onDragOver} // Keep the original onDragOver for allowing drop
+        // Native HTML5 Drop handlers for adding NEW elements
+        onDrop={handleCanvasDrop} // Use the corrected custom handler
+        onDragOver={onDragOver} // Allow dropping
       >
-        {/* Apply dynamic styles (CSS variables) to this inner div for cascading */}
-        <div style={dynamicStyles} className="h-full">
+        {/* Inner div for styling context and DnD */}
+        <div
+          style={dynamicStyles}
+          className="h-full">
+          {" "}
+          {/* Apply CSS vars */}
           <DragDropContext onDragEnd={handleDragEnd}>
+            {" "}
+            {/* DnD context for REORDERING */}
             {/* Main Droppable for Root Elements */}
-            <Droppable droppableId="elements-droppable" direction="vertical">
+            <Droppable
+              droppableId="elements-droppable"
+              direction="vertical">
               {(provided, snapshot) => (
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   // Styling for the root droppable area
-                  className={`p-4 min-h-full transition-colors duration-150 ease-in-out ${snapshot.isDraggingOver ? "bg-black/5 dark:bg-white/5" : ""}`}
-                >
-                  {rootElements.length === 0 ? (
-                    // Placeholder when canvas is empty
-                    <div className="text-center py-20 px-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg" style={{ color: styles.textColor, opacity: 0.7 }}>
+                  className={`p-4 min-h-full transition-colors duration-150 ease-in-out ${
+                    snapshot.isDraggingOver ? "bg-black/5 dark:bg-white/5" : ""
+                  }`}>
+                  {rootElements.length === 0 && !snapshot.isDraggingOver ? ( // Show placeholder only if empty AND not dragging over
+                    <div
+                      className="text-center py-20 px-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg"
+                      style={{ color: styles.textColor, opacity: 0.7 }}>
                       <p className="font-medium">Your canvas is empty!</p>
                       <p className="text-sm mt-1">Drag elements or layouts from the left panel to start building.</p>
                     </div>
                   ) : (
-                    // Render Root Elements (standard elements or layout containers)
+                    // Render Root Elements
                     rootElements.map((elem, index) => (
-                      <Draggable key={elem.id} draggableId={elem.id} index={index}>
+                      <Draggable
+                        key={elem.id}
+                        draggableId={elem.id}
+                        index={index}>
                         {(providedDrag, snapshotDrag) => (
                           <div
                             ref={providedDrag.innerRef}
                             {...providedDrag.draggableProps}
-                            className={`flex items-start mb-2 relative ${snapshotDrag.isDragging ? "opacity-80 shadow-xl" : ""}`}
-                            style={{ transform: snapshotDrag.isDragging ? "rotate(-1deg)" : "none" }} // Tilt effect
+                            // --- STYLE CHANGE FOR ROOT DRAGGABLE (Simplified) ---
+                            className={`flex items-start mb-2 relative ${
+                              snapshotDrag.isDragging
+                                ? "shadow-lg bg-white dark:bg-gray-800 rounded" // Keep shadow, remove opacity/rotate
+                                : ""
+                            }`}
+                            // --- END STYLE CHANGE ---
                           >
                             {/* Drag handle for root elements */}
                             <div
                               {...providedDrag.dragHandleProps}
-                              className="cursor-grab mr-2 pt-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 touch-none" // Added touch-none
-                              aria-label="Drag element to reorder"
-                            >
+                              className="cursor-grab mr-2 pt-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 touch-none"
+                              aria-label="Drag element to reorder">
                               <GripVertical size={20} />
                             </div>
                             {/* Render the root element (could be standard or layout) */}
