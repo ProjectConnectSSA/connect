@@ -35,20 +35,8 @@ import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import TimeAgo from "react-timeago";
 import { toast } from "sonner"; // Import toast for logout feedback
-
+import { Notification } from "@/app/types/notification"; // Adjust import path as needed
 // --- Notification Type ---
-interface Notification {
-  /* ... (interface remains the same) ... */ id: number;
-  user_id: string;
-  created_at: string;
-  read_at: string | null;
-  type: string;
-  title: string;
-  description?: string | null;
-  link?: string | null;
-  icon?: string | null;
-  icon_color?: string | null;
-}
 
 // --- Icon Mapping ---
 const iconMap: { [key: string]: React.ElementType } = {
