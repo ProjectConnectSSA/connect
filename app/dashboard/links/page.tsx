@@ -45,6 +45,7 @@ import { QRCodeSVG } from "qrcode.react";
 // Assuming PageData includes id
 import type { PageData } from "@/app/types/links/types";
 import { Skeleton } from "@radix-ui/themes";
+import { TopBar } from "@/components/dashboard/topbar";
 
 const formatDate = (dateString?: string | null) => {
   // Allow null
@@ -304,6 +305,8 @@ export default function BioPagesDashboard() {
       <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
         <DashboardSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
+          <TopBar />
+          {/* Scrollable Content Area */}
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600 mr-2" />
             <span className="text-gray-600">Loading Pages...</span>
@@ -318,6 +321,7 @@ export default function BioPagesDashboard() {
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
       <DashboardSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
+        <TopBar />
         {/* Scrollable Content Area */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <div className="space-y-6">
@@ -325,10 +329,7 @@ export default function BioPagesDashboard() {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4">
               {/* Use flex-wrap and gap */}
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Bio Pages</h1>
-                <p className="text-sm md:text-base text-gray-600">Create and manage your link-in-bio pages.</p>
-              </div>
+              <div></div>
               <Button
                 onClick={() => router.push("/dashboard/links/edit/new")} // Use 'new' consistently
                 className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap">

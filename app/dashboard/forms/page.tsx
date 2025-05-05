@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { QRCodeSVG } from "qrcode.react";
 import { TemplateSelector } from "@/components/forms/templates/templateSelecter";
 import DashboardSidebar from "@/components/dashboard/sidebar";
+import { TopBar } from "@/components/dashboard/topbar";
 
 // Utility function: format date.
 const formatDate = (dateString: string) => {
@@ -218,116 +219,156 @@ export default function FormsPage() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+      {" "}
+      {/* Added background */}
       <DashboardSidebar />
-      {/* Main content */}
-      {/* Use flex-col to allow header and content area */}
-      <div className="space-y-6 flex-1 p-6 flex flex-col overflow-hidden">
-        {/* Header section - Remains visible */}
-        <div className="flex items-center justify-between flex-shrink-0">
-          {" "}
-          {/* Prevent header shrinking */}
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Forms</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => router.push("/dashboard/forms/edit/new")}
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Form
-              </Button>
-              <Button
-                onClick={() => setTemplateDialogOpen(true)}
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                Templates
-              </Button>
-            </div>
-            <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-2 w-32 h-12 flex flex-col justify-center">
-              <span className="text-sm font-medium text-gray-900">
-                {usedLinks}/{totalLinksAllowed}
-              </span>
-              <Progress
-                value={progressValue}
-                className="w-full mt-1 h-2 bg-gray-300"
-              />
-            </Card>
-          </div>
-        </div>
-
-        {/* Content Area: Loading or Forms List */}
-        {/* Make this part scrollable and grow */}
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            // --- Loading Indicator ---
-            <div className="flex justify-center items-center h-full pt-10">
-              {" "}
-              {/* Adjust padding/height as needed */}
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              <span className="ml-2 text-gray-600">Loading forms...</span>
-            </div>
-          ) : (
-            // --- End Loading Indicator ---
-            // --- Forms List (Rendered when not loading) ---
-            <Card className="bg-white border-none shadow-sm rounded-lg p-4 w-full">
-              <div>
-                {/* Render DataTable only if not loading */}
-                <DataTable
-                  data={Forms || []}
-                  columns={columns}
-                  filters={filters}
-                  itemsPerPage={5}
-                />
+      {/* Main content wrapper - Takes remaining width, arranges TopBar and Main vertically */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* ================================================ */}
+        {/* TopBar: Now a direct child, spans full width */}
+        <TopBar />
+        {/* ================================================ */}
+        {/* Scrollable Page Content Area */}
+        {/* flex-1 makes it take remaining height, overflow-y-auto enables scrolling, p-6 adds padding INSIDE */}
+        <main className="flex-1 overflow-y-auto p-6">
+          {/* Inner container for content spacing */}
+          <div className="space-y-6">
+            {/* Header section */}
+            <div className="flex items-center justify-between flex-shrink-0">
+              <div></div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => router.push("/dashboard/forms/edit/new")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Form
+                  </Button>
+                  <Button
+                    onClick={() => setTemplateDialogOpen(true)}
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-800">
+                    {" "}
+                    {/* Added dark mode */}
+                    Templates
+                  </Button>
+                </div>
+                <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-2 w-32 h-12 flex flex-col justify-center">
+                  {" "}
+                  {/* Added dark mode */}
+                  <div className="flex justify-between items-center">
+                    {" "}
+                    {/* Align usage text */}
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                      {" "}
+                      {/* Added dark mode */}
+                      {usedLinks}/{totalLinksAllowed}
+                    </span>
+                  </div>
+                  <Progress
+                    value={progressValue}
+                    className="w-full mt-1 h-2 bg-gray-200 dark:bg-gray-700 [&>div]:bg-blue-600 dark:[&>div]:bg-blue-500" /* Added dark mode styles */
+                  />
+                </Card>
               </div>
-            </Card>
-            // --- End Forms List ---
-          )}
-        </div>
+            </div>
 
+            {/* Content Area: Loading or Forms List */}
+            {/* This div is now inside the scrollable 'main' */}
+            <div>
+              {isLoading ? (
+                // --- Loading Indicator ---
+                <div className="flex justify-center items-center h-64 pt-10">
+                  {" "}
+                  {/* Adjusted height */}
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" /> {/* Added dark mode */}
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">Loading forms...</span> {/* Added dark mode */}
+                </div>
+              ) : (
+                // --- Forms List (Rendered when not loading) ---
+                <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-4 w-full">
+                  {" "}
+                  {/* Added dark mode */}
+                  <div>
+                    {/* Render DataTable only if not loading */}
+                    <DataTable
+                      data={Forms || []}
+                      columns={columns}
+                      filters={filters} // Make sure filters are defined/passed correctly if used by DataTable
+                      itemsPerPage={5}
+                    />
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>{" "}
+          {/* End Inner container for content spacing */}
+        </main>{" "}
+        {/* End Scrollable Page Content Area */}
+        {/* --- Dialogs --- */}
         {/* Share Dialog */}
         <Dialog
           open={shareDialogOpen}
           onOpenChange={setShareDialogOpen}>
-          <DialogContent>
+          {/* Dialog Content remains the same... */}
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800">
+            {" "}
+            {/* Added dark mode */}
             <DialogHeader>
-              <DialogTitle>Share Form</DialogTitle>
-              <DialogDescription>Use the link below to share the form or generate its QR code.</DialogDescription>
+              <DialogTitle className="dark:text-gray-100">Share Form</DialogTitle> {/* Added dark mode */}
+              <DialogDescription className="dark:text-gray-400">Use the link below to share the form or generate its QR code.</DialogDescription>{" "}
+              {/* Added dark mode */}
             </DialogHeader>
             <div className="flex items-center space-x-2 mt-4">
               <input
                 type="text"
                 value={shareLink}
                 readOnly
-                className="flex-1 border border-gray-300 rounded px-3 py-2"
+                className="flex-1 border border-gray-300 rounded px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700" /* Added dark mode */
               />
               <Button
                 onClick={handleCopy}
-                variant="outline">
-                <Copy className={copied ? "text-green-500" : "text-gray-500"} />
+                size="icon" /* Size icon for copy button */
+                variant="outline"
+                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                {" "}
+                {/* Added dark mode */}
+                <Copy className={`h-4 w-4 ${copied ? "text-green-500" : "text-gray-500 dark:text-gray-400"}`} /> {/* Adjusted size + dark mode */}
                 <span className="sr-only">Copy link</span>
               </Button>
             </div>
             <div className="mt-4">
               <Button
                 onClick={() => setShowQRCode(!showQRCode)}
-                variant="secondary">
+                variant="secondary"
+                className="dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                {" "}
+                {/* Added dark mode */}
                 {showQRCode ? "Hide QR Code" : "Generate QR Code"}
                 <QrCode className="ml-2 h-4 w-4" />
               </Button>
               {showQRCode && (
                 <div className="mt-4 flex flex-col items-center">
-                  <div ref={qrCodeRef}>
+                  <div
+                    ref={qrCodeRef}
+                    className="bg-white p-2 rounded">
+                    {" "}
+                    {/* Ensure QR has white background */}
                     <QRCodeSVG
                       value={shareLink}
-                      style={{ width: 128, height: 128 }}
+                      size={128} // Use size prop instead of style
+                      level="Q" // Error correction level
+                      bgColor="#ffffff"
+                      fgColor="#000000"
                     />
                   </div>
                   <Button
                     onClick={downloadQRCode}
                     variant="outline"
-                    className="mt-2">
+                    className="mt-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                    {" "}
+                    {/* Added dark mode */}
                     Download QR Code
                   </Button>
                 </div>
@@ -336,20 +377,24 @@ export default function FormsPage() {
             <DialogClose asChild>
               <Button
                 variant="ghost"
-                className="mt-4 w-full">
+                className="mt-4 w-full dark:text-gray-400 dark:hover:bg-gray-800">
+                {" "}
+                {/* Added dark mode */}
                 Close
               </Button>
             </DialogClose>
           </DialogContent>
         </Dialog>
-
         {/* Template Selection Dialog */}
+        {/* Assuming TemplateSelector handles its own styling/dark mode */}
         <TemplateSelector
           open={templateDialogOpen}
           onClose={() => setTemplateDialogOpen(false)}
           onSelectTemplate={handleSelectTemplate}
         />
-      </div>
-    </div>
+        {/* --- End Dialogs --- */}
+      </div>{" "}
+      {/* End Main content wrapper */}
+    </div> // End Outer container
   );
 }

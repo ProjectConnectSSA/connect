@@ -55,7 +55,7 @@ export function DashboardSidebar() {
               alt="Logo"
               className="h-8 w-8 flex-shrink-0"
             />
-            {!isCollapsed && <span className="ml-3 font-semibold whitespace-nowrap">Dashboard</span>}
+            {!isCollapsed && <span className="ml-3 font-semibold whitespace-nowrap">DigiFlow</span>}
           </Link>
         </div>
 
