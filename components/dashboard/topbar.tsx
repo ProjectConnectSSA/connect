@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Import useRouter for navigation/logout
+// Import hooks for navigation and path
+import { useRouter, usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +14,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup, // Added for grouping user items
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import {
   Bell,
@@ -24,44 +25,56 @@ import {
   UserPlus,
   AlertTriangle,
   Loader2,
-  LifeBuoy, // Icon for Support
-  BookOpen, // Icon for Docs
-  Users, // Icon for Community
-  User, // Icon for Profile
-  Settings, // Icon for Settings
-  LogOut, // Icon for Logout
+  LifeBuoy,
+  BookOpen,
+  Users,
+  User,
+  Settings,
+  LogOut,
+  // Add specific icons if needed for titles
+  FileText as FormsIcon,
+  Link as LinksIcon,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import TimeAgo from "react-timeago";
-import { toast } from "sonner"; // Import toast for logout feedback
+import { toast } from "sonner";
+import { Notification } from "@/app/types/notification"; // Adjust import path as needed
 
-// --- Notification Type ---
-interface Notification {
-  /* ... (interface remains the same) ... */ id: number;
-  user_id: string;
-  created_at: string;
-  read_at: string | null;
-  type: string;
-  title: string;
-  description?: string | null;
-  link?: string | null;
-  icon?: string | null;
-  icon_color?: string | null;
-}
-
-// --- Icon Mapping ---
+// --- Notification Icon Mapping ---
 const iconMap: { [key: string]: React.ElementType } = {
-  /* ... (map remains the same) ... */ MailCheck: MailCheck,
+  MailCheck: MailCheck,
   BarChart: BarChart,
   FileWarning: FileWarning,
   UserPlus: UserPlus,
   default: AlertTriangle,
 };
 
+// --- HELPER FUNCTION: Get Page Title from Pathname ---
+function getPageTitle(pathname: string | null): string {
+  if (!pathname) return "Dashboard"; // Default if pathname is null
+
+  // Add your specific routes here
+  if (pathname === "/dashboard") return "Overview"; // Or just "Dashboard"
+  if (pathname.startsWith("/dashboard/forms")) return "Forms";
+  if (pathname.startsWith("/dashboard/links")) return "Bio Pages"; // Example
+  if (pathname.startsWith("/dashboard/profile")) return "Profile";
+  if (pathname.startsWith("/dashboard/email")) return "Email";
+  if (pathname.startsWith("/dashboard/contacts")) return "Contacts";
+  if (pathname.startsWith("/dashboard/analytics")) return "Analytics";
+  if (pathname.startsWith("/dashboard/landing")) return "Landing Page";
+  if (pathname.startsWith("/dashboard/Generative-Ai")) return "AI (Beta)";
+  // Add more mappings as needed for your application sections
+
+  // Fallback Title
+  return "Dashboard";
+}
+// --- END HELPER FUNCTION ---
+
 export function TopBar() {
   const supabase = createClient();
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
+  const pathname = usePathname(); // Get current pathname
   const [user, setUser] = useState<any>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -74,7 +87,6 @@ export function TopBar() {
 
   // Effect 1: Fetch User
   useEffect(() => {
-    /* ... (fetch user logic remains the same) ... */
     const fetchUser = async () => {
       setIsAuthLoading(true);
       try {
@@ -82,10 +94,17 @@ export function TopBar() {
           data: { user: currentUser },
           error,
         } = await supabase.auth.getUser();
-        if (error) throw error;
-        setUser(currentUser);
+        if (error) {
+          // Don't throw error if user is simply not logged in
+          if (error.message !== "Auth session missing!") {
+            console.error("Error fetching user:", error);
+          }
+          setUser(null);
+        } else {
+          setUser(currentUser);
+        }
       } catch (error) {
-        console.error("Error fetching user:", error);
+        console.error("Unexpected error fetching user:", error);
         setUser(null);
       } finally {
         setIsAuthLoading(false);
@@ -94,32 +113,45 @@ export function TopBar() {
     fetchUser();
   }, [supabase]);
 
-  // Effect 2: Fetch Notifications
+  // Effect 2: Fetch Notifications (Only if user exists)
   useEffect(() => {
-    /* ... (fetch notifications logic remains the same) ... */
+    // Reset notification state if auth is loading or no user
     if (isAuthLoading || !user) {
+      setIsNotificationsLoading(false); // Stop loading indicator
+      setNotifications([]); // Clear notifications
       if (!isAuthLoading && !user) {
-        setIsNotificationsLoading(false);
-        setNotifications([]);
-        setNotificationError("Please log in to see notifications.");
+        // Optionally set an error/message if needed, but often not desired for anon users
+        // setNotificationError("Please log in to see notifications.");
       }
-      return;
+      return; // Exit early
     }
+
+    // Proceed to fetch notifications if user exists and auth is done
     const fetchNotifications = async () => {
       setIsNotificationsLoading(true);
       setNotificationError(null);
       try {
+        // Ensure your API endpoint is correct and handles authentication
         const response = await fetch("/api/notification");
         if (!response.ok) {
           let errorMsg = `Error: ${response.status}`;
           try {
             const errData = await response.json();
             errorMsg = errData.error || errData.message || errorMsg;
-          } catch {}
+          } catch {
+            /* Ignore parsing error */
+          }
           throw new Error(errorMsg);
         }
         const data: Notification[] = await response.json();
-        setNotifications(data);
+        // Ensure data is an array before setting state
+        if (Array.isArray(data)) {
+          setNotifications(data);
+        } else {
+          console.error("API did not return an array for notifications:", data);
+          setNotifications([]);
+          setNotificationError("Received invalid notification data.");
+        }
       } catch (error: any) {
         console.error("Failed to fetch notifications:", error);
         setNotificationError(error.message || "Could not load notifications.");
@@ -129,37 +161,84 @@ export function TopBar() {
       }
     };
     fetchNotifications();
-  }, [user, isAuthLoading]);
+  }, [user, isAuthLoading]); // Depend on user and auth loading state
 
-  // --- Action Handlers (Mark Read, Click, Logout) ---
+  // --- Action Handlers ---
   const handleMarkAllRead = async () => {
-    /* ... (logic remains the same) ... */
-    const previouslyUnreadIds = notifications.filter((n) => n.read_at === null).map((n) => n.id);
-    if (previouslyUnreadIds.length === 0) return;
+    const unreadNotifications = notifications.filter((n) => n.read_at === null);
+    if (unreadNotifications.length === 0) return;
+
     const now = new Date().toISOString();
+    const originalNotifications = [...notifications]; // Store original state for potential revert
+
+    // Optimistically update UI
     setNotifications((currentNotifications) => currentNotifications.map((n) => (n.read_at === null ? { ...n, read_at: now } : n)));
+
     try {
-      console.log("TODO: Call API to mark all notifications as read");
-      // await fetch('/api/notifications/mark-all-read', { method: 'POST' });
+      // --- Replace with your actual API call ---
+      const response = await fetch("/api/notification/mark-all-read", {
+        // Example endpoint
+        method: "POST",
+        // headers: { 'Content-Type': 'application/json' }, // Add headers if needed
+        // body: JSON.stringify({ ids: unreadNotifications.map(n => n.id) }) // Send IDs if needed by backend
+      });
+      if (!response.ok) {
+        throw new Error("Failed to mark notifications as read on server");
+      }
+      // Success - UI is already updated
+      // toast.success("Marked all as read."); // Optional success feedback
+      // --- End API call section ---
     } catch (error) {
-      console.error("Failed to mark all notifications as read:", error); /* Handle revert/toast */
+      console.error("Failed to mark all notifications as read:", error);
+      // Revert UI changes on error
+      setNotifications(originalNotifications);
+      toast.error("Failed to mark notifications as read. Please try again.");
     }
   };
-  const handleNotificationClick = (notification: Notification) => {
-    /* ... (logic remains the same) ... */
-    console.log("Clicked notification:", notification.id);
+
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read if unread (optimistic update + API call)
     if (notification.read_at === null) {
       const now = new Date().toISOString();
+      const originalNotifications = [...notifications];
       setNotifications((current) => current.map((n) => (n.id === notification.id ? { ...n, read_at: now } : n)));
-      // TODO: API call to mark specific notification 'notification.id' as read
-      // fetch(`/api/notifications/${notification.id}/mark-read`, { method: 'PATCH' });
+
+      try {
+        // --- Replace with your actual API call to mark one notification as read ---
+        const response = await fetch(`/api/notification/${notification.id}/mark-read`, {
+          // Example endpoint
+          method: "PATCH", // Or POST
+        });
+        if (!response.ok) {
+          throw new Error("Failed to mark notification as read on server");
+        }
+        // Success - UI is already updated
+        // --- End API call section ---
+      } catch (error) {
+        console.error(`Failed to mark notification ${notification.id} as read:`, error);
+        // Revert UI change for this specific notification on error
+        setNotifications(originalNotifications);
+        toast.error("Failed to update notification status.");
+        // Decide if navigation should proceed despite the error
+        // return; // Option: Stop navigation if marking as read failed
+      }
     }
+
+    // Navigate if a link exists
     if (notification.link) {
-      window.location.href = notification.link;
+      // Use router.push for internal links for smoother SPA navigation
+      if (notification.link.startsWith("/")) {
+        router.push(notification.link);
+      } else {
+        // Open external links in a new tab
+        window.open(notification.link, "_blank", "noopener noreferrer");
+      }
+    } else {
+      console.log("Clicked notification without a link:", notification.id);
+      // Potentially do something else if there's no link, like opening a modal
     }
   };
 
-  // --- NEW: Logout Handler ---
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -168,186 +247,239 @@ export function TopBar() {
     } else {
       toast.success("Logged out successfully.");
       // Redirect to login or home page and refresh to clear state
-      router.push("/"); // Adjust target route as needed
-      router.refresh();
+      router.push("/"); // Adjust target route as needed (e.g., '/login')
+      router.refresh(); // Force refresh to ensure all state is cleared
     }
   };
   // --- End Action Handlers ---
 
   // --- Helper Functions ---
-  const getInitials = (email?: string | null) => {
-    /* ... (same as before) ... */
-    if (!email) return "?";
-    const name = user?.user_metadata?.full_name;
-    if (name) {
-      const parts = name.split(" ").filter(Boolean);
-      if (parts.length > 1) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  const getInitials = (email?: string | null): string => {
+    // Use user_metadata first if available
+    const name = user?.user_metadata?.full_name || user?.user_metadata?.name;
+    if (name && typeof name === "string") {
+      const parts = name.split(" ").filter(Boolean); // Filter out empty strings from multiple spaces
+      if (parts.length > 1) {
+        // Use first letter of first and last parts
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      if (parts.length === 1 && parts[0].length > 0) {
+        // Use first 1 or 2 letters of the single name part
+        return parts[0].substring(0, Math.min(parts[0].length, 2)).toUpperCase();
+      }
     }
-    return email.substring(0, 2).toUpperCase();
+    // Fallback to email if name is not useful
+    if (email && typeof email === "string" && email.includes("@")) {
+      const emailPrefix = email.split("@")[0];
+      return emailPrefix.substring(0, Math.min(emailPrefix.length, 2)).toUpperCase();
+    }
+    // Absolute fallback
+    return "??";
   };
-  const getDisplayName = () => {
-    /* ... (same as before) ... */
+
+  const getDisplayName = (): string => {
     if (!user) return "Guest";
-    return user.user_metadata?.full_name || user.email || "User";
+    // Prioritize full name, then name, then email
+    return user.user_metadata?.full_name || user.user_metadata?.name || user.email || "User";
   };
 
-  // --- Colors ---
-  const textColor = "text-indigo-100";
-  const hoverTextColor = "hover:text-white";
-  const iconColor = "text-indigo-200";
+  // --- Colors & Styling ---
+  // Define base colors for reuse, makes theme changes easier
+  const textColor = "text-indigo-100 dark:text-gray-200";
+  const hoverTextColor = "hover:text-white dark:hover:text-white";
+  const iconColor = "text-indigo-200 dark:text-gray-400";
+  const bgColor = "bg-indigo-700 dark:bg-gray-950";
+  const borderColor = "border-indigo-900 dark:border-gray-800";
+  const hoverBgColor = "hover:bg-indigo-600 dark:hover:bg-gray-800";
+  const separatorColor = "bg-indigo-500 dark:bg-gray-700";
+  const dropdownBgColor = "bg-white dark:bg-gray-900";
+  const dropdownBorderColor = "border-gray-200 dark:border-gray-700";
+  const dropdownSeparatorColor = "bg-gray-200 dark:bg-gray-700";
+  const dropdownFocusBgColor = "focus:bg-gray-100 dark:focus:bg-gray-800";
+  const dropdownTextColor = "text-gray-700 dark:text-gray-300";
+  const dropdownLabelColor = "text-gray-900 dark:text-gray-100";
+  const dropdownMutedColor = "text-gray-500 dark:text-gray-400";
 
+  // --- RETURN JSX ---
+  // IMPORTANT: Ensure the return statement has parentheses around the JSX
   return (
     <div
       className={cn(
-        /* ... base classes ... */
-        "flex h-16 items-center",
-        "border-b border-indigo-900",
-        "bg-indigo-700",
-        "px-4 md:px-6",
-        "sticky top-0 z-30"
+        "flex h-16 items-center", // Base layout
+        "border-b", // Add border bottom
+        borderColor, // Use dynamic border color
+        bgColor, // Use dynamic background color
+        "px-4 md:px-6", // Padding
+        "sticky top-0 z-30 w-full" // Stickiness and width
       )}>
-      {/* Left side */}
+      {/* Left side - Dynamic Title */}
       <div>
         <Link
-          href="/dashboard"
-          className={cn("text-lg font-semibold", textColor, hoverTextColor)}>
-          Dashboard
+          href="/dashboard" // Link always goes to the main dashboard overview
+          className={cn("text-lg font-semibold", textColor, hoverTextColor)}
+          title="Go to Dashboard Overview">
+          {/* Display the dynamic page title */}
+          {getPageTitle(pathname)}
         </Link>
       </div>
-
-      {/* Right side */}
+      {/* Right side - Icons and User Menu */}
       <div className="ml-auto flex items-center gap-1 md:gap-2">
-        {" "}
-        {/* Reduced gap slightly */}
         {/* --- Notification Dropdown --- */}
         <DropdownMenu>
-          {/* ... (Notification Trigger and Content remain the same) ... */}
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className={cn("rounded-full relative", textColor, hoverTextColor)}
-              disabled={isAuthLoading}>
+              className={cn(
+                "relative rounded-full",
+                textColor,
+                hoverTextColor,
+                hoverBgColor // Apply hover background
+              )}
+              aria-label="Notifications"
+              disabled={isAuthLoading || !user} // Disable if loading or no user
+            >
+              {/* Unread indicator dot */}
               {hasUnread && !isNotificationsLoading && (
-                <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-1 ring-indigo-700" />
+                <span
+                  className={cn(
+                    "absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-1",
+                    "ring-indigo-700 dark:ring-gray-950" // Ring color adapts to theme
+                  )}
+                />
               )}
               <Bell className={cn("h-5 w-5", iconColor)} />
-              <span className="sr-only">Notifications</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-80 md:w-96">
-            {/* ... (Notification Label, Separator, Content, Loading, Error, Empty, List) ... */}
-            <DropdownMenuLabel className="flex justify-between items-center px-2 py-1.5">
-              <span>Notifications</span>
-              {!isNotificationsLoading && notifications.length > 0 && hasUnread && (
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="h-auto p-0 text-xs"
-                  onClick={handleMarkAllRead}>
-                  {" "}
-                  Mark all as read{" "}
-                </Button>
-              )}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="max-h-[400px] overflow-y-auto">
-              {isNotificationsLoading && (
-                <div className="flex items-center justify-center p-4 text-sm text-muted-foreground">
-                  {" "}
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...{" "}
-                </div>
-              )}
-              {!isNotificationsLoading && notificationError && (
-                <div className="flex items-center justify-center p-4 text-sm text-destructive">
-                  {" "}
-                  <AlertTriangle className="mr-2 h-4 w-4" /> {notificationError}{" "}
-                </div>
-              )}
-              {!isNotificationsLoading && !notificationError && notifications.length === 0 && (
-                <div className="px-2 py-6 text-center text-sm text-muted-foreground"> No new notifications </div>
-              )}
-              {!isNotificationsLoading &&
-                !notificationError &&
-                notifications.length > 0 &&
-                notifications.map((notification) => {
-                  const IconComponent = iconMap[notification.icon || "default"] || iconMap.default;
-                  const isUnread = notification.read_at === null;
-                  return (
-                    <DropdownMenuItem
-                      key={notification.id}
-                      className={cn(
-                        "flex items-start gap-3 px-2 py-2.5 cursor-pointer data-[disabled]:pointer-events-auto data-[disabled]:opacity-100",
-                        isUnread && "bg-indigo-50 dark:bg-indigo-900/30"
-                      )}
-                      onClick={() => handleNotificationClick(notification)}>
-                      <div
+          {/* Render content only if user is logged in */}
+          {user && (
+            <DropdownMenuContent
+              align="end"
+              className={cn("w-80 md:w-96 border", dropdownBgColor, dropdownBorderColor)}>
+              {/* Label and Mark All Read */}
+              <DropdownMenuLabel className={cn("flex justify-between items-center px-2 py-1.5 text-sm font-medium", dropdownLabelColor)}>
+                <span>Notifications</span>
+                {!isNotificationsLoading && notifications.length > 0 && hasUnread && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs text-blue-600 dark:text-blue-400"
+                    onClick={handleMarkAllRead}>
+                    Mark all as read
+                  </Button>
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className={dropdownSeparatorColor} />
+
+              {/* Scrollable Notification List */}
+              <div className="max-h-[400px] overflow-y-auto">
+                {isNotificationsLoading && (
+                  <div className={cn("flex items-center justify-center p-4 text-sm", dropdownMutedColor)}>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...
+                  </div>
+                )}
+                {!isNotificationsLoading && notificationError && (
+                  <div className={cn("flex items-center justify-center p-4 text-sm text-red-600 dark:text-red-500")}>
+                    <AlertTriangle className="mr-2 h-4 w-4" /> {notificationError}
+                  </div>
+                )}
+                {!isNotificationsLoading && !notificationError && notifications.length === 0 && (
+                  <div className={cn("px-2 py-6 text-center text-sm", dropdownMutedColor)}> No new notifications </div>
+                )}
+                {/* Render list items */}
+                {!isNotificationsLoading &&
+                  !notificationError &&
+                  notifications.length > 0 &&
+                  notifications.map((notification) => {
+                    const IconComponent = iconMap[notification.icon || "default"] || iconMap.default;
+                    const isUnread = notification.read_at === null;
+                    return (
+                      <DropdownMenuItem
+                        key={notification.id}
                         className={cn(
-                          "flex-shrink-0 rounded-full h-8 w-8 flex items-center justify-center mt-0.5",
-                          !isUnread ? "bg-gray-100 dark:bg-gray-700" : "bg-blue-100 dark:bg-blue-900/50"
-                        )}>
-                        {" "}
-                        <IconComponent className={cn("h-4 w-4", notification.icon_color || iconColor)} />{" "}
-                      </div>
-                      <div className="flex-1">
-                        {" "}
-                        <p className={cn("text-sm font-medium text-foreground", isUnread && "font-semibold")}>{notification.title}</p>{" "}
-                        {notification.description && <p className="text-xs text-muted-foreground line-clamp-2">{notification.description}</p>}{" "}
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {" "}
-                          <TimeAgo date={notification.created_at} />{" "}
-                        </p>{" "}
-                      </div>
-                    </DropdownMenuItem>
-                  );
-                })}
-            </div>
-            {!isNotificationsLoading && !notificationError && notifications.length > 0 && (
-              <>
-                {" "}
-                <DropdownMenuSeparator />{" "}
-                <DropdownMenuItem className="justify-center py-2 cursor-pointer text-sm text-blue-600 hover:text-blue-700">
-                  {" "}
-                  View all notifications {/* TODO: Link */}{" "}
-                </DropdownMenuItem>{" "}
-              </>
-            )}
-          </DropdownMenuContent>
+                          "flex items-start gap-3 px-2 py-2.5 cursor-pointer data-[disabled]:pointer-events-auto data-[disabled]:opacity-100",
+                          dropdownFocusBgColor, // Focus style
+                          isUnread && "bg-blue-50 dark:bg-gray-800/50" // Unread style
+                        )}
+                        onClick={() => handleNotificationClick(notification)}>
+                        {/* Icon container */}
+                        <div
+                          className={cn(
+                            "flex-shrink-0 rounded-full h-8 w-8 flex items-center justify-center mt-0.5",
+                            !isUnread ? "bg-gray-100 dark:bg-gray-700" : "bg-blue-100 dark:bg-blue-900/50"
+                          )}>
+                          <IconComponent className={cn("h-4 w-4", notification.icon_color || "text-gray-500 dark:text-gray-400")} />
+                        </div>
+                        {/* Text content */}
+                        <div className="flex-1 overflow-hidden">
+                          <p
+                            className={cn(
+                              "text-sm font-medium truncate", // Truncate title
+                              dropdownLabelColor,
+                              isUnread && "font-semibold"
+                            )}>
+                            {notification.title}
+                          </p>
+                          {notification.description && <p className={cn("text-xs line-clamp-2", dropdownMutedColor)}>{notification.description}</p>}
+                          <p className={cn("text-xs mt-0.5", dropdownMutedColor)}>
+                            <TimeAgo date={notification.created_at} />
+                          </p>
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })}
+              </div>
+
+              {/* Footer link (optional) */}
+              {!isNotificationsLoading && !notificationError && notifications.length > 0 && (
+                <>
+                  <DropdownMenuSeparator className={dropdownSeparatorColor} />
+                  <DropdownMenuItem
+                    className={cn(
+                      "justify-center py-2 cursor-pointer text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300",
+                      dropdownFocusBgColor
+                    )}>
+                    {/* TODO: Replace with Link if internal, or <a> if external */}
+                    View all notifications
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          )}{" "}
+          {/* End conditional rendering for user */}
         </DropdownMenu>
-        {/* --- End Notification Dropdown --- */}
+
         {/* --- Help Dropdown --- */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className={cn("rounded-full", textColor, hoverTextColor)}>
+              className={cn("rounded-full", textColor, hoverTextColor, hoverBgColor)}
+              aria-label="Help and support">
               <HelpCircle className={cn("h-5 w-5", iconColor)} />
-              <span className="sr-only">Help</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-56">
-            {" "}
-            {/* Standard width */}
-            <DropdownMenuLabel>Help & Support</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            className={cn("w-56 border", dropdownBgColor, dropdownBorderColor)}>
+            <DropdownMenuLabel className={dropdownLabelColor}>Help & Support</DropdownMenuLabel>
+            <DropdownMenuSeparator className={dropdownSeparatorColor} />
+            {/* Use <a> for external links, Link for internal */}
+            <DropdownMenuItem
+              asChild
+              className={cn(dropdownTextColor, dropdownFocusBgColor)}>
               <a
                 href="/docs"
                 target="_blank"
                 rel="noopener noreferrer">
-                {" "}
-                {/* Use <a> for external links */}
                 <BookOpen className="mr-2 h-4 w-4" />
                 <span>Documentation</span>
               </a>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem
+              asChild
+              className={cn(dropdownTextColor, dropdownFocusBgColor)}>
               <a
                 href="/support"
                 target="_blank"
@@ -356,7 +488,9 @@ export function TopBar() {
                 <span>Contact Support</span>
               </a>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem
+              asChild
+              className={cn(dropdownTextColor, dropdownFocusBgColor)}>
               <a
                 href="/community"
                 target="_blank"
@@ -367,94 +501,116 @@ export function TopBar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {/* --- End Help Dropdown --- */}
-        <div className="h-6 w-px bg-indigo-500 hidden md:block mx-1"></div> {/* Separator */}
+
+        {/* Vertical Separator */}
+        <div className={cn("h-6 w-px hidden md:block mx-1", separatorColor)}></div>
+
         {/* --- User Dropdown --- */}
         <DropdownMenu>
           <DropdownMenuTrigger
             asChild
-            disabled={isAuthLoading || !user}>
-            {/* Wrap the user info in a div that acts as the trigger */}
+            disabled={isAuthLoading} // Disable trigger only while auth is loading
+          >
             <div
               className={cn(
-                "flex items-center gap-2 cursor-pointer rounded-md p-1", // Make clickable area slightly larger
-                "hover:bg-indigo-600 transition-colors" // Add hover effect
-              )}>
+                "flex items-center gap-2 cursor-pointer rounded-md p-1 transition-colors",
+                hoverBgColor // Apply hover background
+              )}
+              aria-label="User menu">
+              {/* Loading State */}
               {isAuthLoading ? (
                 <>
-                  <Skeleton className="h-8 w-8 rounded-full bg-indigo-500" />
-                  <Skeleton className="h-4 w-16 bg-indigo-500 hidden sm:block" />
+                  <Skeleton className={cn("h-8 w-8 rounded-full", separatorColor)} />
+                  <Skeleton className={cn("h-4 w-16 hidden sm:block", separatorColor)} />
                 </>
-              ) : user ? (
+              ) : user ? ( // Logged In State
                 <>
-                  <Avatar className="h-8 w-8 border border-indigo-500">
-                    {" "}
-                    {/* Slightly smaller avatar */}
+                  <Avatar className={cn("h-8 w-8 border", borderColor)}>
                     <AvatarImage
                       src={user.user_metadata?.avatar_url}
                       alt={getDisplayName()}
                     />
-                    <AvatarFallback className="bg-indigo-500 text-indigo-100 text-xs">
-                      {" "}
-                      {/* Smaller fallback text */}
+                    <AvatarFallback
+                      className={cn(
+                        "text-xs",
+                        bgColor, // Use main background for fallback
+                        textColor // Use main text color
+                      )}>
                       {getInitials(user.email)}
                     </AvatarFallback>
                   </Avatar>
                   <span className={cn("text-sm font-medium hidden sm:inline", textColor)}>{getDisplayName()}</span>
                 </>
               ) : (
-                <span className={cn("text-sm font-medium", textColor)}>Sign In</span>
-                // Or display a login button if user is null
+                // Logged Out State (Optional: Show Sign In)
+                <Button
+                  variant="ghost"
+                  className={cn("text-sm font-medium h-auto px-2 py-1", textColor, hoverTextColor)}
+                  onClick={() => router.push("/login")} // Redirect to login page
+                >
+                  Sign In
+                </Button>
               )}
             </div>
           </DropdownMenuTrigger>
-          {user && ( // Only render content if user exists
+
+          {/* Content is only rendered if user is logged in */}
+          {user && (
             <DropdownMenuContent
               align="end"
-              className="w-56">
+              className={cn("w-56 border", dropdownBgColor, dropdownBorderColor)}>
+              {/* User Info Header */}
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  <p className={cn("text-sm font-medium leading-none", dropdownLabelColor)}>{getDisplayName()}</p>
+                  <p className={cn("text-xs leading-none", dropdownMutedColor)}>{user.email}</p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className={dropdownSeparatorColor} />
+              {/* Navigation Items */}
               <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem
+                  asChild
+                  className={cn(dropdownTextColor, dropdownFocusBgColor)}>
                   <Link href="/dashboard/profile">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem
+                  asChild
+                  className={cn(dropdownTextColor, dropdownFocusBgColor)}>
                   <Link href="/dashboard/settings">
-                    {" "}
-                    {/* Adjust link as needed */}
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem
+                  asChild
+                  className={cn(dropdownTextColor, dropdownFocusBgColor)}>
                   <Link href="/dashboard/billing">
-                    {" "}
-                    {/* Example */}
-                    <Settings className="mr-2 h-4 w-4" /> {/* Replace with Billing icon if available */}
+                    <Settings className="mr-2 h-4 w-4" /> {/* TODO: Replace with a billing icon */}
                     <span>Billing</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className={dropdownSeparatorColor} />
+              {/* Logout Item */}
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="text-red-600 focus:bg-red-100 focus:text-red-700">
+                className={cn(
+                  "text-red-600 dark:text-red-500",
+                  "focus:bg-red-100 dark:focus:bg-red-900/50",
+                  "focus:text-red-700 dark:focus:text-red-400"
+                )}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           )}
         </DropdownMenu>
-        {/* --- End User Dropdown --- */}
-      </div>
-    </div>
-  );
-}
+      </div>{" "}
+      {/* End Right side */}
+    </div> // End TopBar container div
+  ); // <-- Closing parenthesis for return
+} // <-- Closing brace for the TopBar function component
