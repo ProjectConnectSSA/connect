@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils";
 import TimeAgo from "react-timeago";
 import { toast } from "sonner";
 import { Notification } from "@/app/types/notification"; // Adjust import path as needed
-
+import { NotificationSidebar } from "./notificationbar";
 // --- Notification Icon Mapping ---
 const iconMap: { [key: string]: React.ElementType } = {
   MailCheck: MailCheck,
@@ -49,7 +49,22 @@ const iconMap: { [key: string]: React.ElementType } = {
   UserPlus: UserPlus,
   default: AlertTriangle,
 };
-
+// --- Colors & Styling ---
+// Define base colors for reuse, makes theme changes easier
+const textColor = "text-indigo-100 dark:text-gray-200";
+const hoverTextColor = "hover:text-white dark:hover:text-white";
+const iconColor = "text-indigo-200 dark:text-gray-400";
+const bgColor = "bg-indigo-700 dark:bg-gray-950";
+const borderColor = "border-indigo-900 dark:border-gray-800";
+const hoverBgColor = "hover:bg-indigo-600 dark:hover:bg-gray-800";
+const separatorColor = "bg-indigo-500 dark:bg-gray-700";
+const dropdownBgColor = "bg-white dark:bg-gray-900";
+const dropdownBorderColor = "border-gray-200 dark:border-gray-700";
+const dropdownSeparatorColor = "bg-gray-200 dark:bg-gray-700";
+const dropdownFocusBgColor = "focus:bg-gray-100 dark:focus:bg-gray-800";
+const dropdownTextColor = "text-gray-700 dark:text-gray-300";
+const dropdownLabelColor = "text-gray-900 dark:text-gray-100";
+const dropdownMutedColor = "text-gray-500 dark:text-gray-400";
 // --- HELPER FUNCTION: Get Page Title from Pathname ---
 function getPageTitle(pathname: string | null): string {
   if (!pathname) return "Dashboard"; // Default if pathname is null
@@ -80,7 +95,7 @@ export function TopBar() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(true);
   const [notificationError, setNotificationError] = useState<string | null>(null);
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const hasUnread = useMemo(() => {
     return notifications.some((n) => n.read_at === null);
   }, [notifications]);
@@ -196,6 +211,38 @@ export function TopBar() {
     }
   };
 
+  const handleMarkOneRead = async (notificationId: number) => {
+    try {
+      const response = await fetch("/api/notification", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [notificationId] }),
+      });
+      if (!response.ok) throw new Error("Network response was not ok");
+      // Optimistic UI update
+      setNotifications((current) => current.map((n) => (n.id === notificationId ? { ...n, read_at: new Date().toISOString() } : n)));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast.error("Failed to mark notification as read.");
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId: number) => {
+    try {
+      const response = await fetch("/api/notification", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: notificationId }),
+      });
+      if (!response.ok) throw new Error("Network response was not ok");
+      // Remove from UI
+      setNotifications((current) => current.filter((n) => n.id !== notificationId));
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      toast.error("Failed to delete notification.");
+    }
+  };
+
   const handleNotificationClick = async (notification: Notification) => {
     // Mark as read if unread (optimistic update + API call)
     if (notification.read_at === null) {
@@ -204,23 +251,17 @@ export function TopBar() {
       setNotifications((current) => current.map((n) => (n.id === notification.id ? { ...n, read_at: now } : n)));
 
       try {
-        // --- Replace with your actual API call to mark one notification as read ---
-        const response = await fetch(`/api/notification/${notification.id}/mark-read`, {
-          // Example endpoint
-          method: "PATCH", // Or POST
+        const response = await fetch("/api/notification", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: [notification.id] }),
         });
-        if (!response.ok) {
-          throw new Error("Failed to mark notification as read on server");
-        }
-        // Success - UI is already updated
-        // --- End API call section ---
+        if (!response.ok) throw new Error("Network response was not ok");
+        // Optimistic UI update
+        setNotifications((current) => current.map((n) => (n.id === notification.id ? { ...n, read_at: new Date().toISOString() } : n)));
       } catch (error) {
-        console.error(`Failed to mark notification ${notification.id} as read:`, error);
-        // Revert UI change for this specific notification on error
-        setNotifications(originalNotifications);
-        toast.error("Failed to update notification status.");
-        // Decide if navigation should proceed despite the error
-        // return; // Option: Stop navigation if marking as read failed
+        console.error("Error marking notification as read:", error);
+        toast.error("Failed to mark notification as read.");
       }
     }
 
@@ -282,23 +323,6 @@ export function TopBar() {
     // Prioritize full name, then name, then email
     return user.user_metadata?.full_name || user.user_metadata?.name || user.email || "User";
   };
-
-  // --- Colors & Styling ---
-  // Define base colors for reuse, makes theme changes easier
-  const textColor = "text-indigo-100 dark:text-gray-200";
-  const hoverTextColor = "hover:text-white dark:hover:text-white";
-  const iconColor = "text-indigo-200 dark:text-gray-400";
-  const bgColor = "bg-indigo-700 dark:bg-gray-950";
-  const borderColor = "border-indigo-900 dark:border-gray-800";
-  const hoverBgColor = "hover:bg-indigo-600 dark:hover:bg-gray-800";
-  const separatorColor = "bg-indigo-500 dark:bg-gray-700";
-  const dropdownBgColor = "bg-white dark:bg-gray-900";
-  const dropdownBorderColor = "border-gray-200 dark:border-gray-700";
-  const dropdownSeparatorColor = "bg-gray-200 dark:bg-gray-700";
-  const dropdownFocusBgColor = "focus:bg-gray-100 dark:focus:bg-gray-800";
-  const dropdownTextColor = "text-gray-700 dark:text-gray-300";
-  const dropdownLabelColor = "text-gray-900 dark:text-gray-100";
-  const dropdownMutedColor = "text-gray-500 dark:text-gray-400";
 
   // --- RETURN JSX ---
   // IMPORTANT: Ensure the return statement has parentheses around the JSX
@@ -435,6 +459,10 @@ export function TopBar() {
                 <>
                   <DropdownMenuSeparator className={dropdownSeparatorColor} />
                   <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsSidebarOpen(true);
+                    }}
                     className={cn(
                       "justify-center py-2 cursor-pointer text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300",
                       dropdownFocusBgColor
@@ -611,6 +639,14 @@ export function TopBar() {
         </DropdownMenu>
       </div>{" "}
       {/* End Right side */}
-    </div> // End TopBar container div
+      <NotificationSidebar
+        notifications={notifications}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onMarkAllRead={handleMarkAllRead}
+        onMarkRead={handleMarkOneRead}
+        onDelete={handleDeleteNotification} // TODO: Implement delete function
+      />
+    </div> // End TopBar container
   ); // <-- Closing parenthesis for return
 } // <-- Closing brace for the TopBar function component
