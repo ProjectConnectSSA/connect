@@ -15,7 +15,7 @@ export function DashboardSidebar() {
 
   const routes = [
     // ... (Keep your routes array)
-    { href: "/dashboard/links", label: "Link", icon: LinkIcon },
+    { href: "/dashboard/links", label: "Bio Page", icon: LinkIcon },
     { href: "/dashboard/forms", label: "Forms", icon: FileText },
     { href: "/dashboard/emails", label: "Emails", icon: Mail },
     { href: "/dashboard/landing", label: "Landing Page", icon: LayoutTemplate },

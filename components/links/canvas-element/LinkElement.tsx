@@ -118,88 +118,17 @@ export default function LinkElement({ element, styles, updateElement, deleteElem
   };
 
   return (
-    <div className={`relative group mb-3 ${isNested ? "px-0" : "px-2 md:px-4"}`}>
-      {/* Edit/Delete Controls */}
-      <div className="absolute top-1 right-1 md:top-1/2 md:-translate-y-1/2 md:right-3 flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-        {/* Edit Button & Dialog */}
-        <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <Dialog.Trigger asChild>
-            <button className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50" aria-label="Edit Link">
-              <Edit2 size={16} />
-            </button>
-          </Dialog.Trigger>
-
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 data-[state=open]:animate-overlayShow" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-md transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow" onEscapeKeyDown={handleCancel} onPointerDownOutside={(e) => e.preventDefault()}>
-              {/* Modal Header */}
-              <div className="flex justify-between items-center mb-5 border-b pb-3">
-                <Dialog.Title className="text-lg font-medium text-gray-900">Edit Link</Dialog.Title>
-                <Dialog.Close asChild>
-                  <button className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400" aria-label="Close" onClick={handleCancel}>
-                    <X size={20} />
-                  </button>
-                </Dialog.Close>
-              </div>
-
-              {/* Modal Body */}
-              <div className="space-y-4 mb-6">
-                {/* Title */}
-                <div>
-                  <label htmlFor={`link-title-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Link Text*
-                  </label>
-                  <input id={`link-title-${element.id}`} type="text" value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} onKeyDown={handleKeyDown} placeholder={DEFAULT_TITLE} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" aria-required="true" autoFocus />
-                </div>
-                {/* URL */}
-                <div>
-                  <label htmlFor={`link-url-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
-                    URL*
-                  </label>
-                  <input id={`link-url-${element.id}`} type="url" value={editedUrl} onChange={handleUrlChange} onKeyDown={handleKeyDown} placeholder="https://example.com" className={`w-full px-3 py-2 border rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition ${urlError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`} aria-required="true" aria-invalid={!!urlError} aria-describedby={urlError ? "link-url-error" : undefined} />
-                  {urlError && (
-                    <p id="link-url-error" className="text-xs text-red-600 mt-1.5 flex items-center">
-                      <AlertCircle size={14} className="mr-1" /> {urlError}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Dialog.Close asChild>
-                  <button onClick={handleCancel} type="button" className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
-                    Cancel
-                  </button>
-                </Dialog.Close>
-                <button
-                  onClick={handleSave}
-                  type="button"
-                  disabled={!!urlError || !editedTitle.trim()} // Disable if URL error or title is empty
-                  className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <Check size={16} className="mr-1" />
-                  Save
-                </button>
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-
-        {/* Delete Button */}
-        <button onClick={handleDelete} className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50" aria-label="Delete Link">
-          <Trash2 size={16} />
-        </button>
-      </div>
-
-      {/* Link Display Button */}
+    // Main container: Uses flex to position link and controls side-by-side. Added 'group' for hover effects on controls.
+    <div className={`group mb-3 ${isNested ? "px-0" : "px-2 md:px-4"} flex items-center gap-x-2 md:gap-x-3`}>
+      {/* Link Display Button: Takes available space */}
       <a
         href={isCurrentUrlValid ? currentUrl : undefined} // Only set valid href
         target="_blank"
         rel="noopener noreferrer nofollow" // Added nofollow
-        className={`${styles.buttonStyle === "filled" ? buttonFilledStyle : buttonOutlineStyle} ${!isCurrentUrlValid ? "opacity-70 cursor-not-allowed" : ""}`}
+        className={`${styles.buttonStyle === "filled" ? buttonFilledStyle : buttonOutlineStyle} ${
+          !isCurrentUrlValid ? "opacity-70 cursor-not-allowed" : ""
+        } flex-grow min-w-0`} // Added flex-grow and min-w-0
         style={styles.buttonStyle === "filled" ? filledStyleProps : outlineStyleProps}
-        // Apply hover styles directly for outline variant due to CSS variable limitations in inline styles
         onMouseEnter={(e) => {
           if (styles.buttonStyle === "outline") (e.currentTarget as HTMLAnchorElement).style.backgroundColor = outlineStyleProps["--hover-bg-color"];
         }}
@@ -210,21 +139,154 @@ export default function LinkElement({ element, styles, updateElement, deleteElem
           if (styles.buttonStyle === "outline") (e.currentTarget as HTMLAnchorElement).style.backgroundColor = outlineStyleProps["--active-bg-color"];
         }}
         onMouseUp={(e) => {
-          if (styles.buttonStyle === "outline") (e.currentTarget as HTMLAnchorElement).style.backgroundColor = outlineStyleProps["--hover-bg-color"];
-        }} // Return to hover state on mouse up
-        onClick={(e) => !isCurrentUrlValid && e.preventDefault()} // Prevent click if URL is invalid
+          // Return to hover state on mouse up if mouse is still over
+          if (styles.buttonStyle === "outline" && e.currentTarget.matches(":hover")) {
+            (e.currentTarget as HTMLAnchorElement).style.backgroundColor = outlineStyleProps["--hover-bg-color"];
+          } else if (styles.buttonStyle === "outline") {
+            (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
+          }
+        }}
+        onClick={(e) => !isCurrentUrlValid && e.preventDefault()}
         aria-disabled={!isCurrentUrlValid}
-        role="link"
-      >
-        {/* Optional: Add an icon */}
-        {/* <LinkIcon size={18} className="inline-block mr-2 opacity-80" /> */}
+        role="link">
         <span className="font-medium break-words">{currentTitle}</span>
         {!isCurrentUrlValid && (
-          <span className="absolute top-1 right-1 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full opacity-80 group-hover/link:opacity-100" title="Invalid or missing URL">
+          <span
+            className="absolute top-1 right-1 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full opacity-80 group-hover/link:opacity-100"
+            title="Invalid or missing URL">
             !
           </span>
         )}
       </a>
+
+      {/* Edit/Delete Controls Container: Stacked vertically, appears on group hover */}
+      <div className="flex flex-col space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10 shrink-0">
+        {/* Edit Button & Dialog */}
+        <Dialog.Root
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}>
+          <Dialog.Trigger asChild>
+            <button
+              className="p-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-green-500 transition-colors"
+              aria-label="Edit Link">
+              <Edit2 size={16} />
+            </button>
+          </Dialog.Trigger>
+
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 data-[state=open]:animate-overlayShow" />
+            <Dialog.Content
+              className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-md transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow"
+              onEscapeKeyDown={handleCancel}
+              onPointerDownOutside={(e) => {
+                // Allow Radix to handle closing, but prevent default if the click is outside content but inside a potential parent that might react.
+                // For this specific case, it helps ensure the hover state of buttons doesn't flicker if mouse moves slightly during close.
+                const target = e.target as HTMLElement;
+                if (!target.closest("[data-radix-dialog-content]")) {
+                  e.preventDefault();
+                }
+              }}>
+              {/* Modal Header */}
+              <div className="flex justify-between items-center mb-5 border-b pb-3">
+                <Dialog.Title className="text-lg font-medium text-gray-900">Edit Link</Dialog.Title>
+                <Dialog.Close asChild>
+                  <button
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400"
+                    aria-label="Close"
+                    onClick={handleCancel}>
+                    <X size={20} />
+                  </button>
+                </Dialog.Close>
+              </div>
+
+              {/* Modal Body */}
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label
+                    htmlFor={`link-title-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Link Text*
+                  </label>
+                  <input
+                    id={`link-title-${element.id}`}
+                    type="text"
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={DEFAULT_TITLE}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    aria-required="true"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor={`link-url-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
+                    URL*
+                  </label>
+                  <input
+                    id={`link-url-${element.id}`}
+                    type="url"
+                    value={editedUrl}
+                    onChange={handleUrlChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="https://example.com"
+                    className={`w-full px-3 py-2 border rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition ${
+                      urlError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    }`}
+                    aria-required="true"
+                    aria-invalid={!!urlError}
+                    aria-describedby={urlError ? "link-url-error" : undefined}
+                  />
+                  {urlError && (
+                    <p
+                      id="link-url-error"
+                      className="text-xs text-red-600 mt-1.5 flex items-center">
+                      <AlertCircle
+                        size={14}
+                        className="mr-1"
+                      />{" "}
+                      {urlError}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Dialog.Close asChild>
+                  <button
+                    onClick={handleCancel}
+                    type="button"
+                    className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
+                    Cancel
+                  </button>
+                </Dialog.Close>
+                <button
+                  onClick={handleSave}
+                  type="button"
+                  disabled={!!urlError || !editedTitle.trim()}
+                  className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed`}>
+                  <Check
+                    size={16}
+                    className="mr-1"
+                  />
+                  Save
+                </button>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+
+        {/* Delete Button */}
+        <button
+          onClick={handleDelete}
+          className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-red-500 transition-colors"
+          aria-label="Delete Link">
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 }
