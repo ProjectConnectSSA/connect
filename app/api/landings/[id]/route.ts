@@ -6,9 +6,16 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params; // Extract the dynamic ID from the URL
+    // Await the params object before accessing its properties
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
 
-    console.log("API GET form by ID", id);
+    if (!id) {
+      return NextResponse.json(
+        { error: "Landing page ID is required" },
+        { status: 400 }
+      );
+    }
 
     const { data, error } = await supabase
       .from("landing_pages")
