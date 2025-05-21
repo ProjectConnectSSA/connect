@@ -8,26 +8,6 @@ import { RecentActivityWidget, Campaign } from "@/components/dashboard/widgets/R
 import { StatsOverviewWidget } from "@/components/dashboard/widgets/StatsOverviewWidget";
 import { QuickAccessWidget } from "@/components/dashboard/widgets/QuickAccessWidget";
 
-// --- Keep your mock data definitions here (or fetch them) ---
-// (Announcements, Tutorials, Campaigns data...)
-const announcements: Announcement[] = [
-  {
-    id: 1,
-    title: "New Email Templates Available",
-    description: "We've added 15 new responsive email templates.",
-    date: "March 15, 2025",
-    type: "feature",
-  },
-  { id: 2, title: "Form Analytics Update", description: "Track conversion rates and drop-offs easily.", date: "March 10, 2025", type: "update" },
-  {
-    id: 3,
-    title: "Scheduled Maintenance",
-    description: "Brief downtime expected on March 20 from 2-4am EST.",
-    date: "March 8, 2025",
-    type: "maintenance",
-  },
-];
-
 const tutorials: Tutorial[] = [
   { id: 1, title: "Creating Your First Email Campaign", duration: "5 min", difficulty: "Beginner", image: "/placeholder-img.svg" },
   { id: 2, title: "Advanced Form Validation Techniques", duration: "8 min", difficulty: "Intermediate", image: "/placeholder-img.svg" },
@@ -61,7 +41,7 @@ export default function DashboardPage() {
 
             {/* Two Column Layout: Announcements & Tutorials */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <AnnouncementsWidget announcements={announcements} />
+              <AnnouncementsWidget />
               <TutorialsWidget tutorials={tutorials} />
             </div>
 
