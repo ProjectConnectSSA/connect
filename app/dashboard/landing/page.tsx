@@ -38,6 +38,8 @@ import {
   Globe,
   Copy,
   QrCode,
+  ExternalLink,
+  Link2, // Add this import
 } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +103,17 @@ export default function LandingPage() {
 
   // Add this to your state variables
   const [recentlyDeletedPages, setRecentlyDeletedPages] = useState<any[]>([]);
+
+  // Add these state variables for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [landingPageToDelete, setLandingPageToDelete] = useState<string | null>(
+    null
+  );
+
+  // Add these state variables for URL shortening
+  const [shortUrl, setShortUrl] = useState("");
+  const [isShorteningUrl, setIsShorteningUrl] = useState(false);
+  const [shortUrlError, setShortUrlError] = useState("");
 
   useEffect(() => {
     fetchLandingPagesData();
@@ -238,6 +251,15 @@ export default function LandingPage() {
               <Share2 className="mr-2 h-4 w-4" />
               Share
             </DropdownMenuItem>
+
+            {/* Add this new menu item */}
+            <DropdownMenuItem
+              onClick={() => window.open(`/landing/${item.id}`, "_blank")}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              View Landing Page
+            </DropdownMenuItem>
+
             <DropdownMenuItem
               onClick={() => {
                 setPreviewContent(item);
@@ -260,10 +282,10 @@ export default function LandingPage() {
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => deleteLandingPage(item.id)}
-              className="text-destructive"
+              onClick={() => handleDeleteClick(item.id)}
+              className="text-red-500 hover:bg-red-100"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="mr-2 h-4 w-4 text-red-500" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -352,8 +374,13 @@ export default function LandingPage() {
       setLandingPages((prevForms) =>
         prevForms.filter((form) => form.id !== id)
       );
+      toast.success("Landing page deleted successfully");
     } catch (error) {
       console.error("Failed to delete landing page:", error);
+      toast.error("Failed to delete landing page");
+    } finally {
+      setDeleteDialogOpen(false);
+      setLandingPageToDelete(null);
     }
   }
 
@@ -365,15 +392,18 @@ export default function LandingPage() {
 
   const handleCopy = async () => {
     try {
+      // Use shortened URL if available, otherwise use the original link
+      const textToCopy = shortUrl || shareLink;
+
       // Check if we're in a browser environment and clipboard API is available
       if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(shareLink);
+        await navigator.clipboard.writeText(textToCopy);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } else {
         // Fallback method for copying text
         const textArea = document.createElement("textarea");
-        textArea.value = shareLink;
+        textArea.value = textToCopy;
         textArea.style.position = "fixed"; // Avoid scrolling to bottom
         document.body.appendChild(textArea);
         textArea.focus();
@@ -492,6 +522,46 @@ export default function LandingPage() {
     router.push("/dashboard/landing/edit?id=new");
   };
 
+  // Add this inside your LandingPage component, before the return statement
+  // For example, add it near handleCreateLandingPage or other handlers
+  const handleDeleteClick = (id: string) => {
+    setLandingPageToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  // Add this function to shorten URLs
+  const shortenUrl = async () => {
+    setIsShorteningUrl(true);
+    setShortUrlError("");
+
+    try {
+      const response = await fetch("/api/shorten-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: shareLink }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to shorten URL");
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setShortUrl(data.shortUrl);
+    } catch (error) {
+      console.error("Error shortening URL:", error);
+      setShortUrlError("Error shortening the link");
+    } finally {
+      setIsShorteningUrl(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -577,10 +647,10 @@ export default function LandingPage() {
           <CardDescription className="text-gray-600">
             {usedPages} of {totalPagesAllowed} landing pages used
             {usedPages === totalPagesAllowed && (
-              <p className="text-amber-600 mt-1 text-sm">
+              <span className="text-amber-600 mt-1 text-sm block">
                 You've reached your plan limit. Oldest pages are preserved if
                 you exceed this limit.
-              </p>
+              </span>
             )}
           </CardDescription>
           <Progress value={progressValue} className="mt-2 bg-gray-300" />
@@ -617,7 +687,7 @@ export default function LandingPage() {
           <div className="flex items-center space-x-2 mt-4">
             <input
               type="text"
-              value={shareLink}
+              value={shortUrl || shareLink}
               readOnly
               className="flex-1 border border-gray-300 rounded px-3 py-2"
             />
@@ -626,32 +696,51 @@ export default function LandingPage() {
               <span className="sr-only">Copy link</span>
             </Button>
           </div>
-          <div className="mt-4">
+          {shortUrlError && (
+            <p className="text-sm text-red-500 mt-1">{shortUrlError}</p>
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              onClick={shortenUrl}
+              variant="outline"
+              disabled={isShorteningUrl || !!shortUrl}
+              className="flex-1"
+            >
+              {isShorteningUrl ? (
+                <>Shortening...</>
+              ) : (
+                <>
+                  <Link2 className="mr-2 h-4 w-4" />
+                  Shorten URL
+                </>
+              )}
+            </Button>
             <Button
               onClick={() => setShowQRCode(!showQRCode)}
               variant="secondary"
+              className="flex-1"
             >
               {showQRCode ? "Hide QR Code" : "Generate QR Code"}
               <QrCode className="ml-2 h-4 w-4" />
             </Button>
-            {showQRCode && (
-              <div className="mt-4 flex flex-col items-center">
-                <div ref={qrCodeRef}>
-                  <QRCodeSVG
-                    value={shareLink}
-                    style={{ width: 128, height: 128 }}
-                  />
-                </div>
-                <Button
-                  onClick={downloadQRCode}
-                  variant="outline"
-                  className="mt-2"
-                >
-                  Download QR Code
-                </Button>
-              </div>
-            )}
           </div>
+          {showQRCode && (
+            <div className="mt-4 flex flex-col items-center">
+              <div ref={qrCodeRef}>
+                <QRCodeSVG
+                  value={shortUrl || shareLink}
+                  style={{ width: 128, height: 128 }}
+                />
+              </div>
+              <Button
+                onClick={downloadQRCode}
+                variant="outline"
+                className="mt-2"
+              >
+                Download QR Code
+              </Button>
+            </div>
+          )}
           <DialogClose asChild>
             <Button variant="ghost" className="mt-4 w-full">
               Close
@@ -739,6 +828,35 @@ export default function LandingPage() {
               Close
             </Button>
           </DialogClose>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this landing page? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                landingPageToDelete && deleteLandingPage(landingPageToDelete)
+              }
+            >
+              Delete
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

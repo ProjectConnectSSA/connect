@@ -13,7 +13,15 @@ import { LandingEditor } from "@/components/landing/landing-editor";
 import { LandingStyles } from "@/components/landing/landing-styles";
 import { LandingPreview } from "@/components/landing/landing-preview";
 import { DomainSettings } from "@/components/landing/domain-settings";
-import { Paintbrush, Settings, Save, Globe } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Paintbrush, Globe, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { getCurrentUser } from "@/app/actions";
 
@@ -24,6 +32,7 @@ export default function EditLandingPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [landingPages, setLandingPages] = useState([]);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const [content, setContent] = useState({
     title: "Product Launch Landing Page",
@@ -260,7 +269,7 @@ export default function EditLandingPage() {
   return (
     <div className="h-[calc(100vh-4rem)]">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={40} minSize={30}>
+        <ResizablePanel defaultSizePercentage={40} minSizePercentage={30}>
           <Tabs defaultValue="editor">
             <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container flex h-14 items-center justify-between">
@@ -287,10 +296,19 @@ export default function EditLandingPage() {
                     Domain
                   </TabsTrigger>
                 </TabsList>
-                <Button onClick={handleSave} disabled={isLoading}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {isLoading ? "Saving..." : "Save Page"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowExitDialog(true)}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <Button onClick={handleSave} disabled={isLoading}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isLoading ? "Saving..." : "Save Page"}
+                  </Button>
+                </div>
               </div>
             </div>
             <TabsContent value="editor" className="h-[calc(100vh-8rem)]">
@@ -309,6 +327,27 @@ export default function EditLandingPage() {
           <LandingPreview content={content} />
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* Add the exit confirmation dialog */}
+      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Leave page?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to go back to the dashboard? Any unsaved
+              changes will be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowExitDialog(false)}>
+              No, stay here
+            </Button>
+            <Button onClick={() => router.push("/dashboard/landing")}>
+              Yes, go back
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

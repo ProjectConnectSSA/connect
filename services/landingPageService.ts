@@ -97,6 +97,13 @@ export async function getLandingPage(id: string) {
 
 export async function deleteLandingPage(id: string) {
   try {
+    // First get the landing page to extract image URLs
+    const landingPage = await getLandingPage(id);
+
+    // Extract all image URLs from the landing page content
+    const imageUrls = extractImagesFromContent(landingPage);
+
+    // Delete the landing page from the database
     const response = await fetch("/api/landings", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -107,9 +114,43 @@ export async function deleteLandingPage(id: string) {
       throw new Error("Failed to delete landing page");
     }
 
+    // After successful deletion, clean up the orphaned images
+    await cleanupImages(imageUrls);
+
     return await response.json();
   } catch (error: any) {
     console.error("Error deleting landing page:", error);
     throw error;
   }
+}
+
+// Helper function to extract all image URLs from landing page content
+function extractImagesFromContent(landingPage: LandingPageData): string[] {
+  const imageUrls: string[] = [];
+
+  if (!landingPage?.sections) return imageUrls;
+
+  // Process each section to find images
+  landingPage.sections.forEach((section) => {
+    // Hero section images
+    if (section.type === "hero" && section.content?.image) {
+      imageUrls.push(section.content.image);
+    }
+
+    // Content section images
+    if (section.type === "content" && section.content?.image) {
+      imageUrls.push(section.content.image);
+    }
+
+    // Feature section might have images in items
+    if (section.type === "features" && section.content?.items) {
+      section.content.items.forEach((item: any) => {
+        if (item.image) {
+          imageUrls.push(item.image);
+        }
+      });
+    }
+  });
+
+  return imageUrls;
 }
