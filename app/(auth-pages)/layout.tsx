@@ -1,12 +1,16 @@
 // app/layout.tsx
 import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { SessionContextProvider } from "@supabase/auth-helpers-react";
+import { createClient } from "@/utils/supabase/server";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Use the latest helper for server components.
-  const supabase = createServerComponentClient({ cookies });
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // Get the session data but don't pass the client
+  const cookieStore = cookies();
+  const supabase = await createClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -15,9 +19,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html>
       <head />
       <body>
-        <SessionProviderWrapper
-          supabaseClient={supabase}
-          initialSession={session}>
+        <SessionProviderWrapper initialSession={session}>
           {children}
         </SessionProviderWrapper>
       </body>

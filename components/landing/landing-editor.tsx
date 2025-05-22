@@ -20,7 +20,15 @@ import {
 } from "@/components/ui/accordion";
 import { ImageUpload } from "@/components/emails/image-upload";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Plus, Trash2, GripVertical, Layout, Type, Grid, Image } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  GripVertical,
+  Layout,
+  Type,
+  Grid,
+  Image,
+} from "lucide-react";
 
 interface LandingEditorProps {
   content: any;
@@ -50,8 +58,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
           image: "",
           cta: {
             text: "Get Started",
-            url: "#"
-          }
+            url: "#",
+          },
         }),
         ...(type === "features" && {
           heading: "Features",
@@ -59,31 +67,50 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
             {
               title: "Feature 1",
               description: "Description here",
-              icon: "Zap"
-            }
-          ]
+              icon: "Zap",
+            },
+          ],
         }),
         ...(type === "content" && {
           heading: "Content Section",
           body: "Add your content here",
           image: "",
-          alignment: "left"
-        })
-      }
+          alignment: "left",
+        }),
+        ...(type === "footer" && {
+          heading: "Footer",
+          companyName: "Your Company",
+          tagline: "Your company tagline here",
+          links: [
+            { label: "Home", url: "#" },
+            { label: "About", url: "#" },
+            { label: "Services", url: "#" },
+            { label: "Contact", url: "#" },
+          ],
+          socialLinks: [
+            { platform: "Twitter", url: "#", icon: "Twitter" },
+            { platform: "Facebook", url: "#", icon: "Facebook" },
+            { platform: "Instagram", url: "#", icon: "Instagram" },
+          ],
+          copyright: `© ${new Date().getFullYear()} Your Company. All rights reserved.`,
+        }),
+      },
     };
 
     setContent({
       ...content,
-      sections: [...content.sections, newSection]
+      sections: [...content.sections, newSection],
     });
     setSelectedSection(`section-${content.sections.length}`);
   };
 
   const removeSection = (index: number) => {
-    const newSections = content.sections.filter((_: any, i: number) => i !== index);
+    const newSections = content.sections.filter(
+      (_: any, i: number) => i !== index
+    );
     setContent({
       ...content,
-      sections: newSections
+      sections: newSections,
     });
   };
 
@@ -96,7 +123,7 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
 
     setContent({
       ...content,
-      sections: sections
+      sections: sections,
     });
   };
 
@@ -136,7 +163,7 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium">Page Sections</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -161,6 +188,14 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                 <Type className="mr-2 h-4 w-4" />
                 Add Content
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => addSection("footer")}
+              >
+                <Layout className="mr-2 h-4 w-4" />
+                Add Footer
+              </Button>
             </div>
           </div>
 
@@ -182,10 +217,7 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                           {...provided.draggableProps}
                         >
                           <div className="flex items-center">
-                            <div
-                              {...provided.dragHandleProps}
-                              className="px-2"
-                            >
+                            <div {...provided.dragHandleProps} className="px-2">
                               <GripVertical className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <AccordionTrigger className="flex-1 px-4">
@@ -205,6 +237,12 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                 <div className="flex items-center gap-2">
                                   <Type className="h-4 w-4" />
                                   Content Section
+                                </div>
+                              )}
+                              {section.type === "footer" && (
+                                <div className="flex items-center gap-2">
+                                  <Layout className="h-4 w-4" />
+                                  Footer Section
                                 </div>
                               )}
                             </AccordionTrigger>
@@ -228,8 +266,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          heading: e.target.value
-                                        }
+                                          heading: e.target.value,
+                                        },
                                       })
                                     }
                                   />
@@ -242,8 +280,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          subheading: e.target.value
-                                        }
+                                          subheading: e.target.value,
+                                        },
                                       })
                                     }
                                   />
@@ -256,8 +294,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          image: url
-                                        }
+                                          image: url,
+                                        },
                                       })
                                     }
                                   />
@@ -272,9 +310,9 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                           ...section.content,
                                           cta: {
                                             ...section.content.cta,
-                                            text: e.target.value
-                                          }
-                                        }
+                                            text: e.target.value,
+                                          },
+                                        },
                                       })
                                     }
                                   />
@@ -289,9 +327,9 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                           ...section.content,
                                           cta: {
                                             ...section.content.cta,
-                                            url: e.target.value
-                                          }
-                                        }
+                                            url: e.target.value,
+                                          },
+                                        },
                                       })
                                     }
                                   />
@@ -309,108 +347,124 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          heading: e.target.value
-                                        }
+                                          heading: e.target.value,
+                                        },
                                       })
                                     }
                                   />
                                 </div>
                                 <div className="space-y-4">
-                                  {section.content.items.map((item: any, itemIndex: number) => (
-                                    <div
-                                      key={itemIndex}
-                                      className="space-y-4 border-t pt-4"
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <h4 className="font-medium">
-                                          Feature {itemIndex + 1}
-                                        </h4>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => {
-                                            const newItems = section.content.items.filter(
-                                              (_: any, i: number) => i !== itemIndex
-                                            );
-                                            updateSection(index, {
-                                              content: {
-                                                ...section.content,
-                                                items: newItems
-                                              }
-                                            });
-                                          }}
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                  {section.content.items.map(
+                                    (item: any, itemIndex: number) => (
+                                      <div
+                                        key={itemIndex}
+                                        className="space-y-4 border-t pt-4"
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <h4 className="font-medium">
+                                            Feature {itemIndex + 1}
+                                          </h4>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => {
+                                              const newItems =
+                                                section.content.items.filter(
+                                                  (_: any, i: number) =>
+                                                    i !== itemIndex
+                                                );
+                                              updateSection(index, {
+                                                content: {
+                                                  ...section.content,
+                                                  items: newItems,
+                                                },
+                                              });
+                                            }}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                        <div className="space-y-2">
+                                          <Label>Title</Label>
+                                          <Input
+                                            value={item.title}
+                                            onChange={(e) => {
+                                              const newItems = [
+                                                ...section.content.items,
+                                              ];
+                                              newItems[itemIndex] = {
+                                                ...item,
+                                                title: e.target.value,
+                                              };
+                                              updateSection(index, {
+                                                content: {
+                                                  ...section.content,
+                                                  items: newItems,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <Label>Description</Label>
+                                          <Textarea
+                                            value={item.description}
+                                            onChange={(e) => {
+                                              const newItems = [
+                                                ...section.content.items,
+                                              ];
+                                              newItems[itemIndex] = {
+                                                ...item,
+                                                description: e.target.value,
+                                              };
+                                              updateSection(index, {
+                                                content: {
+                                                  ...section.content,
+                                                  items: newItems,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <Label>Icon</Label>
+                                          <Select
+                                            value={item.icon}
+                                            onValueChange={(value) => {
+                                              const newItems = [
+                                                ...section.content.items,
+                                              ];
+                                              newItems[itemIndex] = {
+                                                ...item,
+                                                icon: value,
+                                              };
+                                              updateSection(index, {
+                                                content: {
+                                                  ...section.content,
+                                                  items: newItems,
+                                                },
+                                              });
+                                            }}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Zap">
+                                                Lightning
+                                              </SelectItem>
+                                              <SelectItem value="Shield">
+                                                Shield
+                                              </SelectItem>
+                                              <SelectItem value="Star">
+                                                Star
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
                                       </div>
-                                      <div className="space-y-2">
-                                        <Label>Title</Label>
-                                        <Input
-                                          value={item.title}
-                                          onChange={(e) => {
-                                            const newItems = [...section.content.items];
-                                            newItems[itemIndex] = {
-                                              ...item,
-                                              title: e.target.value
-                                            };
-                                            updateSection(index, {
-                                              content: {
-                                                ...section.content,
-                                                items: newItems
-                                              }
-                                            });
-                                          }}
-                                        />
-                                      </div>
-                                      <div className="space-y-2">
-                                        <Label>Description</Label>
-                                        <Textarea
-                                          value={item.description}
-                                          onChange={(e) => {
-                                            const newItems = [...section.content.items];
-                                            newItems[itemIndex] = {
-                                              ...item,
-                                              description: e.target.value
-                                            };
-                                            updateSection(index, {
-                                              content: {
-                                                ...section.content,
-                                                items: newItems
-                                              }
-                                            });
-                                          }}
-                                        />
-                                      </div>
-                                      <div className="space-y-2">
-                                        <Label>Icon</Label>
-                                        <Select
-                                          value={item.icon}
-                                          onValueChange={(value) => {
-                                            const newItems = [...section.content.items];
-                                            newItems[itemIndex] = {
-                                              ...item,
-                                              icon: value
-                                            };
-                                            updateSection(index, {
-                                              content: {
-                                                ...section.content,
-                                                items: newItems
-                                              }
-                                            });
-                                          }}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="Zap">Lightning</SelectItem>
-                                            <SelectItem value="Shield">Shield</SelectItem>
-                                            <SelectItem value="Star">Star</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                    </div>
-                                  ))}
+                                    )
+                                  )}
                                   <Button
                                     variant="outline"
                                     onClick={() => {
@@ -419,14 +473,14 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                         {
                                           title: "New Feature",
                                           description: "Description here",
-                                          icon: "Zap"
-                                        }
+                                          icon: "Zap",
+                                        },
                                       ];
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          items: newItems
-                                        }
+                                          items: newItems,
+                                        },
                                       });
                                     }}
                                   >
@@ -447,8 +501,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          heading: e.target.value
-                                        }
+                                          heading: e.target.value,
+                                        },
                                       })
                                     }
                                   />
@@ -461,8 +515,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          body: e.target.value
-                                        }
+                                          body: e.target.value,
+                                        },
                                       })
                                     }
                                     rows={6}
@@ -476,8 +530,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          image: url
-                                        }
+                                          image: url,
+                                        },
                                       })
                                     }
                                   />
@@ -490,8 +544,8 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                       updateSection(index, {
                                         content: {
                                           ...section.content,
-                                          alignment: value
-                                        }
+                                          alignment: value,
+                                        },
                                       })
                                     }
                                   >
@@ -500,9 +554,72 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="left">Left</SelectItem>
-                                      <SelectItem value="right">Right</SelectItem>
+                                      <SelectItem value="right">
+                                        Right
+                                      </SelectItem>
                                     </SelectContent>
                                   </Select>
+                                </div>
+                              </>
+                            )}
+
+                            {section.type === "footer" && (
+                              <>
+                                <div className="space-y-2">
+                                  <Label>Heading</Label>
+                                  <Input
+                                    value={section.content.heading}
+                                    onChange={(e) =>
+                                      updateSection(index, {
+                                        content: {
+                                          ...section.content,
+                                          heading: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Company Name</Label>
+                                  <Input
+                                    value={section.content.companyName}
+                                    onChange={(e) =>
+                                      updateSection(index, {
+                                        content: {
+                                          ...section.content,
+                                          companyName: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Tagline</Label>
+                                  <Input
+                                    value={section.content.tagline}
+                                    onChange={(e) =>
+                                      updateSection(index, {
+                                        content: {
+                                          ...section.content,
+                                          tagline: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Copyright</Label>
+                                  <Input
+                                    value={section.content.copyright}
+                                    onChange={(e) =>
+                                      updateSection(index, {
+                                        content: {
+                                          ...section.content,
+                                          copyright: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
                                 </div>
                               </>
                             )}

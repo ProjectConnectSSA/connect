@@ -7,14 +7,23 @@ import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
 
 // --- Configuration ---
 // Make sure your LM Studio server is running!
-const LM_STUDIO_URL = process.env.LM_STUDIO_URL || "http://localhost:1234/v1/chat/completions";
+const LM_STUDIO_URL =
+  process.env.LM_STUDIO_URL || "http://localhost:1234/v1/chat/completions";
 // You might need to adjust max_tokens based on the complexity you expect
 const MAX_TOKENS_RESPONSE = 1024;
 const AI_TEMPERATURE = 0.7; // Controls randomness (0 = deterministic, >1 = more random)
 
 // --- Helper Function to Build the AI Prompt ---
 function buildSystemPrompt(): string {
-  const typeOptions = ["profile", "socials", "link", "card", "button", "header", "image"].join(", ");
+  const typeOptions = [
+    "profile",
+    "socials",
+    "link",
+    "card",
+    "button",
+    "header",
+    "image",
+  ].join(", ");
 
   // This prompt instructs the AI on the desired output format.
   // It's crucial for getting structured JSON back.
@@ -69,9 +78,16 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     userPrompt = body.prompt;
-    if (!userPrompt || typeof userPrompt !== "string" || userPrompt.trim().length === 0) {
+    if (
+      !userPrompt ||
+      typeof userPrompt !== "string" ||
+      userPrompt.trim().length === 0
+    ) {
       console.error("Invalid prompt received:", userPrompt);
-      return NextResponse.json({ error: "Prompt is required and must be a non-empty string." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Prompt is required and must be a non-empty string." },
+        { status: 400 }
+      );
     }
     console.log("Received user prompt:", userPrompt);
   } catch (error) {
@@ -92,7 +108,10 @@ export async function POST(request: Request) {
         model: "local-model", // Model name isn't usually critical for LM Studio default endpoint
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Generate the bio elements based on this description: "${userPrompt}"` },
+          {
+            role: "user",
+            content: `Generate the bio elements based on this description: "${userPrompt}"`,
+          },
         ],
         temperature: AI_TEMPERATURE,
         max_tokens: MAX_TOKENS_RESPONSE,
@@ -104,14 +123,27 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error(`LM Studio request failed with status ${response.status}:`, errorBody);
-      throw new Error(`LM Studio request failed: ${response.statusText} (${response.status})`);
+      console.error(
+        `LM Studio request failed with status ${response.status}:`,
+        errorBody
+      );
+      throw new Error(
+        `LM Studio request failed: ${response.statusText} (${response.status})`
+      );
     }
 
     const data = await response.json();
-    console.log("Raw response data from LM Studio:", JSON.stringify(data, null, 2));
+    console.log(
+      "Raw response data from LM Studio:",
+      JSON.stringify(data, null, 2)
+    );
 
-    if (!data.choices || data.choices.length === 0 || !data.choices[0].message || !data.choices[0].message.content) {
+    if (
+      !data.choices ||
+      data.choices.length === 0 ||
+      !data.choices[0].message ||
+      !data.choices[0].message.content
+    ) {
       console.error("Invalid response structure from LM Studio:", data);
       throw new Error("Received invalid response structure from AI model.");
     }
@@ -123,7 +155,9 @@ export async function POST(request: Request) {
     let generatedElements: BioElement[];
     try {
       // Sometimes the AI might still wrap the JSON in markdown, try to strip it
-      const cleanJsonResponse = aiResponseContent.replace(/^```json\s*|```$/g, "").trim();
+      const cleanJsonResponse = aiResponseContent
+        .replace(/^```json\s*|```$/g, "")
+        .trim();
       generatedElements = JSON.parse(cleanJsonResponse);
 
       // --- Basic Validation and Cleanup ---
@@ -142,7 +176,10 @@ export async function POST(request: Request) {
       // Sort by order just in case AI didn't do it sequentially
       generatedElements.sort((a, b) => a.order - b.order);
 
-      console.log("Successfully parsed and validated elements:", generatedElements);
+      console.log(
+        "Successfully parsed and validated elements:",
+        generatedElements
+      );
       return NextResponse.json(generatedElements, { status: 200 });
     } catch (parseError: any) {
       console.error("Failed to parse AI response as JSON:", parseError);
@@ -158,6 +195,9 @@ export async function POST(request: Request) {
     }
   } catch (error: any) {
     console.error("Error during AI generation:", error);
-    return NextResponse.json({ error: `An error occurred: ${error.message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `An error occurred: ${error.message}` },
+      { status: 500 }
+    );
   }
 }
