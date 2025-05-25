@@ -74,7 +74,9 @@ export default function SubscribeElement({ element, styles, updateElement, delet
   };
 
   return (
-    <div className={`relative group my-3 ${isNested ? "p-2" : "p-4"} border border-gray-200/60 dark:border-gray-700/60 shadow-sm ${radiusClass}`} style={{ backgroundColor: cardBgColor }}>
+    <div
+      className={`relative group my-3 ${isNested ? "p-2" : "p-4"} border border-gray-200/60 dark:border-gray-700/60 shadow-sm ${radiusClass}`}
+      style={{ backgroundColor: cardBgColor }}>
       {/* Static Subscribe Preview */}
       <div className="space-y-2">
         <input
@@ -92,7 +94,10 @@ export default function SubscribeElement({ element, styles, updateElement, delet
           // Inline style for placeholder as direct prop isn't standard
           // Note: Cross-browser placeholder styling can be tricky. Tailwind's placeholder utilities are better if applicable.
         />
-        <button disabled className={styles.buttonStyle === "filled" ? buttonFilledStyle : buttonOutlineStyle} style={styles.buttonStyle === "filled" ? filledStyleProps : outlineStyleProps}>
+        <button
+          disabled
+          className={styles.buttonStyle === "filled" ? buttonFilledStyle : buttonOutlineStyle}
+          style={styles.buttonStyle === "filled" ? filledStyleProps : outlineStyleProps}>
           Subscribe
         </button>
       </div>
@@ -102,21 +107,31 @@ export default function SubscribeElement({ element, styles, updateElement, delet
       {/* Edit/Delete Controls */}
       <div className="absolute top-1.5 right-1.5 flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
         {/* Edit Button & Dialog */}
-        <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog.Root
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}>
           <Dialog.Trigger asChild>
-            <button className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50" aria-label="Edit Subscribe Settings">
+            <button
+              className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50"
+              aria-label="Edit Subscribe Settings">
               <Edit2 size={16} />
             </button>
           </Dialog.Trigger>
 
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 data-[state=open]:animate-overlayShow" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-sm transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow" onEscapeKeyDown={handleCancel} onPointerDownOutside={(e) => e.preventDefault()}>
+            <Dialog.Content
+              className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-sm transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow"
+              onEscapeKeyDown={handleCancel}
+              onPointerDownOutside={(e) => e.preventDefault()}>
               {/* Modal Header */}
               <div className="flex justify-between items-center mb-5 border-b pb-3">
                 <Dialog.Title className="text-lg font-medium text-gray-900">Subscribe Settings</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400" aria-label="Close" onClick={handleCancel}>
+                  <button
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400"
+                    aria-label="Close"
+                    onClick={handleCancel}>
                     <X size={20} />
                   </button>
                 </Dialog.Close>
@@ -126,10 +141,21 @@ export default function SubscribeElement({ element, styles, updateElement, delet
               <div className="space-y-4 mb-6">
                 {/* Campaign Tag Input */}
                 <div>
-                  <label htmlFor={`subscribe-tag-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`subscribe-tag-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Campaign Tag (Optional)
                   </label>
-                  <input id={`subscribe-tag-${element.id}`} type="text" value={editedTag} onChange={(e) => setEditedTag(e.target.value)} onKeyDown={handleKeyDown} placeholder="e.g., 'newsletter_popup'" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" autoFocus />
+                  <input
+                    id={`subscribe-tag-${element.id}`}
+                    type="text"
+                    value={editedTag}
+                    onChange={(e) => setEditedTag(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="e.g., 'newsletter_popup'"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    autoFocus
+                  />
                   <p className="text-xs text-gray-500 mt-1.5">This tag can help track where subscriptions come from (integration needed).</p>
                 </div>
               </div>
@@ -137,12 +163,21 @@ export default function SubscribeElement({ element, styles, updateElement, delet
               {/* Modal Footer */}
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Dialog.Close asChild>
-                  <button onClick={handleCancel} type="button" className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
+                  <button
+                    onClick={handleCancel}
+                    type="button"
+                    className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
                     Cancel
                   </button>
                 </Dialog.Close>
-                <button onClick={handleSave} type="button" className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition">
-                  <Check size={16} className="mr-1" />
+                <button
+                  onClick={handleSave}
+                  type="button"
+                  className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition">
+                  <Check
+                    size={16}
+                    className="mr-1"
+                  />
                   Save Tag
                 </button>
               </div>
@@ -151,7 +186,10 @@ export default function SubscribeElement({ element, styles, updateElement, delet
         </Dialog.Root>
 
         {/* Delete Element Button */}
-        <button onClick={handleDelete} className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50" aria-label="Delete Subscribe Block">
+        <button
+          onClick={handleDelete}
+          className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50"
+          aria-label="Delete Subscribe Block">
           <Trash2 size={16} />
         </button>
       </div>

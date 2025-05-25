@@ -248,6 +248,7 @@ export function TopBar() {
         borderColor, // Main TopBar border, from styles.ts via barrel file
         bgColor, // Main TopBar background, from styles.ts via barrel file
         "px-4 md:px-6",
+        // These classes ensure the TopBar is sticky at the top of the viewport
         "sticky top-0 z-30 w-full"
       )}>
       <PageTitle pathname={pathname} />

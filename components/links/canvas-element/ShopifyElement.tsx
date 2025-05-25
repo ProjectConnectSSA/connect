@@ -109,9 +109,15 @@ export default function ShopifyElement({ element, styles, updateElement, deleteE
   const cardTextColor = styles.textColor;
 
   return (
-    <div className={`relative group my-3 ${isNested ? "p-2" : "p-4"} border border-gray-200/80 dark:border-gray-700/80 shadow-sm bg-white ${radiusClass}`} style={{ backgroundColor: cardBgColor }}>
+    <div
+      className={`relative group my-3 ${
+        isNested ? "p-2" : "p-4"
+      } border border-gray-200/80 dark:border-gray-700/80 shadow-sm bg-white ${radiusClass}`}
+      style={{ backgroundColor: cardBgColor }}>
       {/* Title */}
-      <h3 className="font-medium text-base mb-3 text-center" style={{ color: cardTextColor }}>
+      <h3
+        className="font-medium text-base mb-3 text-center"
+        style={{ color: cardTextColor }}>
         {currentTitle}
       </h3>
 
@@ -130,9 +136,15 @@ export default function ShopifyElement({ element, styles, updateElement, deleteE
         />
       ) : (
         // Placeholder when URL is not set or invalid
-        <div className={`flex flex-col items-center justify-center h-60 bg-gray-100/50 dark:bg-gray-800/30 rounded-md p-4 border border-dashed border-gray-300 dark:border-gray-600 ${radiusClass}`}>
-          <Store className="text-gray-400 dark:text-gray-500 mb-2" size={30} />
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium text-center">{currentUrl ? "Invalid Shopify Product URL" : "Add a Shopify Product URL"}</p>
+        <div
+          className={`flex flex-col items-center justify-center h-60 bg-gray-100/50 dark:bg-gray-800/30 rounded-md p-4 border border-dashed border-gray-300 dark:border-gray-600 ${radiusClass}`}>
+          <Store
+            className="text-gray-400 dark:text-gray-500 mb-2"
+            size={30}
+          />
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium text-center">
+            {currentUrl ? "Invalid Shopify Product URL" : "Add a Shopify Product URL"}
+          </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-center">Click the edit icon.</p>
         </div>
       )}
@@ -140,21 +152,31 @@ export default function ShopifyElement({ element, styles, updateElement, deleteE
       {/* Edit/Delete Controls */}
       <div className="absolute top-1.5 right-1.5 flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
         {/* Edit Button & Dialog */}
-        <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog.Root
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}>
           <Dialog.Trigger asChild>
-            <button className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1" aria-label="Edit Shopify Product">
+            <button
+              className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1"
+              aria-label="Edit Shopify Product">
               <Edit2 size={16} />
             </button>
           </Dialog.Trigger>
 
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 data-[state=open]:animate-overlayShow" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-lg transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow" onEscapeKeyDown={handleCancel} onPointerDownOutside={(e) => e.preventDefault()}>
+            <Dialog.Content
+              className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-lg transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow"
+              onEscapeKeyDown={handleCancel}
+              onPointerDownOutside={(e) => e.preventDefault()}>
               {/* Modal Header */}
               <div className="flex justify-between items-center mb-5 border-b pb-3">
                 <Dialog.Title className="text-lg font-medium text-gray-900">Edit Shopify Product</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400" aria-label="Close" onClick={handleCancel}>
+                  <button
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400"
+                    aria-label="Close"
+                    onClick={handleCancel}>
                     <X size={20} />
                   </button>
                 </Dialog.Close>
@@ -164,20 +186,52 @@ export default function ShopifyElement({ element, styles, updateElement, deleteE
               <div className="space-y-4 mb-6">
                 {/* Title */}
                 <div>
-                  <label htmlFor={`shopify-title-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`shopify-title-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Display Title (Optional)
                   </label>
-                  <input id={`shopify-title-${element.id}`} type="text" value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} onKeyDown={handleKeyDown} placeholder={DEFAULT_TITLE} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" autoFocus />
+                  <input
+                    id={`shopify-title-${element.id}`}
+                    type="text"
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={DEFAULT_TITLE}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    autoFocus
+                  />
                 </div>
                 {/* URL */}
                 <div>
-                  <label htmlFor={`shopify-url-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`shopify-url-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Shopify Product URL*
                   </label>
-                  <input id={`shopify-url-${element.id}`} type="url" value={editedUrl} onChange={handleUrlChange} onKeyDown={handleKeyDown} placeholder={DEFAULT_SHOPIFY_URL_EXAMPLE} className={`w-full px-3 py-2 border rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition ${urlError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`} aria-required="true" aria-invalid={!!urlError} aria-describedby={urlError ? "shopify-url-error" : undefined} />
+                  <input
+                    id={`shopify-url-${element.id}`}
+                    type="url"
+                    value={editedUrl}
+                    onChange={handleUrlChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={DEFAULT_SHOPIFY_URL_EXAMPLE}
+                    className={`w-full px-3 py-2 border rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition ${
+                      urlError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    }`}
+                    aria-required="true"
+                    aria-invalid={!!urlError}
+                    aria-describedby={urlError ? "shopify-url-error" : undefined}
+                  />
                   {urlError && (
-                    <p id="shopify-url-error" className="text-xs text-red-600 mt-1.5 flex items-center">
-                      <AlertCircle size={14} className="mr-1" /> {urlError}
+                    <p
+                      id="shopify-url-error"
+                      className="text-xs text-red-600 mt-1.5 flex items-center">
+                      <AlertCircle
+                        size={14}
+                        className="mr-1"
+                      />{" "}
+                      {urlError}
                     </p>
                   )}
                 </div>
@@ -186,7 +240,10 @@ export default function ShopifyElement({ element, styles, updateElement, deleteE
               {/* Modal Footer */}
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Dialog.Close asChild>
-                  <button onClick={handleCancel} type="button" className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
+                  <button
+                    onClick={handleCancel}
+                    type="button"
+                    className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
                     Cancel
                   </button>
                 </Dialog.Close>
@@ -194,9 +251,11 @@ export default function ShopifyElement({ element, styles, updateElement, deleteE
                   onClick={handleSave}
                   type="button"
                   disabled={!!urlError} // Disable if URL error
-                  className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <Check size={16} className="mr-1" />
+                  className={`px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed`}>
+                  <Check
+                    size={16}
+                    className="mr-1"
+                  />
                   Save
                 </button>
               </div>
@@ -205,7 +264,10 @@ export default function ShopifyElement({ element, styles, updateElement, deleteE
         </Dialog.Root>
 
         {/* Delete Button */}
-        <button onClick={handleDelete} className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1" aria-label="Delete Shopify Product">
+        <button
+          onClick={handleDelete}
+          className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1"
+          aria-label="Delete Shopify Product">
           <Trash2 size={16} />
         </button>
       </div>

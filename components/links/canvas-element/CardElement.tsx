@@ -46,7 +46,8 @@ export default function CardElement({ element, styles, updateElement, deleteElem
     const finalUrl = editedUrl.trim();
 
     // Check if anything actually changed
-    const hasChanged = finalTitle !== currentTitle || finalDescription !== currentDescription || finalThumbnailUrl !== currentThumbnailUrl || finalUrl !== currentUrl;
+    const hasChanged =
+      finalTitle !== currentTitle || finalDescription !== currentDescription || finalThumbnailUrl !== currentThumbnailUrl || finalUrl !== currentUrl;
 
     if (hasChanged) {
       updateElement(element.id, {
@@ -104,7 +105,10 @@ export default function CardElement({ element, styles, updateElement, deleteElem
       ) : (
         hasTextContent && ( // Show placeholder only if there's text but no image
           <div className={`w-full h-16 flex items-center justify-center bg-gray-100 dark:bg-gray-700 ${imageRadiusClass}`}>
-            <ImageIcon size={24} className="text-gray-400 dark:text-gray-500" />
+            <ImageIcon
+              size={24}
+              className="text-gray-400 dark:text-gray-500"
+            />
           </div>
         )
       )}
@@ -113,21 +117,27 @@ export default function CardElement({ element, styles, updateElement, deleteElem
           {currentTitle && (
             <h3
               className="font-semibold mb-1 text-base break-words" // Use text-base for card title
-              style={{ color: cardTextColor }}
-            >
+              style={{ color: cardTextColor }}>
               {currentTitle}
             </h3>
           )}
           {currentDescription && (
-            <p className="text-sm break-words" style={{ color: cardTextColor, opacity: 0.85 }}>
+            <p
+              className="text-sm break-words"
+              style={{ color: cardTextColor, opacity: 0.85 }}>
               {currentDescription}
             </p>
           )}
         </div>
       )}
       {!hasContent && ( // Placeholder for completely empty card
-        <div className={`p-6 text-center text-sm flex flex-col items-center justify-center h-32 ${radiusClass}`} style={{ color: cardTextColor, opacity: 0.6 }}>
-          <ImageIcon size={24} className="mb-2" />
+        <div
+          className={`p-6 text-center text-sm flex flex-col items-center justify-center h-32 ${radiusClass}`}
+          style={{ color: cardTextColor, opacity: 0.6 }}>
+          <ImageIcon
+            size={24}
+            className="mb-2"
+          />
           Empty Card
           <span className="text-xs block mt-1">(Click edit icon)</span>
         </div>
@@ -145,21 +155,31 @@ export default function CardElement({ element, styles, updateElement, deleteElem
       {/* Controls: Edit and Delete visible on hover */}
       <div className="absolute top-1.5 right-1.5 flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
         {/* Edit Button & Dialog */}
-        <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog.Root
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}>
           <Dialog.Trigger asChild>
-            <button className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1" aria-label="Edit Card">
+            <button
+              className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1"
+              aria-label="Edit Card">
               <Edit2 size={16} />
             </button>
           </Dialog.Trigger>
 
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 data-[state=open]:animate-overlayShow" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-lg transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow" onEscapeKeyDown={handleCancel} onPointerDownOutside={(e) => e.preventDefault()}>
+            <Dialog.Content
+              className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-lg transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow"
+              onEscapeKeyDown={handleCancel}
+              onPointerDownOutside={(e) => e.preventDefault()}>
               {/* Modal Header */}
               <div className="flex justify-between items-center mb-5 border-b pb-3">
                 <Dialog.Title className="text-lg font-medium text-gray-900">Edit Card</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400" aria-label="Close" onClick={handleCancel}>
+                  <button
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400"
+                    aria-label="Close"
+                    onClick={handleCancel}>
                     <X size={20} />
                   </button>
                 </Dialog.Close>
@@ -169,7 +189,9 @@ export default function CardElement({ element, styles, updateElement, deleteElem
               <div className="space-y-4 mb-6 max-h-[60vh] overflow-y-auto pr-2">
                 {/* Title */}
                 <div>
-                  <label htmlFor={`card-title-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`card-title-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Title
                   </label>
                   <input
@@ -185,36 +207,75 @@ export default function CardElement({ element, styles, updateElement, deleteElem
                 </div>
                 {/* Description */}
                 <div>
-                  <label htmlFor={`card-description-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`card-description-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Description
                   </label>
-                  <textarea id={`card-description-${element.id}`} value={editedDescription} onChange={(e) => setEditedDescription(e.target.value)} onKeyDown={handleKeyDown} placeholder={DEFAULT_CARD_DESCRIPTION} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" rows={3} />
+                  <textarea
+                    id={`card-description-${element.id}`}
+                    value={editedDescription}
+                    onChange={(e) => setEditedDescription(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={DEFAULT_CARD_DESCRIPTION}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    rows={3}
+                  />
                 </div>
                 {/* Thumbnail URL */}
                 <div>
-                  <label htmlFor={`card-thumbnail-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`card-thumbnail-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Thumbnail URL (Optional)
                   </label>
-                  <input id={`card-thumbnail-${element.id}`} type="url" value={editedThumbnailUrl} onChange={(e) => setEditedThumbnailUrl(e.target.value)} onKeyDown={handleKeyDown} placeholder="https://image.url/thumb.jpg" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+                  <input
+                    id={`card-thumbnail-${element.id}`}
+                    type="url"
+                    value={editedThumbnailUrl}
+                    onChange={(e) => setEditedThumbnailUrl(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="https://image.url/thumb.jpg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
                 </div>
                 {/* Link URL */}
                 <div>
-                  <label htmlFor={`card-link-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`card-link-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Link URL (Optional) <span className="text-xs text-gray-500">(Makes card clickable)</span>
                   </label>
-                  <input id={`card-link-${element.id}`} type="url" value={editedUrl} onChange={(e) => setEditedUrl(e.target.value)} onKeyDown={handleKeyDown} placeholder="https://example.com" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+                  <input
+                    id={`card-link-${element.id}`}
+                    type="url"
+                    value={editedUrl}
+                    onChange={(e) => setEditedUrl(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="https://example.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
                 </div>
               </div>
 
               {/* Modal Footer */}
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Dialog.Close asChild>
-                  <button onClick={handleCancel} type="button" className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
+                  <button
+                    onClick={handleCancel}
+                    type="button"
+                    className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition">
                     Cancel
                   </button>
                 </Dialog.Close>
-                <button onClick={handleSave} type="button" className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition">
-                  <Check size={16} className="mr-1" />
+                <button
+                  onClick={handleSave}
+                  type="button"
+                  className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition">
+                  <Check
+                    size={16}
+                    className="mr-1"
+                  />
                   Save
                 </button>
               </div>
@@ -223,7 +284,10 @@ export default function CardElement({ element, styles, updateElement, deleteElem
         </Dialog.Root>
 
         {/* Delete Button */}
-        <button onClick={handleDelete} className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1" aria-label="Delete Card">
+        <button
+          onClick={handleDelete}
+          className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1"
+          aria-label="Delete Card">
           <Trash2 size={16} />
         </button>
       </div>

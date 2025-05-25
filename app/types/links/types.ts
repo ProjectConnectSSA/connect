@@ -90,32 +90,3 @@ export const defaultStyles: StyleProps = {
   borderRadius: "md",
   fontFamily: "Inter, sans-serif",
 };
-
-// Pre-defined color palettes for themes.
-export const colorPalettes: Record<string, Partial<StyleProps>> = {
-  light: {
-    backgroundColor: "#FFFFFF",
-    textColor: "#1f2937",
-    buttonColor: "#3b82f6",
-    buttonTextColor: "#FFFFFF",
-  },
-  dark: {
-    backgroundColor: "#1f2937", // gray-800
-    textColor: "#f3f4f6", // gray-100
-    buttonColor: "#60a5fa", // blue-400
-    buttonTextColor: "#1f2937",
-  },
-  ocean: {
-    backgroundColor: "#E0F7FA", // cyan-50
-    textColor: "#006064", // cyan-900
-    buttonColor: "#00ACC1", // cyan-600
-    buttonTextColor: "#FFFFFF",
-  },
-  sunset: {
-    backgroundColor: "#FFF3E0", // orange-50
-    textColor: "#E65100", // orange-900
-    buttonColor: "#FB8C00", // orange-600
-    buttonTextColor: "#FFFFFF",
-  },
-  // Add more palettes as desired
-};
