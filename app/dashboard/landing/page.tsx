@@ -40,6 +40,7 @@ import {
   ExternalLink,
   Link2,
   Loader2,
+  RefreshCcw,
 } from "lucide-react";
 // Replace the DataTable import with the one from forms
 import { DataTable } from "@/components/forms/data-table";
@@ -302,6 +303,18 @@ export default function LandingPage() {
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => duplicateLandingPage(item, false)}
+            >
+              <Copy className="mr-2 h-4 w-4 text-gray-500" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => duplicateLandingPage(item, true)}
+            >
+              <FileText className="mr-2 h-4 w-4 text-gray-500" />
+              Duplicate & Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => handleDeleteClick(item.id)}
               className="text-red-500 hover:bg-red-100"
             >
@@ -493,6 +506,52 @@ export default function LandingPage() {
     }
   };
 
+  // New handler function for duplicating landing pages
+  const duplicateLandingPage = async (landingPage: any, redirectToEdit: boolean = false) => {
+    // Check if user has reached their limit
+    if (usedPages >= totalPagesAllowed) {
+      setLimitReachedDialogOpen(true);
+      return;
+    }
+
+    try {
+      // Clone the landing page data and modify necessary fields
+      const duplicatedLandingPage = {
+        ...landingPage,
+        title: `${landingPage.title}_copy`,
+        id: undefined, // Remove ID so a new one is generated
+        created_at: new Date().toISOString(), // Set current date as creation date
+      };
+
+      // Create the new landing page
+      const response = await fetch("/api/landings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(duplicatedLandingPage),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to duplicate landing page");
+      }
+
+      const newLandingPage = await response.json();
+      
+      // Show success message
+      toast.success("Landing page duplicated successfully");
+      
+      // Refresh the landing pages list
+      fetchLandingPagesData();
+      
+      // If redirectToEdit is true, navigate to the edit page for the new landing page
+      if (redirectToEdit) {
+        router.push(`/dashboard/landing/edit?id=${newLandingPage.id}`);
+      }
+    } catch (error) {
+      console.error("Error duplicating landing page:", error);
+      toast.error("Failed to duplicate landing page");
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
       <DashboardSidebar />
@@ -512,6 +571,32 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => fetchLandingPagesData()}
+                          variant="outline"
+                          className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-800"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCcw className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        align="center"
+                        className="bg-gray-800 text-white text-xs px-3 py-2"
+                      >
+                        <p>Reload landing pages</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
                   <TooltipProvider delayDuration={300}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -550,26 +635,47 @@ export default function LandingPage() {
                     Templates
                   </Button>
                 </div>
-                <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-2 w-36 h-12 flex flex-col justify-center">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
-                      {usedPages}/{totalPagesAllowed}
-                    </span>
-                    {usedPages >= totalPagesAllowed && (
-                      <span className="text-xs bg-red-100 text-red-600 font-medium px-1.5 py-0.5 rounded-full">
-                        Limit
-                      </span>
-                    )}
-                  </div>
-                  <Progress
-                    value={progressValue}
-                    className={`w-full mt-1 h-2 bg-gray-200 dark:bg-gray-700 ${
-                      usedPages >= totalPagesAllowed
-                        ? "[&>div]:bg-red-500 dark:[&>div]:bg-red-600"
-                        : "[&>div]:bg-blue-600 dark:[&>div]:bg-blue-500"
-                    }`}
-                  />
-                </Card>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-2 w-36 h-12 flex flex-col justify-center cursor-help">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                            {usedPages}/{totalPagesAllowed}
+                          </span>
+                          {usedPages >= totalPagesAllowed && (
+                            <span className="text-xs bg-red-100 text-red-600 font-medium px-1.5 py-0.5 rounded-full">
+                              Limit
+                            </span>
+                          )}
+                        </div>
+                        <Progress
+                          value={progressValue}
+                          className={`w-full mt-1 h-2 bg-gray-200 dark:bg-gray-700 ${
+                            usedPages >= totalPagesAllowed
+                              ? "[&>div]:bg-red-500 dark:[&>div]:bg-red-600"
+                              : "[&>div]:bg-blue-600 dark:[&>div]:bg-blue-500"
+                          }`}
+                        />
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      align="center"
+                      className="bg-gray-800 text-white text-xs px-3 py-2 max-w-xs"
+                    >
+                      <p>
+                        You are using {usedPages} out of {totalPagesAllowed}{" "}
+                        available landing pages on your current plan.{" "}
+                        {usedPages >= totalPagesAllowed
+                          ? "You've reached your limit."
+                          : `You can create ${
+                              totalPagesAllowed - usedPages
+                            } more landing pages.`}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 
