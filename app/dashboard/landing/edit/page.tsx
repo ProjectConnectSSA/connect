@@ -24,6 +24,8 @@ import {
 import { ArrowLeft, Paintbrush, Globe, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { getCurrentUser } from "@/app/actions";
+import DashboardSidebar from "@/components/dashboard/sidebar"; // Add sidebar import
+import { TopBar } from "@/components/dashboard/topbar"; // Add topbar import
 
 export default function EditLandingPage() {
   const router = useRouter();
@@ -267,68 +269,74 @@ export default function EditLandingPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)]">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSizePercentage={40} minSizePercentage={30}>
-          <Tabs defaultValue="editor">
-            <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="container flex h-14 items-center justify-between">
-                <TabsList>
-                  <TabsTrigger
-                    value="editor"
-                    className="flex items-center gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Editor
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="styles"
-                    className="flex items-center gap-2"
-                  >
-                    <Paintbrush className="h-4 w-4" />
-                    Styles
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="domain"
-                    className="flex items-center gap-2"
-                  >
-                    <Globe className="h-4 w-4" />
-                    Domain
-                  </TabsTrigger>
-                </TabsList>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowExitDialog(true)}
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <Button onClick={handleSave} disabled={isLoading}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {isLoading ? "Saving..." : "Save Page"}
-                  </Button>
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+      <DashboardSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <TopBar />
+        <div className="flex-1">
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel defaultSizePercentage={40} minSizePercentage={30}>
+              <Tabs defaultValue="editor">
+                <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                  <div className="container flex h-14 items-center justify-between">
+                    <TabsList>
+                      <TabsTrigger
+                        value="editor"
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="h-4 w-4" />
+                        Editor
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="styles"
+                        className="flex items-center gap-2"
+                      >
+                        <Paintbrush className="h-4 w-4" />
+                        Styles
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="domain"
+                        className="flex items-center gap-2"
+                      >
+                        <Globe className="h-4 w-4" />
+                        Domain
+                      </TabsTrigger>
+                    </TabsList>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowExitDialog(true)}
+                      >
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back
+                      </Button>
+                      <Button onClick={handleSave} disabled={isLoading}>
+                        <Save className="mr-2 h-4 w-4" />
+                        {isLoading ? "Saving..." : "Save Page"}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <TabsContent value="editor" className="h-[calc(100vh-8rem)]">
-              <LandingEditor content={content} setContent={setContent} />
-            </TabsContent>
-            <TabsContent value="styles" className="h-[calc(100vh-8rem)]">
-              <LandingStyles content={content} setContent={setContent} />
-            </TabsContent>
-            <TabsContent value="domain" className="h-[calc(100vh-8rem)]">
-              <DomainSettings content={content} setContent={setContent} />
-            </TabsContent>
-          </Tabs>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={60}>
-          <LandingPreview content={content} />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+                <TabsContent value="editor" className="h-[calc(100vh-10rem)]">
+                  <LandingEditor content={content} setContent={setContent} />
+                </TabsContent>
+                <TabsContent value="styles" className="h-[calc(100vh-10rem)]">
+                  <LandingStyles content={content} setContent={setContent} />
+                </TabsContent>
+                <TabsContent value="domain" className="h-[calc(100vh-10rem)]">
+                  <DomainSettings content={content} setContent={setContent} />
+                </TabsContent>
+              </Tabs>
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel defaultSizePercentage={60}>
+              <LandingPreview content={content} />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+      </div>
 
-      {/* Add the exit confirmation dialog */}
+      {/* Exit confirmation dialog */}
       <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
         <DialogContent>
           <DialogHeader>

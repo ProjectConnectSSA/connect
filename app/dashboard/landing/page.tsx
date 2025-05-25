@@ -38,17 +38,24 @@ import {
   Copy,
   QrCode,
   ExternalLink,
-  Link2, // Add this import
+  Link2,
+  Loader2,
 } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { landingTemplates } from "@/components/landing/templates/landing-templates";
-import { QRCodeSVG } from "qrcode.react"; // You'll need to install this package if not already installed
+import { QRCodeSVG } from "qrcode.react";
 import { LandingPreview } from "@/components/landing/landing-preview";
 import { toast } from "sonner";
 import { DomainSettings } from "@/components/landing/domain-settings";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Utility function: format date.
 const formatDate = (dateString: string) => {
@@ -80,47 +87,53 @@ const filters = [
 export default function LandingPage() {
   const router = useRouter();
   const [LandingPages, setLandingPages] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
   const totalPagesAllowed = 10;
   const usedPages = LandingPages?.length ?? 0;
   const progressValue = (usedPages / totalPagesAllowed) * 100;
 
-  // Add these state variables for sharing
+  // States for sharing
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const qrCodeRef = useRef<HTMLDivElement>(null);
 
-  // Add this with your other state variables
+  // States for preview
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState<any>(null);
 
-  // Add these state variables with your other state variables
+  // States for domain management
   const [domainDialogOpen, setDomainDialogOpen] = useState(false);
   const [selectedLandingPage, setSelectedLandingPage] = useState<any>(null);
 
-  // Add these state variables
+  // States for limit reached
   const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
 
-  // Add this to your state variables
+  // States for deleted pages
   const [recentlyDeletedPages, setRecentlyDeletedPages] = useState<any[]>([]);
 
-  // Add these state variables for delete confirmation dialog
+  // States for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [landingPageToDelete, setLandingPageToDelete] = useState<string | null>(
     null
   );
 
-  // Add these state variables for URL shortening
+  // States for URL shortening
   const [shortUrl, setShortUrl] = useState("");
   const [isShorteningUrl, setIsShorteningUrl] = useState(false);
   const [shortUrlError, setShortUrlError] = useState("");
+
+  // State for template dialog
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchLandingPagesData();
   }, []);
 
   async function fetchLandingPagesData() {
+    setIsLoading(true);
     try {
       // Get the current user first
       const { getCurrentUser } = await import("@/app/actions");
@@ -181,10 +194,11 @@ export default function LandingPage() {
     } catch (error) {
       console.error("Error fetching landing pages:", error);
       setLandingPages([]);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  // Update these columns in your landing page component
   const columns = [
     {
       key: "title",
@@ -243,35 +257,39 @@ export default function LandingPage() {
       render: (item: any) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-gray-100 transition"
+            >
+              <MoreVertical className="h-4 w-4 text-gray-600" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent
+            align="end"
+            className="shadow-md rounded-lg bg-white"
+          >
             <DropdownMenuItem onClick={() => handleShareLandingPage(item)}>
-              <Share2 className="mr-2 h-4 w-4" />
+              <Share2 className="mr-2 h-4 w-4 text-gray-500" />
               Share
             </DropdownMenuItem>
-
-            {/* Add this new menu item */}
             <DropdownMenuItem
               onClick={() => window.open(`/landing/${item.id}`, "_blank")}
             >
-              <ExternalLink className="mr-2 h-4 w-4" />
+              <ExternalLink className="mr-2 h-4 w-4 text-gray-500" />
               View Landing Page
             </DropdownMenuItem>
-
             <DropdownMenuItem
               onClick={() => {
                 setPreviewContent(item);
                 setPreviewDialogOpen(true);
               }}
             >
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="mr-2 h-4 w-4 text-gray-500" />
               Preview
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleManageDomain(item)}>
-              <Globe className="mr-2 h-4 w-4" />
+              <Globe className="mr-2 h-4 w-4 text-gray-500" />
               Manage Domain
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -279,7 +297,7 @@ export default function LandingPage() {
                 router.push(`/dashboard/landing/edit?id=${item.id}`)
               }
             >
-              <Pencil className="mr-2 h-4 w-4" />
+              <Pencil className="mr-2 h-4 w-4 text-gray-500" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -294,73 +312,6 @@ export default function LandingPage() {
       ),
     },
   ];
-
-  // const columns = [
-  //   { key: "title", label: "Title" },
-  //   {
-  //     key: "created_at",
-  //     label: "Created",
-  //     render: (item: any) => formatDate(item.created_at),
-  //   },
-  //   {
-  //     key: "status",
-  //     label: "Status",
-  //     render: (item: any) => (
-  //       <Badge variant={item.isActive ? "success" : "secondary"}>
-  //         {item.isActive ? "Active" : "Inactive"}
-  //       </Badge>
-  //     ),
-  //   },
-  //   {
-  //     key: "actions",
-  //     label: "Actions",
-  //     render: (item: any) => (
-  //       <DropdownMenu>
-  //         <DropdownMenuTrigger asChild>
-  //           <Button
-  //             variant="ghost"
-  //             size="icon"
-  //             className="hover:bg-gray-100 transition"
-  //           >
-  //             <MoreVertical className="h-4 w-4 text-gray-600" />
-  //           </Button>
-  //         </DropdownMenuTrigger>
-  //         <DropdownMenuContent
-  //           align="end"
-  //           className="shadow-md rounded-lg bg-white"
-  //         >
-  //           {/* <DropdownMenuItem onClick={() => handleEditLandingPage(item)> */}
-  //           <DropdownMenuItem>
-  //             <Pencil className="mr-2 h-4 w-4 text-gray-500" />
-  //             Edit
-  //           </DropdownMenuItem>
-  //           {/* <DropdownMenuItem onClick={() => handleShareLandingPage(item)> */}
-  //           <DropdownMenuItem>
-  //             <Share2 className="mr-2 h-4 w-4 text-gray-500" />
-  //             Share
-  //           </DropdownMenuItem>
-  //           <DropdownMenuItem onClick={() => handleViewLandingPage(item)}>
-  //             <Eye className="mr-2 h-4 w-4 text-gray-500" />
-  //             View
-  //           </DropdownMenuItem>
-  //           <DropdownMenuItem
-  //             onClick={() => handleViewLandingPageSubmision(item)}
-  //           >
-  //             <FileText className="mr-2 h-4 w-4 text-gray-500" />
-  //             Submissions
-  //           </DropdownMenuItem>
-  //           <DropdownMenuItem
-  //             onClick={() => deleteLandingPage(item.id)}
-  //             className="text-red-500 hover:bg-red-100"
-  //           >
-  //             <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-  //             Delete
-  //           </DropdownMenuItem>
-  //         </DropdownMenuContent>
-  //       </DropdownMenu>
-  //     ),
-  //   },
-  // ];
 
   async function deleteLandingPage(id: string) {
     try {
@@ -446,22 +397,6 @@ export default function LandingPage() {
     }
   };
 
-  const handleUseTemplate = (template: any) => {
-    router.push("/dashboard/landing/edit");
-    console.log(template);
-  };
-
-  const handlePreviewLandingPage = async (landingPage: any) => {
-    try {
-      // For better UX, we could fetch the latest version
-      // but in this case we'll just use the data we already have
-      setPreviewContent(landingPage);
-      setPreviewDialogOpen(true);
-    } catch (error) {
-      console.error("Error loading landing page preview:", error);
-    }
-  };
-
   // Add this function to handle domain management
   const handleManageDomain = async (landingPage: any) => {
     try {
@@ -523,8 +458,6 @@ export default function LandingPage() {
     router.push("/dashboard/landing/edit?id=new");
   };
 
-  // Add this inside your LandingPage component, before the return statement
-  // For example, add it near handleCreateLandingPage or other handlers
   const handleDeleteClick = (id: string) => {
     setLandingPageToDelete(id);
     setDeleteDialogOpen(true);
@@ -564,335 +497,392 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
       <DashboardSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar />
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* Header section */}
+            <div className="flex items-center justify-between flex-shrink-0">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                   Landing Pages
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Create and manage your landing pages.
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Templates
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                      <DialogTitle>Choose a Template</DialogTitle>
-                      <DialogDescription>
-                        Start with a pre-built landing page template or create
-                        from scratch.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
-                      {landingTemplates.map((template) => {
-                        const Icon = template.icon;
-                        return (
-                          <Card
-                            key={template.id}
-                            className="cursor-pointer transition-all hover:scale-105"
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="inline-block">
+                          <Button
                             onClick={handleCreateLandingPage}
+                            disabled={usedPages >= totalPagesAllowed}
+                            className={`bg-blue-600 hover:bg-blue-700 text-white shadow-md ${
+                              usedPages >= totalPagesAllowed
+                                ? "opacity-70 cursor-not-allowed"
+                                : ""
+                            }`}
                           >
-                            <CardHeader>
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-5 w-5" />
-                                <CardTitle className="text-lg">
-                                  {template.title}
-                                </CardTitle>
-                              </div>
-                              <CardDescription>
-                                {template.description}
-                              </CardDescription>
-                            </CardHeader>
-                          </Card>
-                        );
-                      })}
-                      <Card
-                        className="cursor-pointer transition-all hover:scale-105"
-                        onClick={() =>
-                          router.push("/dashboard/landing/edit?id=new")
-                        }
-                      >
-                        <CardHeader>
-                          <div className="flex items-center gap-2">
-                            <Plus className="h-5 w-5" />
-                            <CardTitle className="text-lg">
-                              Blank Page
-                            </CardTitle>
-                          </div>
-                          <CardDescription>
-                            Start from scratch with a blank landing page
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  onClick={handleCreateLandingPage}
-                  disabled={usedPages >= totalPagesAllowed}
-                  variant={
-                    usedPages >= totalPagesAllowed ? "outline" : "default"
-                  }
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {usedPages >= totalPagesAllowed
-                    ? "Page Limit Reached"
-                    : "Create New Landing Page"}
-                </Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Landing Page
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      {usedPages >= totalPagesAllowed && (
+                        <TooltipContent
+                          side="top"
+                          align="center"
+                          className="bg-gray-800 text-white text-xs px-3 py-2 z-[9999]"
+                        >
+                          <p>You've reached your limit of 10 landing pages</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <Button
+                    onClick={() => setTemplateDialogOpen(true)}
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-800"
+                  >
+                    Templates
+                  </Button>
+                </div>
+                <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-2 w-36 h-12 flex flex-col justify-center">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                      {usedPages}/{totalPagesAllowed}
+                    </span>
+                    {usedPages >= totalPagesAllowed && (
+                      <span className="text-xs bg-red-100 text-red-600 font-medium px-1.5 py-0.5 rounded-full">
+                        Limit
+                      </span>
+                    )}
+                  </div>
+                  <Progress
+                    value={progressValue}
+                    className={`w-full mt-1 h-2 bg-gray-200 dark:bg-gray-700 ${
+                      usedPages >= totalPagesAllowed
+                        ? "[&>div]:bg-red-500 dark:[&>div]:bg-red-600"
+                        : "[&>div]:bg-blue-600 dark:[&>div]:bg-blue-500"
+                    }`}
+                  />
+                </Card>
               </div>
             </div>
 
-            {/* Usage Card */}
-            <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-4 max-w-sm">
-              <CardHeader>
-                <CardTitle className="text-gray-900 text-lg">Usage</CardTitle>
-                <CardDescription className="text-gray-600">
-                  {usedPages} of {totalPagesAllowed} landing pages used
-                  {usedPages === totalPagesAllowed && (
-                    <span className="text-amber-600 mt-1 text-sm block">
-                      You've reached your plan limit. Oldest pages are preserved
-                      if you exceed this limit.
-                    </span>
-                  )}
-                </CardDescription>
-                <Progress value={progressValue} className="mt-2 bg-gray-300" />
-              </CardHeader>
-            </Card>
-
-            {/* Landing Pages List */}
-            <Card className="bg-white border-none shadow-sm rounded-lg p-4">
-              <CardHeader>
-                <CardTitle className="text-gray-900 text-xl">
-                  Your Landing Pages
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable
-                  data={LandingPages || []}
-                  columns={columns}
-                  filters={filters}
-                  itemsPerPage={10}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Share Dialog */}
-            <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Share Landing Page</DialogTitle>
-                  <DialogDescription>
-                    Use the link below to share the landing page or generate its
-                    QR code.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex items-center space-x-2 mt-4">
-                  <input
-                    type="text"
-                    value={shortUrl || shareLink}
-                    readOnly
-                    className="flex-1 border border-gray-300 rounded px-3 py-2"
-                  />
-                  <Button onClick={handleCopy} variant="outline">
-                    <Copy
-                      className={copied ? "text-green-500" : "text-gray-500"}
-                    />
-                    <span className="sr-only">Copy link</span>
-                  </Button>
+            {/* Content Area: Loading or Landing Pages List */}
+            <div>
+              {isLoading ? (
+                // --- Loading Indicator ---
+                <div className="flex justify-center items-center h-64 pt-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">
+                    Loading landing pages...
+                  </span>
                 </div>
-                {shortUrlError && (
-                  <p className="text-sm text-red-500 mt-1">{shortUrlError}</p>
-                )}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    onClick={shortenUrl}
-                    variant="outline"
-                    disabled={isShorteningUrl || !!shortUrl}
-                    className="flex-1"
-                  >
-                    {isShorteningUrl ? (
-                      <>Shortening...</>
-                    ) : (
-                      <>
-                        <Link2 className="mr-2 h-4 w-4" />
-                        Shorten URL
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => setShowQRCode(!showQRCode)}
-                    variant="secondary"
-                    className="flex-1"
-                  >
-                    {showQRCode ? "Hide QR Code" : "Generate QR Code"}
-                    <QrCode className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-                {showQRCode && (
-                  <div className="mt-4 flex flex-col items-center">
-                    <div ref={qrCodeRef}>
-                      <QRCodeSVG
-                        value={shortUrl || shareLink}
-                        style={{ width: 128, height: 128 }}
-                      />
-                    </div>
-                    <Button
-                      onClick={downloadQRCode}
-                      variant="outline"
-                      className="mt-2"
-                    >
-                      Download QR Code
-                    </Button>
-                  </div>
-                )}
-                <DialogClose asChild>
-                  <Button variant="ghost" className="mt-4 w-full">
-                    Close
-                  </Button>
-                </DialogClose>
-              </DialogContent>
-            </Dialog>
-
-            {/* Preview Dialog */}
-            <Dialog
-              open={previewDialogOpen}
-              onOpenChange={setPreviewDialogOpen}
-            >
-              <DialogContent className="max-w-5xl h-[80vh]">
-                <DialogHeader>
-                  <DialogTitle>Landing Page Preview</DialogTitle>
-                  <DialogDescription>
-                    Preview how your landing page will appear to visitors
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex-1 overflow-auto mt-4 border rounded-md">
-                  {previewContent && (
-                    <LandingPreview content={previewContent} />
-                  )}
-                </div>
-                <DialogClose asChild>
-                  <Button variant="ghost" className="mt-4 w-full">
-                    Close
-                  </Button>
-                </DialogClose>
-              </DialogContent>
-            </Dialog>
-
-            {/* Domain Management Dialog */}
-            <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
-              <DialogContent className="max-w-3xl max-h-[70vh] overflow-hidden flex flex-col">
-                <DialogHeader className="flex-shrink-0">
-                  <DialogTitle>Manage Domain Settings</DialogTitle>
-                  <DialogDescription>
-                    Configure the domain settings for your landing page
-                  </DialogDescription>
-                </DialogHeader>
-                {selectedLandingPage && (
-                  <div className="mt-4 overflow-y-auto flex-grow">
-                    <DomainSettings
-                      content={selectedLandingPage}
-                      setContent={(updatedContent) => {
-                        // ONLY update the local state, don't save to database yet
-                        setSelectedLandingPage(updatedContent);
-                      }}
+              ) : (
+                // --- Landing Pages List ---
+                <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-4 w-full">
+                  <div>
+                    <DataTable
+                      data={LandingPages || []}
+                      columns={columns}
+                      filters={filters}
+                      itemsPerPage={5}
                     />
                   </div>
-                )}
-                <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                  </DialogClose>
-                  <Button
-                    onClick={() =>
-                      handleSaveDomainSettings(selectedLandingPage)
-                    }
-                    disabled={!selectedLandingPage}
-                  >
-                    Save Changes
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Limit Reached Dialog */}
-            <Dialog
-              open={limitReachedDialogOpen}
-              onOpenChange={setLimitReachedDialogOpen}
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Landing Page Limit Reached</DialogTitle>
-                  <DialogDescription>
-                    You have used all 10 free landing pages available on your
-                    current plan.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <p>To create more landing pages, you can:</p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>Delete existing landing pages you no longer need</li>
-                    <li>
-                      Upgrade to a premium plan for unlimited landing pages
-                    </li>
-                  </ul>
-                </div>
-                <DialogClose asChild>
-                  <Button variant="ghost" className="mt-4 w-full flex-shrink-0">
-                    Close
-                  </Button>
-                </DialogClose>
-              </DialogContent>
-            </Dialog>
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Confirm Deletion</DialogTitle>
-                  <DialogDescription>
-                    Are you sure you want to delete this landing page? This
-                    action cannot be undone.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setDeleteDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() =>
-                      landingPageToDelete &&
-                      deleteLandingPage(landingPageToDelete)
-                    }
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </Card>
+              )}
+            </div>
           </div>
-        </div>
+        </main>
+
+        {/* Share Dialog */}
+        <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800">
+            <DialogHeader>
+              <DialogTitle className="dark:text-gray-100">
+                Share Landing Page
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                Use the link below to share the landing page or generate its QR
+                code.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center space-x-2 mt-4">
+              <input
+                type="text"
+                value={shortUrl || shareLink}
+                readOnly
+                className="flex-1 border border-gray-300 rounded px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+              />
+              <Button
+                onClick={handleCopy}
+                size="icon"
+                variant="outline"
+                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                <Copy
+                  className={`h-4 w-4 ${
+                    copied
+                      ? "text-green-500"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                />
+                <span className="sr-only">Copy link</span>
+              </Button>
+            </div>
+            {shortUrlError && (
+              <p className="text-sm text-red-500 mt-1">{shortUrlError}</p>
+            )}
+            <div className="mt-4">
+              <Button
+                onClick={() => setShowQRCode(!showQRCode)}
+                variant="secondary"
+                className="dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+              >
+                {showQRCode ? "Hide QR Code" : "Generate QR Code"}
+                <QrCode className="ml-2 h-4 w-4" />
+              </Button>
+              {showQRCode && (
+                <div className="mt-4 flex flex-col items-center">
+                  <div ref={qrCodeRef} className="bg-white p-2 rounded">
+                    <QRCodeSVG
+                      value={shortUrl || shareLink}
+                      size={128}
+                      level="Q"
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                    />
+                  </div>
+                  <Button
+                    onClick={downloadQRCode}
+                    variant="outline"
+                    className="mt-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    Download QR Code
+                  </Button>
+                </div>
+              )}
+            </div>
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                Close
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+
+        {/* Template Dialog */}
+        <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="dark:text-gray-100">
+                Choose a Template
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                Start with a pre-built landing page template or create from
+                scratch.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
+              {landingTemplates.map((template) => {
+                const Icon = template.icon;
+                return (
+                  <Card
+                    key={template.id}
+                    className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
+                    onClick={handleCreateLandingPage}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-5 w-5 dark:text-gray-300" />
+                        <CardTitle className="text-lg dark:text-gray-200">
+                          {template.title}
+                        </CardTitle>
+                      </div>
+                      <CardDescription className="dark:text-gray-400">
+                        {template.description}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
+              <Card
+                className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
+                onClick={() => router.push("/dashboard/landing/edit?id=new")}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-5 w-5 dark:text-gray-300" />
+                    <CardTitle className="text-lg dark:text-gray-200">
+                      Blank Page
+                    </CardTitle>
+                  </div>
+                  <CardDescription className="dark:text-gray-400">
+                    Start from scratch with a blank landing page
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                Close
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+
+        {/* Preview Dialog */}
+        <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-5xl h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="dark:text-gray-100">
+                Landing Page Preview
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                Preview how your landing page will appear to visitors
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-auto mt-4 border rounded-md">
+              {previewContent && <LandingPreview content={previewContent} />}
+            </div>
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                Close
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+
+        {/* Domain Management Dialog */}
+        <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl max-h-[70vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="dark:text-gray-100">
+                Manage Domain Settings
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                Configure the domain settings for your landing page
+              </DialogDescription>
+            </DialogHeader>
+            {selectedLandingPage && (
+              <div className="mt-4 overflow-y-auto flex-grow">
+                <DomainSettings
+                  content={selectedLandingPage}
+                  setContent={(updatedContent) => {
+                    setSelectedLandingPage(updatedContent);
+                  }}
+                />
+              </div>
+            )}
+            <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                onClick={() => handleSaveDomainSettings(selectedLandingPage)}
+                disabled={!selectedLandingPage}
+                className="dark:bg-blue-600 dark:hover:bg-blue-700"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Limit Reached Dialog */}
+        <Dialog
+          open={limitReachedDialogOpen}
+          onOpenChange={setLimitReachedDialogOpen}
+        >
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800">
+            <DialogHeader>
+              <DialogTitle className="dark:text-gray-100">
+                Landing Page Limit Reached
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                You have used all 10 free landing pages available on your
+                current plan.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="dark:text-gray-300">
+                To create more landing pages, you can:
+              </p>
+              <ul className="list-disc pl-5 space-y-2 dark:text-gray-300">
+                <li>Delete existing landing pages you no longer need</li>
+                <li>Upgrade to a premium plan for unlimited landing pages</li>
+              </ul>
+            </div>
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                className="mt-4 w-full dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                Close
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="dark:text-gray-100">
+                Confirm Deletion
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                Are you sure you want to delete this landing page? This action
+                cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() =>
+                  landingPageToDelete && deleteLandingPage(landingPageToDelete)
+                }
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 }
 
-// Add this function with your other functions
+// Helper function for deleting excess landing pages
 async function deleteExcessLandingPages(pagesToDelete: any[]) {
   try {
     // Delete each excess landing page one by one
