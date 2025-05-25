@@ -41,7 +41,8 @@ import {
   Link2,
   Loader2,
 } from "lucide-react";
-import { DataTable } from "@/components/shared/data-table";
+// Replace the DataTable import with the one from forms
+import { DataTable } from "@/components/forms/data-table";
 import { Badge } from "@/components/ui/badge";
 import { landingTemplates } from "@/components/landing/templates/landing-templates";
 import { QRCodeSVG } from "qrcode.react";
@@ -397,7 +398,6 @@ export default function LandingPage() {
     }
   };
 
-  // Add this function to handle domain management
   const handleManageDomain = async (landingPage: any) => {
     try {
       // Fetch the latest version of the landing page for domain management
@@ -415,7 +415,6 @@ export default function LandingPage() {
     }
   };
 
-  // Function to save domain settings
   const handleSaveDomainSettings = async (updatedContent: any) => {
     try {
       // Make sure we have a selected landing page
@@ -447,7 +446,6 @@ export default function LandingPage() {
     }
   };
 
-  // Replace the existing button click handlers with this function
   const handleCreateLandingPage = () => {
     if (usedPages >= totalPagesAllowed) {
       setLimitReachedDialogOpen(true);
@@ -463,7 +461,6 @@ export default function LandingPage() {
     setDeleteDialogOpen(true);
   };
 
-  // Add this function to shorten URLs
   const shortenUrl = async () => {
     setIsShorteningUrl(true);
     setShortUrlError("");
@@ -590,6 +587,7 @@ export default function LandingPage() {
                 // --- Landing Pages List ---
                 <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-4 w-full">
                   <div>
+                    {/* Using the forms DataTable component instead of the shared one */}
                     <DataTable
                       data={LandingPages || []}
                       columns={columns}
@@ -641,7 +639,7 @@ export default function LandingPage() {
             {shortUrlError && (
               <p className="text-sm text-red-500 mt-1">{shortUrlError}</p>
             )}
-            <div className="mt-4">
+            <div className="flex justify-between items-center mt-4">
               <Button
                 onClick={() => setShowQRCode(!showQRCode)}
                 variant="secondary"
@@ -650,27 +648,51 @@ export default function LandingPage() {
                 {showQRCode ? "Hide QR Code" : "Generate QR Code"}
                 <QrCode className="ml-2 h-4 w-4" />
               </Button>
-              {showQRCode && (
-                <div className="mt-4 flex flex-col items-center">
-                  <div ref={qrCodeRef} className="bg-white p-2 rounded">
-                    <QRCodeSVG
-                      value={shortUrl || shareLink}
-                      size={128}
-                      level="Q"
-                      bgColor="#ffffff"
-                      fgColor="#000000"
-                    />
-                  </div>
-                  <Button
-                    onClick={downloadQRCode}
-                    variant="outline"
-                    className="mt-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  >
-                    Download QR Code
-                  </Button>
-                </div>
-              )}
+
+              <Button
+                onClick={shortenUrl}
+                disabled={isShorteningUrl || !!shortUrl}
+                variant="outline"
+                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                {isShorteningUrl ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Shortening...
+                  </>
+                ) : shortUrl ? (
+                  <>
+                    <Link2 className="mr-2 h-4 w-4 text-green-500" />
+                    Shortened
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="mr-2 h-4 w-4" />
+                    Shorten URL
+                  </>
+                )}
+              </Button>
             </div>
+            {showQRCode && (
+              <div className="mt-4 flex flex-col items-center">
+                <div ref={qrCodeRef} className="bg-white p-2 rounded">
+                  <QRCodeSVG
+                    value={shortUrl || shareLink}
+                    size={128}
+                    level="Q"
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                  />
+                </div>
+                <Button
+                  onClick={downloadQRCode}
+                  variant="outline"
+                  className="mt-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Download QR Code
+                </Button>
+              </div>
+            )}
             <DialogClose asChild>
               <Button
                 variant="ghost"
