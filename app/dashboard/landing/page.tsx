@@ -159,7 +159,7 @@ export default function LandingPage() {
 
       // Check if user has more than 10 landing pages
       if (data.length > totalPagesAllowed) {
-        // Sort by creation date (oldest first)
+        // Sort by creation date (oldest first for deletion purposes)
         const sortedPages = [...data].sort(
           (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -174,8 +174,13 @@ export default function LandingPage() {
         // Delete excess pages
         await deleteExcessLandingPages(pagesToDelete);
 
-        // Update state with only the kept pages
-        setLandingPages(pagesToKeep);
+        // Update state with only the kept pages (but sort newest first for display)
+        const pagesForDisplay = [...pagesToKeep].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setLandingPages(pagesForDisplay);
+
         // Store deleted pages in state
         setRecentlyDeletedPages(pagesToDelete);
         // Show more detailed toast
@@ -191,7 +196,12 @@ export default function LandingPage() {
           { duration: 5000 }
         );
       } else {
-        setLandingPages(data);
+        // Sort the landing pages by creation date (newest first)
+        const sortedData = [...data].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setLandingPages(sortedData);
       }
     } catch (error) {
       console.error("Error fetching landing pages:", error);
@@ -276,10 +286,12 @@ export default function LandingPage() {
               Share
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => window.open(`/landing/${item.id}`, "_blank")}
+              onClick={() =>
+                router.push(`/dashboard/landing/edit?id=${item.id}`)
+              }
             >
-              <ExternalLink className="mr-2 h-4 w-4 text-gray-500" />
-              View Landing Page
+              <Pencil className="mr-2 h-4 w-4 text-gray-500" />
+              Edit
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -290,29 +302,23 @@ export default function LandingPage() {
               <Eye className="mr-2 h-4 w-4 text-gray-500" />
               Preview
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleManageDomain(item)}>
-              <Globe className="mr-2 h-4 w-4 text-gray-500" />
-              Manage Domain
-            </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() =>
-                router.push(`/dashboard/landing/edit?id=${item.id}`)
-              }
+              onClick={() => window.open(`/landing/${item.id}`, "_blank")}
             >
-              <Pencil className="mr-2 h-4 w-4 text-gray-500" />
-              Edit
+              <ExternalLink className="mr-2 h-4 w-4 text-gray-500" />
+              View Landing Page
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => duplicateLandingPage(item, false)}
-            >
+            <DropdownMenuItem onClick={() => duplicateLandingPage(item, false)}>
               <Copy className="mr-2 h-4 w-4 text-gray-500" />
               Duplicate
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => duplicateLandingPage(item, true)}
-            >
+            <DropdownMenuItem onClick={() => duplicateLandingPage(item, true)}>
               <FileText className="mr-2 h-4 w-4 text-gray-500" />
               Duplicate & Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleManageDomain(item)}>
+              <Globe className="mr-2 h-4 w-4 text-gray-500" />
+              Manage Domain
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleDeleteClick(item.id)}
@@ -507,7 +513,10 @@ export default function LandingPage() {
   };
 
   // New handler function for duplicating landing pages
-  const duplicateLandingPage = async (landingPage: any, redirectToEdit: boolean = false) => {
+  const duplicateLandingPage = async (
+    landingPage: any,
+    redirectToEdit: boolean = false
+  ) => {
     // Check if user has reached their limit
     if (usedPages >= totalPagesAllowed) {
       setLimitReachedDialogOpen(true);
@@ -535,13 +544,20 @@ export default function LandingPage() {
       }
 
       const newLandingPage = await response.json();
-      
+
+      // Instead of refetching all landing pages, just add the new one to the state
+      setLandingPages((prevPages) => {
+        // Add the new landing page and sort by created_at (newest first)
+        const updatedPages = [newLandingPage, ...prevPages];
+        return updatedPages.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+
       // Show success message
       toast.success("Landing page duplicated successfully");
-      
-      // Refresh the landing pages list
-      fetchLandingPagesData();
-      
+
       // If redirectToEdit is true, navigate to the edit page for the new landing page
       if (redirectToEdit) {
         router.push(`/dashboard/landing/edit?id=${newLandingPage.id}`);
