@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { toast, Toaster } from "sonner";
 
-import { PageData, BioElement, StyleProps, defaultStyles } from "@/app/types/links/types";
+import { PageData, BioElement, StyleProps } from "@/app/types/links/types";
+import { defaultStyles } from "@/components/links/constants/styleConstants";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
@@ -66,6 +67,7 @@ export default function ViewPage() {
           customDomain: data.custom_domain,
           active: data.active ?? true,
         });
+        recordPageView(data.id);
       } else {
         toast.error("Page not found.");
         setError("Page not found.");
@@ -76,6 +78,26 @@ export default function ViewPage() {
 
     fetchData();
   }, [identifier]);
+
+  const recordPageView = async (pageId: string) => {
+    if (!pageId) {
+      console.error("Cannot record page view: pageId is missing.");
+      return;
+    }
+    try {
+      // Directly insert into Supabase using the client
+      const { error: insertError } = await supabase.from("link_analytics").insert([{ page_id: pageId }]); // `viewed_at` will default to NOW()
+
+      if (insertError) {
+        console.error("Supabase error recording page view directly:", insertError.message);
+        // Optionally toast a silent error or log to an error tracking service
+      } else {
+        console.log("Page view recorded directly to Supabase");
+      }
+    } catch (error: any) {
+      console.error("Error recording page view directly:", error.message);
+    }
+  };
 
   if (isLoading) {
     return (

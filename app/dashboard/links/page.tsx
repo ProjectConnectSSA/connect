@@ -1,3 +1,4 @@
+// app/dashboard/links/page.tsx (Assuming this is your BioPagesDashboard file)
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -22,20 +23,19 @@ import {
   Search,
   Loader2,
   AlertTriangle,
+  BarChart3, // <-- Import BarChart3 icon for Analytics
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
-// Assuming PageData includes id and slug, but no separate title
-import type { PageData as PageDataType } from "@/app/types/links/types"; // Renaming to avoid conflict if local definition changes
-import { Skeleton } from "@radix-ui/themes";
+import type { PageData as PageDataType } from "@/app/types/links/types";
+import { Skeleton } from "@radix-ui/themes"; // Assuming this is @radix-ui/themes/Skeleton
 import { TopBar } from "@/components/dashboard/topbar";
 
-// Define PageData locally based on the assumption of only having slug
 interface PageData {
   id: string | number;
-  slug: string; // Slug is the primary identifier from API
+  slug: string;
   customDomain?: string | null;
   created_at?: string | null;
   active: boolean;
@@ -91,21 +91,18 @@ export default function BioPagesDashboard() {
       }
       const data = await res.json();
       const pagesData = Array.isArray(data?.data) ? data.data : [];
-
       const pages: PageData[] = pagesData.map((p: any) => ({
         id: p.id,
-        slug: p.slug || "untitled-page", // Ensure slug has a fallback if API could send null/empty
+        slug: p.slug || "untitled-page",
         customDomain: p.custom_domain,
         created_at: p.created_at,
-        active: p.active,
+        active: p.active ?? true, // Ensure active has a default
       }));
-
       pages.sort((a, b) => {
         const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
         return dateB - dateA;
       });
-
       setBioPages(pages);
     } catch (err: any) {
       console.error("Fetch Error:", err);
@@ -124,7 +121,6 @@ export default function BioPagesDashboard() {
       }
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
-        // Search only by slug
         const slugMatch = page.slug?.toLowerCase().includes(term);
         if (!slugMatch) {
           return false;
@@ -160,7 +156,7 @@ export default function BioPagesDashboard() {
     fetchProfileUsage();
   }, [fetchProfileUsage]);
 
-  const progressValue = profileUsage.limit > 0 ? (profileUsage.current / profileUsage.limit) * 100 : 0;
+  const progressValue = profileUsage.limit > 0 && profileUsage.limit !== Infinity ? (profileUsage.current / profileUsage.limit) * 100 : 0;
 
   const handleShareTrigger = (page: PageData) => {
     const link = page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/p/${page.slug}`;
@@ -216,11 +212,17 @@ export default function BioPagesDashboard() {
     if (!pageId) return;
     const page = bioPages.find((p) => p.id === pageId);
     if (page) {
-      const publicUrl = page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/p/${page.slug}`;
+      const publicUrl = page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/p/${page.slug}`; // Changed to /p/ for public view
       window.open(publicUrl, "_blank");
     } else {
       toast.error("Page details not found to open.");
     }
+  };
+
+  // New handler for Analytics
+  const handleViewAnalytics = (pageId: string | number) => {
+    if (!pageId) return;
+    router.push(`/dashboard/links/analytics/${pageId}`);
   };
 
   const handleDeleteTrigger = (page: PageData) => {
@@ -233,7 +235,6 @@ export default function BioPagesDashboard() {
     setIsDeleting(true);
     const pageId = pageToDelete.id;
     const pageSlugDisplay = pageToDelete.slug;
-
     const promise = fetch("/api/links", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -245,7 +246,6 @@ export default function BioPagesDashboard() {
       }
       return res.json();
     });
-
     toast.promise(promise, {
       loading: `Deleting page "${pageSlugDisplay}"...`,
       success: () => {
@@ -269,14 +269,11 @@ export default function BioPagesDashboard() {
       toast.error("Page not found to clone.");
       return;
     }
-
     if (profileUsage.limit !== Infinity && profileUsage.current >= profileUsage.limit) {
       toast.error("You have reached your page limit. Cannot clone page.");
       return;
     }
-
     const originalPageSlugDisplay = pageToClone.slug;
-
     const promise = fetch(`/api/links/clone`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -288,20 +285,17 @@ export default function BioPagesDashboard() {
       }
       return res.json();
     });
-
     toast.promise(promise, {
       loading: `Cloning page "${originalPageSlugDisplay}"...`,
       success: (clonedPageResponse) => {
         const newClonedPageData = clonedPageResponse.data;
-
         const newPage: PageData = {
           id: newClonedPageData.id,
-          slug: newClonedPageData.slug || "untitled-cloned-page", // Fallback for cloned slug
+          slug: newClonedPageData.slug || "untitled-cloned-page",
           customDomain: newClonedPageData.custom_domain,
           created_at: newClonedPageData.created_at,
           active: newClonedPageData.active,
         };
-
         setBioPages((prevPages) => {
           const updatedPages = [newPage, ...prevPages];
           updatedPages.sort((a, b) => {
@@ -311,9 +305,7 @@ export default function BioPagesDashboard() {
           });
           return updatedPages;
         });
-
         fetchProfileUsage();
-
         return `Page "${originalPageSlugDisplay}" cloned as "${newPage.slug}".`;
       },
       error: (err) => {
@@ -355,16 +347,16 @@ export default function BioPagesDashboard() {
                 <Plus className="mr-2 h-4 w-4" /> Create Page
               </Button>
             </div>
-            <Card className="p-3 md:p-4">
+            <Card className="p-3 md:p-4 dark:bg-gray-800">
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
                 <div className="relative flex-grow sm:flex-grow-0 sm:w-64">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     type="search"
-                    placeholder="Search slug..." // Updated placeholder
+                    placeholder="Search slug..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 h-9 text-sm"
+                    className="pl-8 h-9 text-sm dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                   />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -374,7 +366,11 @@ export default function BioPagesDashboard() {
                       key={opt.value}
                       variant={activeFilter === opt.value ? "secondary" : "outline"}
                       size="sm"
-                      className="h-9 text-xs px-2.5"
+                      className={`h-9 text-xs px-2.5 ${
+                        activeFilter === opt.value
+                          ? "dark:bg-gray-700 dark:text-gray-200"
+                          : "dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                      }`}
                       onClick={() => setActiveFilter(opt.value as any)}>
                       {opt.label}
                     </Button>
@@ -385,7 +381,7 @@ export default function BioPagesDashboard() {
                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Page Limit</span>
                     {isProfileLoading ? (
                       <Skeleton>
-                        <span className="text-xs"> 0/0 </span>
+                        <span className="text-xs"> 0/0 </span>
                       </Skeleton>
                     ) : (
                       <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -461,7 +457,11 @@ export default function BioPagesDashboard() {
                             </a>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <Badge variant={page.active ? "success" : "secondary"}>{page.active ? "Active" : "Inactive"}</Badge>
+                            <Badge
+                              variant={page.active ? "success" : "secondary"}
+                              className={page.active ? "dark:bg-green-700 dark:text-green-100" : "dark:bg-gray-600 dark:text-gray-200"}>
+                              {page.active ? "Active" : "Inactive"}
+                            </Badge>
                           </td>
                           <td className="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                             {formatDate(page.created_at)}
@@ -478,32 +478,38 @@ export default function BioPagesDashboard() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent
                                 align="end"
-                                className="dark:bg-gray-800">
+                                className="dark:bg-gray-800 border-gray-700">
                                 <DropdownMenuItem
                                   onClick={() => handleEditPage(page.id!)}
-                                  className="dark:focus:bg-gray-700">
+                                  className="dark:focus:bg-gray-700 dark:text-gray-200">
                                   <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                {/* Analytics Option Added Here */}
+                                <DropdownMenuItem
+                                  onClick={() => handleViewAnalytics(page.id!)}
+                                  className="dark:focus:bg-gray-700 dark:text-gray-200">
+                                  <BarChart3 className="mr-2 h-4 w-4" /> Analytics
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleShareTrigger(page)}
-                                  className="dark:focus:bg-gray-700">
+                                  className="dark:focus:bg-gray-700 dark:text-gray-200">
                                   <Share2 className="mr-2 h-4 w-4" /> Share
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleClonePage(page.id!)}
                                   disabled={profileUsage.limit !== Infinity && profileUsage.current >= profileUsage.limit && !isProfileLoading}
-                                  className="dark:focus:bg-gray-700">
+                                  className="dark:focus:bg-gray-700 dark:text-gray-200">
                                   <CopyPlus className="mr-2 h-4 w-4" /> Clone
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleViewPage(page.id!)}
-                                  className="dark:focus:bg-gray-700">
+                                  className="dark:focus:bg-gray-700 dark:text-gray-200">
                                   <Eye className="mr-2 h-4 w-4" /> View Public Page
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="dark:bg-gray-700" />
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteTrigger(page)}
-                                  className="text-red-600 focus:bg-red-100 focus:text-red-700 dark:focus:bg-red-700/20 dark:focus:text-red-400">
+                                  className="text-red-600 focus:bg-red-100 focus:text-red-700 dark:focus:bg-red-700/20 dark:focus:text-red-400 dark:text-red-400">
                                   <Trash2 className="mr-2 h-4 w-4" /> Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -529,11 +535,10 @@ export default function BioPagesDashboard() {
         </main>
       </div>
 
-      {/* Share Dialog */}
       <Dialog
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}>
-        <DialogContent className="dark:bg-gray-800">
+        <DialogContent className="dark:bg-gray-800 border-gray-700">
           <DialogHeader>
             <DialogTitle className="dark:text-gray-100">Share Page</DialogTitle>
             <DialogDescription className="dark:text-gray-400">Copy link or scan the QR code to share your page.</DialogDescription>
@@ -548,7 +553,7 @@ export default function BioPagesDashboard() {
               onClick={handleCopy}
               size="icon"
               variant="outline"
-              className="dark:border-gray-600 dark:hover:bg-gray-700">
+              className="dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300">
               <Copy className={`h-4 w-4 ${copied ? "text-green-500" : "dark:text-gray-300"}`} />
             </Button>
           </div>
@@ -583,18 +588,17 @@ export default function BioPagesDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="dark:bg-gray-800">
+        <DialogContent className="dark:bg-gray-800 border-gray-700">
           <DialogHeader>
             <DialogTitle className="flex items-center dark:text-gray-100">
               <AlertTriangle className="h-5 w-5 mr-2 text-red-500" /> Are you sure?
             </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              This action cannot be undone. This will permanently delete the page
-              <span className="font-semibold"> "{pageToDelete?.slug}"</span> and all its associated data.
+              This action cannot be undone. This will permanently delete the page <span className="font-semibold">"{pageToDelete?.slug}"</span> and
+              all its associated data.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">

@@ -51,3 +51,16 @@ export const colorPalettes: Record<string, Partial<StyleProps>> = {
   },
   // Add more palettes as desired
 };
+
+// Default style settings for a new page.
+export const defaultStyles: StyleProps = {
+  theme: "light",
+  backgroundColor: "#FFFFFF",
+  backgroundImage: "",
+  textColor: "#1f2937", // Tailwind gray-800
+  buttonColor: "#3b82f6", // Tailwind blue-500
+  buttonTextColor: "#FFFFFF",
+  buttonStyle: "filled",
+  borderRadius: "md",
+  fontFamily: "Inter, sans-serif",
+};

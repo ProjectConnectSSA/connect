@@ -110,23 +110,12 @@ export function CardElementView({ element, styles }: { element: BioElement; styl
   );
 
   return (
-    <div className={`mb-3 w-full ${element.layout === "double" ? "md:w-[calc(50%-0.5rem)]" : "w-full"}`}>
-      {element.url ? (
-        <a
-          href={element.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`block overflow-hidden border shadow-md ${radiusClass}`}
-          style={{ backgroundColor: cardBgColor }}>
-          {cardContent}
-        </a>
-      ) : (
-        <div
-          className={`block overflow-hidden border shadow-md ${radiusClass}`}
-          style={{ backgroundColor: cardBgColor }}>
-          {cardContent}
-        </div>
-      )}
+    <div className={`mb-3 w-full `}>
+      <div
+        className={`block overflow-hidden border shadow-md ${radiusClass}`}
+        style={{ backgroundColor: cardBgColor }}>
+        {cardContent}
+      </div>
     </div>
   );
 }
