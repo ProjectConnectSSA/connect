@@ -30,7 +30,7 @@ export async function GET(request: Request, { params }: { params: { pageId: stri
     // If you want all columns, use .select("*")
     const { data, error: fetchError } = await supabase
       .from("link_analytics")
-      .select("id, viewed_at,  user_agent, referrer, country") // Example: select specific useful columns
+      .select("*") // Example: select specific useful columns
       // Or to select all columns: .select("*")
       .eq("page_id", pageId);
     console.log("Fetching view records for pageId:", data);

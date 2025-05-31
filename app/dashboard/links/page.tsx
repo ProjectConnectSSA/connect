@@ -212,7 +212,7 @@ export default function BioPagesDashboard() {
     if (!pageId) return;
     const page = bioPages.find((p) => p.id === pageId);
     if (page) {
-      const publicUrl = page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/p/${page.slug}`; // Changed to /p/ for public view
+      const publicUrl = page.customDomain ? `${window.location.protocol}//${page.customDomain}` : `${baseUrl}/dashboard/links/view/${page.slug}`; // Changed to /p/ for public view
       window.open(publicUrl, "_blank");
     } else {
       toast.error("Page details not found to open.");

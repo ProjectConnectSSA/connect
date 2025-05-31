@@ -1,3 +1,4 @@
+// app/dashboard/links/view/[identifier]/page.tsx (or your public page path)
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -7,7 +8,7 @@ import { toast, Toaster } from "sonner";
 
 import { PageData, BioElement, StyleProps } from "@/app/types/links/types";
 import { defaultStyles } from "@/components/links/constants/styleConstants";
-import DashboardSidebar from "@/components/dashboard/sidebar";
+// import DashboardSidebar from "@/components/dashboard/sidebar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 
@@ -36,6 +37,7 @@ export default function ViewPage() {
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewRecorded, setViewRecorded] = useState(false);
 
   useEffect(() => {
     if (!identifier) {
@@ -43,17 +45,14 @@ export default function ViewPage() {
       setIsLoading(false);
       return;
     }
-
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
-
       const { data, error: fetchError } = await supabase
         .from("link_forms")
         .select("*")
         .or(`slug.eq.${identifier},custom_domain.eq.${identifier}`)
         .maybeSingle();
-
       if (fetchError) {
         toast.error(`Failed to load page data: ${fetchError.message}`);
         setError(`Failed to load page data: ${fetchError.message}`);
@@ -67,7 +66,10 @@ export default function ViewPage() {
           customDomain: data.custom_domain,
           active: data.active ?? true,
         });
-        recordPageView(data.id);
+        if (!viewRecorded) {
+          recordPageView(data.id);
+          setViewRecorded(true);
+        }
       } else {
         toast.error("Page not found.");
         setError("Page not found.");
@@ -75,8 +77,8 @@ export default function ViewPage() {
       }
       setIsLoading(false);
     };
-
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identifier]);
 
   const recordPageView = async (pageId: string) => {
@@ -84,27 +86,53 @@ export default function ViewPage() {
       console.error("Cannot record page view: pageId is missing.");
       return;
     }
+
+    const userAgent = typeof window !== "undefined" ? navigator.userAgent : null;
+    const referrer = typeof window !== "undefined" ? document.referrer : null;
+    let country = null;
+
+    // Attempt to get country using a client-side geolocation API
+    // Using ipapi.co as an example. It returns JSON.
     try {
-      // Directly insert into Supabase using the client
-      const { error: insertError } = await supabase.from("link_analytics").insert([{ page_id: pageId }]); // `viewed_at` will default to NOW()
+      const geoResponse = await fetch("https://ipapi.co/json/"); // Fetches geo info for the calling IP
+      if (geoResponse.ok) {
+        const geoData = await geoResponse.json();
+        country = geoData.country_code || geoData.country_name || null; // e.g., 'US' or 'United States'
+        console.log("Client-side geolocation successful, country:", country);
+      } else {
+        console.warn("Client-side geolocation failed:", geoResponse.status, geoResponse.statusText);
+      }
+    } catch (geoError: any) {
+      console.error("Error during client-side geolocation:", geoError.message);
+    }
+
+    try {
+      const { error: insertError } = await supabase.from("link_analytics").insert([
+        {
+          page_id: pageId,
+          user_agent: userAgent,
+          referrer: referrer,
+          country: country, // Country obtained (or null if failed)
+          // ip_address column is not used/inserted
+        },
+      ]);
 
       if (insertError) {
         console.error("Supabase error recording page view directly:", insertError.message);
-        // Optionally toast a silent error or log to an error tracking service
       } else {
-        console.log("Page view recorded directly to Supabase");
+        console.log("Page view recorded with country (client-side attempt).");
       }
     } catch (error: any) {
       console.error("Error recording page view directly:", error.message);
     }
   };
 
+  // ... (Rest of the ViewPage component: isLoading, error, renderElement, JSX - remains the same)
   if (isLoading) {
     return (
       <div className="flex h-screen bg-gray-100">
-        <DashboardSidebar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500">Loading page view...</div>
+          <div className="text-gray-500">Loading page...</div>
         </div>
         <Toaster
           richColors
@@ -117,17 +145,10 @@ export default function ViewPage() {
   if (error || !pageData) {
     return (
       <div className="flex h-screen bg-gray-100">
-        <DashboardSidebar />
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Page</h2>
-          <p className="text-red-600 mb-6">{error || "Page data could not be loaded."}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.back()}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-          </Button>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">{error ? "Error Loading Page" : "Page Not Found"}</h2>
+          <p className="text-red-600 mb-6">{error || "The page you are looking for could not be found or loaded."}</p>
         </div>
         <Toaster
           richColors
@@ -157,13 +178,28 @@ export default function ViewPage() {
         : "0.375rem",
     fontFamily: styles.fontFamily,
     backgroundImage: styles.backgroundImage ? `url(${styles.backgroundImage})` : "none",
-    backgroundColor: styles.backgroundColor,
+    backgroundColor: styles.backgroundImage ? "transparent" : styles.backgroundColor,
     backgroundSize: "cover",
     backgroundPosition: "center",
     color: styles.textColor,
+    minHeight: "100vh",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    paddingTop: "2rem",
+    paddingBottom: "2rem",
   } as React.CSSProperties;
 
+  const contentWrapperStyles: React.CSSProperties = {
+    width: "100%",
+    maxWidth: "680px",
+    paddingLeft: "1rem",
+    paddingRight: "1rem",
+  };
+
   const renderElement = (elem: BioElement) => {
+    if (!elem || !elem.type) return null;
     switch (elem.type) {
       case "countdown":
         return (
@@ -247,22 +283,27 @@ export default function ViewPage() {
           />
         );
       default:
+        console.warn("Unknown element type:", elem.type);
         return null;
     }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center bg-gray-50">
-      <div
-        className="w-full max-w-xl rounded-lg shadow-lg overflow-hidden border border-gray-300"
-        style={{ minHeight: "600px" }}>
-        <div
-          style={dynamicStyles}
-          className="p-4 md:p-6 h-full">
-          {elements.map((element) => renderElement(element))}
-          {elements.length === 0 && <p className="text-center py-20 opacity-70">This page has no content yet.</p>}
-        </div>
+    <div style={dynamicStyles}>
+      <div style={contentWrapperStyles}>
+        {elements.map((element) => renderElement(element))}
+        {elements.length === 0 && (
+          <p
+            className="text-center py-20"
+            style={{ color: styles.textColor || defaultStyles.textColor, opacity: 0.7 }}>
+            This page has no content yet.
+          </p>
+        )}
       </div>
+      <Toaster
+        richColors
+        position="bottom-right"
+      />
     </div>
   );
 }
