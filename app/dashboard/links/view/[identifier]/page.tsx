@@ -90,15 +90,16 @@ export default function ViewPage() {
     const userAgent = typeof window !== "undefined" ? navigator.userAgent : null;
     const referrer = typeof window !== "undefined" ? document.referrer : null;
     let country = null;
+    let city = null; // <--- Add city variable
 
-    // Attempt to get country using a client-side geolocation API
-    // Using ipapi.co as an example. It returns JSON.
+    // Attempt to get country and city using a client-side geolocation API
     try {
-      const geoResponse = await fetch("https://ipapi.co/json/"); // Fetches geo info for the calling IP
+      const geoResponse = await fetch("https://ipapi.co/json/");
       if (geoResponse.ok) {
         const geoData = await geoResponse.json();
-        country = geoData.country_code || geoData.country_name || null; // e.g., 'US' or 'United States'
-        console.log("Client-side geolocation successful, country:", country);
+        country = geoData.country_code || geoData.country_name || null;
+        city = geoData.city || null; // <--- Get city from geoData
+        console.log("Client-side geolocation: Country:", country, "City:", city);
       } else {
         console.warn("Client-side geolocation failed:", geoResponse.status, geoResponse.statusText);
       }
@@ -112,15 +113,15 @@ export default function ViewPage() {
           page_id: pageId,
           user_agent: userAgent,
           referrer: referrer,
-          country: country, // Country obtained (or null if failed)
-          // ip_address column is not used/inserted
+          country: country,
+          city: city, // <--- Add city to the insert object
         },
       ]);
 
       if (insertError) {
         console.error("Supabase error recording page view directly:", insertError.message);
       } else {
-        console.log("Page view recorded with country (client-side attempt).");
+        console.log("Page view recorded with country and city (client-side attempt).");
       }
     } catch (error: any) {
       console.error("Error recording page view directly:", error.message);
