@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Image as ImageIcon, Upload, X, Search } from "lucide-react";
 import { UnsplashSearch } from "./unsplash-search";
-import { PexelsSearch } from "./pexels-search"; // Import the new component
+import { PexelsSearch } from "./pexels-search";
+import { GiphySearch } from "./giphy-search"; // Add this import
 
 interface ImageUploadProps {
   value: string;
@@ -21,11 +22,12 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   // Dialog states
   const [unsplashDialogOpen, setUnsplashDialogOpen] = useState(false);
   const [pexelsDialogOpen, setPexelsDialogOpen] = useState(false);
+  const [giphyDialogOpen, setGiphyDialogOpen] = useState(false); // Add this state
 
   // Attribution data for stock images
   const [attributionData, setAttributionData] = useState<any>(null);
   const [attributionSource, setAttributionSource] = useState<
-    "unsplash" | "pexels" | null
+    "unsplash" | "pexels" | "giphy" | null // Add "giphy" to the types
   >(null);
 
   const triggerFileSelect = () => {
@@ -83,6 +85,13 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
     onChange(imageUrl);
     setAttributionData(attribution);
     setAttributionSource("pexels");
+  };
+
+  // Add handler for Giphy selection
+  const handleGiphySelect = (gifUrl: string, attribution: any) => {
+    onChange(gifUrl);
+    setAttributionData(attribution);
+    setAttributionSource("giphy");
   };
 
   return (
@@ -157,11 +166,35 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               </a>
             </div>
           )}
+
+          {/* Add Giphy attribution */}
+          {attributionData && attributionSource === "giphy" && (
+            <div className="text-xs text-gray-500 mt-1">
+              GIF by{" "}
+              <a
+                href={attributionData.userUrl || "https://giphy.com"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600"
+              >
+                {attributionData.username || "GIPHY"}
+              </a>{" "}
+              on{" "}
+              <a
+                href="https://giphy.com/?utm_source=your_app&utm_medium=referral"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600"
+              >
+                GIPHY
+              </a>
+            </div>
+          )}
         </div>
       ) : isUrlInput ? (
         <div className="flex items-center gap-2">
           <Input
-            type="url"
+            type="text"
             value={tempUrl}
             onChange={(e) => setTempUrl(e.target.value)}
             placeholder="Paste image URL..."
@@ -177,7 +210,9 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-2">
+          {" "}
+          {/* Change from grid-cols-4 to grid-cols-5 to accommodate the new button */}
           <Button
             variant="outline"
             onClick={triggerFileSelect}
@@ -210,6 +245,15 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             <Search className="h-4 w-4 mr-2" />
             Pexels
           </Button>
+          {/* Add Giphy button */}
+          <Button
+            variant="outline"
+            onClick={() => setGiphyDialogOpen(true)}
+            className="w-full"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Giphy
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -228,11 +272,18 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
         onSelectImage={handleUnsplashSelect}
       />
 
-      {/* Pexels Dialog - Temporarily disabled until fixing the SelectItem error  */}
+      {/* Pexels Dialog */}
       <PexelsSearch
         open={pexelsDialogOpen}
         onOpenChange={setPexelsDialogOpen}
         onSelectImage={handlePexelsSelect}
+      />
+
+      {/* Giphy Dialog */}
+      <GiphySearch
+        open={giphyDialogOpen}
+        onOpenChange={setGiphyDialogOpen}
+        onSelectImage={handleGiphySelect}
       />
     </div>
   );
