@@ -42,6 +42,7 @@ import {
   Loader2,
   RefreshCcw,
 } from "lucide-react";
+import { Smartphone, Tablet, Monitor } from "lucide-react";
 // Replace the DataTable import with the one from forms
 import { DataTable } from "@/components/forms/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,9 @@ export default function LandingPage() {
   // States for preview
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState<any>(null);
+  const [previewDeviceMode, setPreviewDeviceMode] = useState<
+    "mobile" | "tablet" | "desktop"
+  >("desktop");
 
   // States for domain management
   const [domainDialogOpen, setDomainDialogOpen] = useState(false);
@@ -894,8 +898,8 @@ export default function LandingPage() {
 
         {/* Preview Dialog */}
         <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-5xl h-[80vh]">
-            <DialogHeader>
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-5xl h-[95vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle className="dark:text-gray-100">
                 Landing Page Preview
               </DialogTitle>
@@ -903,23 +907,86 @@ export default function LandingPage() {
                 Preview how your landing page will appear to visitors
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 overflow-auto mt-4 border rounded-md">
-              {previewContent && <LandingPreview content={previewContent} />}
+
+            {/* Device Selection Controls */}
+            <div className="flex justify-center border-b border-gray-200 dark:border-gray-700 py-2 flex-shrink-0">
+              <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-md">
+                <Button
+                  variant={previewDeviceMode === "mobile" ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setPreviewDeviceMode("mobile")}
+                  className="h-8 w-8"
+                  aria-label="Mobile view"
+                >
+                  <Smartphone className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={previewDeviceMode === "tablet" ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setPreviewDeviceMode("tablet")}
+                  className="h-8 w-8"
+                  aria-label="Tablet view"
+                >
+                  <Tablet className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={
+                    previewDeviceMode === "desktop" ? "default" : "ghost"
+                  }
+                  size="icon"
+                  onClick={() => setPreviewDeviceMode("desktop")}
+                  className="h-8 w-8"
+                  aria-label="Desktop view"
+                >
+                  <Monitor className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <DialogClose asChild>
-              <Button
-                variant="ghost"
-                className="mt-4 w-full dark:text-gray-400 dark:hover:bg-gray-800"
+
+            {/* Responsive Preview Container */}
+            <div className="flex-1 overflow-hidden flex justify-center mt-4">
+              <div
+                className={`h-full transition-all duration-300 overflow-y-auto border rounded-md ${
+                  previewDeviceMode === "mobile"
+                    ? "w-[375px] border-x shadow-md"
+                    : previewDeviceMode === "tablet"
+                    ? "w-[768px] border-x shadow-md"
+                    : "w-full"
+                }`}
               >
-                Close
+                {previewContent && <LandingPreview content={previewContent} />}
+              </div>
+            </div>
+
+            {/* Button Row - Added Open Landing Page button next to Close */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                onClick={() =>
+                  previewContent &&
+                  window.open(`/landing/${previewContent.id}`, "_blank")
+                }
+                disabled={!previewContent}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open Landing Page
               </Button>
-            </DialogClose>
+              <DialogClose asChild>
+                <Button
+                  variant="ghost"
+                  className="dark:text-gray-400 dark:hover:bg-gray-800"
+                >
+                  Close
+                </Button>
+              </DialogClose>
+            </div>
           </DialogContent>
         </Dialog>
 
         {/* Domain Management Dialog */}
         <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl max-h-[70vh] overflow-hidden flex flex-col">
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="dark:text-gray-100">
                 Manage Domain Settings
