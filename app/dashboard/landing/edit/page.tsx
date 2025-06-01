@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { landingTemplates } from "@/components/landing/templates/landing-templates"; // Move this import up
 import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
@@ -39,6 +40,8 @@ export default function EditLandingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pageId = searchParams.get("id") || "new";
+  const templateId = searchParams.get("template");
+
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [landingPages, setLandingPages] = useState([]);
@@ -131,6 +134,18 @@ export default function EditLandingPage() {
         if (pageId !== "new") {
           await fetchLandingPage(pageId);
         }
+
+        // If creating a new page with a template
+        if (pageId === "new" && templateId) {
+          // Find the template in landingTemplates
+          const selectedTemplate = landingTemplates.find(
+            (t) => t.id === templateId
+          );
+          if (selectedTemplate) {
+            // Use the template data instead of default
+            setContent(selectedTemplate.template);
+          }
+        }
       } catch (error) {
         console.error("Initialization error:", error);
         if (mounted) {
@@ -149,7 +164,7 @@ export default function EditLandingPage() {
     return () => {
       mounted = false; // Cleanup to prevent state updates after unmount
     };
-  }, [pageId]);
+  }, [pageId, templateId]);
 
   async function fetchUser() {
     try {

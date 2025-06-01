@@ -18,7 +18,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ImageUpload } from "@/components/emails/image-upload";
+import { ImageUpload } from "@/components/landing/image-upload";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   Plus,

@@ -465,14 +465,15 @@ export default function LandingPage() {
     }
   };
 
-  const handleCreateLandingPage = () => {
+  const handleCreateLandingPage = (templateId?: string) => {
     if (usedPages >= totalPagesAllowed) {
       setLimitReachedDialogOpen(true);
       return;
     }
 
-    // If under the limit, proceed to the create page
-    router.push("/dashboard/landing/edit?id=new");
+    // If under the limit, proceed to the create page with template parameter
+    const templateParam = templateId ? `&template=${templateId}` : "";
+    router.push(`/dashboard/landing/edit?id=new${templateParam}`);
   };
 
   const handleDeleteClick = (id: string) => {
@@ -845,7 +846,7 @@ export default function LandingPage() {
                   <Card
                     key={template.id}
                     className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
-                    onClick={handleCreateLandingPage}
+                    onClick={() => handleCreateLandingPage(template.id)} // Pass the template ID
                   >
                     <CardHeader>
                       <div className="flex items-center gap-2">
