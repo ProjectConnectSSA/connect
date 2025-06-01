@@ -1128,7 +1128,7 @@ export default function LandingPage() {
             </div>
 
             {/* Button Row - Added Open Landing Page button next to Close */}
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 grid grid-cols-3 gap-2">
               <Button
                 variant="outline"
                 className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -1141,6 +1141,20 @@ export default function LandingPage() {
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Open Landing Page
               </Button>
+
+              <Button
+                variant="outline"
+                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                onClick={() =>
+                  previewContent &&
+                  router.push(`/dashboard/landing/edit?id=${previewContent.id}`)
+                }
+                disabled={!previewContent}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Page
+              </Button>
+
               <DialogClose asChild>
                 <Button
                   variant="ghost"
