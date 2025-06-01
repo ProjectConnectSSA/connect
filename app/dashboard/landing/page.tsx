@@ -16,8 +16,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
+  DialogFooter,
+  DialogClose, // Add this import
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -41,8 +41,11 @@ import {
   Link2,
   Loader2,
   RefreshCcw,
+  Smartphone,
+  Tablet,
+  Monitor,
+  Sparkles, // Add this import
 } from "lucide-react";
-import { Smartphone, Tablet, Monitor } from "lucide-react";
 // Replace the DataTable import with the one from forms
 import { DataTable } from "@/components/forms/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +62,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AILoadingOverlay } from "@/components/landing/ai-loading-overlay";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 // Utility function: format date.
 const formatDate = (dateString: string) => {
@@ -133,6 +139,11 @@ export default function LandingPage() {
 
   // State for template dialog
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+
+  // State for AI generator dialog
+  const [AIGeneratorDialogOpen, setAIGeneratorDialogOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     fetchLandingPagesData();
@@ -573,6 +584,144 @@ export default function LandingPage() {
     }
   };
 
+  const handleGenerateAITemplate = async () => {
+    if (!aiPrompt.trim()) return;
+
+    setIsGenerating(true);
+
+    try {
+      // Call our API endpoint instead of directly calling LM Studio
+      const response = await fetch("/api/ai/landing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const landingPageData = await response.json();
+
+      // Process images - add placeholder Unsplash images for empty image fields
+      landingPageData.sections = await addImagePlaceholders(
+        landingPageData.sections
+      );
+
+      // Redirect to editor with the generated template
+      await createNewLandingPageFromAI(landingPageData);
+    } catch (error) {
+      console.error("Error generating AI template:", error);
+      toast.error("Failed to generate template. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Add helper functions
+  async function addImagePlaceholders(sections) {
+    // For each section with an image property that's empty, add a placeholder image
+    for (const section of sections) {
+      if (section.content && section.content.image === "") {
+        let query = "";
+
+        // Generate appropriate image search term based on section content
+        if (section.type === "hero") {
+          query =
+            section.content.heading?.split(" ").slice(0, 3).join(" ") ||
+            "business";
+        } else if (section.type === "content") {
+          query =
+            section.content.heading?.split(" ").slice(0, 2).join(" ") ||
+            "office";
+        }
+
+        try {
+          // Try Unsplash first
+          const unsplashResponse = await fetch(
+            `/api/unsplash/search?query=${encodeURIComponent(query)}&per_page=1`
+          );
+          if (unsplashResponse.ok) {
+            const unsplashData = await unsplashResponse.json();
+            if (unsplashData.results?.length > 0) {
+              section.content.image = unsplashData.results[0].urls.regular;
+              continue;
+            }
+          }
+
+          // Fall back to Pexels if Unsplash fails
+          const pexelsResponse = await fetch(
+            `/api/pexels/search?query=${encodeURIComponent(query)}&per_page=1`
+          );
+          if (pexelsResponse.ok) {
+            const pexelsData = await pexelsResponse.json();
+            if (pexelsData.photos?.length > 0) {
+              section.content.image = pexelsData.photos[0].src.large;
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching image:", error);
+        }
+      }
+    }
+
+    return sections;
+  }
+
+  async function createNewLandingPageFromAI(landingPageData) {
+    try {
+      // First, get the current user
+      const { getCurrentUser } = await import("@/app/actions");
+      const currentUser = await getCurrentUser();
+
+      if (!currentUser) {
+        toast.error("User authentication required");
+        router.push("/login");
+        return;
+      }
+
+      // Create a complete landing page data object
+      const completeData = {
+        user_id: currentUser.id,
+        title: landingPageData.title || "AI Generated Landing Page",
+        description:
+          landingPageData.description || "Created with AI assistance",
+        sections: landingPageData.sections || [],
+        styles: landingPageData.styles || {
+          theme: "modern",
+          fontFamily: "Inter",
+          colors: {
+            primary: "#7c3aed",
+            background: "#ffffff",
+            text: "#1f2937",
+          },
+        },
+        domain: {
+          subdomain: "",
+          custom: "",
+          status: "unverified",
+        },
+        isactive: false,
+      };
+
+      // Redirect to the editor with this data
+      // We'll use localStorage to temporarily store the data
+      localStorage.setItem(
+        "aiGeneratedLandingPage",
+        JSON.stringify(completeData)
+      );
+
+      // Close the dialog and redirect
+      setAIGeneratorDialogOpen(false);
+      router.push(`/dashboard/landing/edit?id=new&source=ai`);
+    } catch (error) {
+      console.error("Error creating landing page from AI:", error);
+      toast.error("Failed to create landing page");
+    }
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
       <DashboardSidebar />
@@ -845,6 +994,26 @@ export default function LandingPage() {
             </DialogHeader>
             <div className="flex-1 overflow-y-auto py-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 px-1">
+                {/* AI Generated Template - First position */}
+                <Card
+                  className="cursor-pointer transition-all hover:scale-105 relative overflow-hidden border-2 border-primary"
+                  onClick={() => setAIGeneratorDialogOpen(true)}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-indigo-600 opacity-90" />
+                  <CardHeader className="relative z-10">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-white" />
+                      <CardTitle className="text-lg text-white">
+                        Generate with AI
+                      </CardTitle>
+                    </div>
+                    <CardDescription className="text-white/90">
+                      Create a custom landing page with AI assistance
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                {/* Existing template mapping */}
                 {landingTemplates.map((template) => {
                   const Icon = template.icon;
                   return (
@@ -1091,6 +1260,66 @@ export default function LandingPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* AI Generator Dialog - New dialog for AI template generation */}
+        <Dialog
+          open={AIGeneratorDialogOpen}
+          onOpenChange={setAIGeneratorDialogOpen}
+        >
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="dark:text-gray-100">
+                Generate Landing Page with AI
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                Describe your ideal landing page and our AI will create it for
+                you
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="aiPrompt">Description</Label>
+                <Textarea
+                  id="aiPrompt"
+                  placeholder="Describe what you want in your landing page. For example: 'Create a landing page for a fitness app with features like workout tracking, nutrition planning, and community support. Use bold colors and include testimonials.'"
+                  className="min-h-[120px]"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setAIGeneratorDialogOpen(false)}
+                className="dark:border-gray-700 dark:text-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleGenerateAITemplate}
+                disabled={!aiPrompt.trim() || isGenerating}
+                className="relative"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <AILoadingOverlay isVisible={isGenerating} />
       </div>
     </div>
   );

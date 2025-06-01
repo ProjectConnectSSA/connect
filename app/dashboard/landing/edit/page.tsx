@@ -118,6 +118,26 @@ export default function EditLandingPage() {
         // Only continue if component is still mounted
         if (!mounted) return;
 
+        // Check if this is an AI-generated landing page from localStorage
+        const sourceParam = searchParams.get("source");
+        if (sourceParam === "ai" && pageId === "new") {
+          try {
+            const aiGeneratedData = localStorage.getItem(
+              "aiGeneratedLandingPage"
+            );
+            if (aiGeneratedData) {
+              const parsedData = JSON.parse(aiGeneratedData);
+              setContent(parsedData);
+              // Clear the localStorage after loading
+              localStorage.removeItem("aiGeneratedLandingPage");
+              setIsLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.error("Error loading AI-generated data:", err);
+          }
+        }
+
         // If creating a new page, check the limit first
         if (pageId === "new") {
           const canCreate = await checkPageLimit();
