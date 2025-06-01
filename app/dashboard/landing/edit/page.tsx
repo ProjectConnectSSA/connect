@@ -290,7 +290,7 @@ export default function EditLandingPage() {
           scroll: false,
         });
         // Update page ID in memory
-        pageId = savedPage.id;
+        // pageId = savedPage.id;
       }
 
       toast.success("Landing page saved successfully!");

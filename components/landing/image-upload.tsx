@@ -228,13 +228,12 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
         onSelectImage={handleUnsplashSelect}
       />
 
-      {/* Pexels Dialog - Temporarily disabled until fixing the SelectItem error 
+      {/* Pexels Dialog - Temporarily disabled until fixing the SelectItem error  */}
       <PexelsSearch
         open={pexelsDialogOpen}
         onOpenChange={setPexelsDialogOpen}
         onSelectImage={handlePexelsSelect}
       />
-      */}
     </div>
   );
 }
