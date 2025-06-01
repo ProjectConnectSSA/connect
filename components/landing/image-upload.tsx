@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Image as ImageIcon, Upload, X, Search } from "lucide-react";
 import { UnsplashSearch } from "./unsplash-search";
+import { PexelsSearch } from "./pexels-search"; // Import the new component
 
 interface ImageUploadProps {
   value: string;
@@ -16,10 +17,16 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   const [isUrlInput, setIsUrlInput] = useState(false);
   const [tempUrl, setTempUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [unsplashDialogOpen, setUnsplashDialogOpen] = useState(false);
 
-  // Attribution data for Unsplash images
+  // Dialog states
+  const [unsplashDialogOpen, setUnsplashDialogOpen] = useState(false);
+  const [pexelsDialogOpen, setPexelsDialogOpen] = useState(false);
+
+  // Attribution data for stock images
   const [attributionData, setAttributionData] = useState<any>(null);
+  const [attributionSource, setAttributionSource] = useState<
+    "unsplash" | "pexels" | null
+  >(null);
 
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
@@ -45,8 +52,9 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
 
       const data = await response.json();
       onChange(data.url);
-      // Clear any previous attribution data when uploading own image
+      // Clear attribution data for uploaded images
       setAttributionData(null);
+      setAttributionSource(null);
     } catch (error) {
       console.error("Error uploading image:", error);
     } finally {
@@ -59,14 +67,22 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       onChange(tempUrl);
       setIsUrlInput(false);
       setTempUrl("");
-      // Clear any previous attribution data when using custom URL
+      // Clear attribution data for URL images
       setAttributionData(null);
+      setAttributionSource(null);
     }
   };
 
   const handleUnsplashSelect = (imageUrl: string, attribution: any) => {
     onChange(imageUrl);
     setAttributionData(attribution);
+    setAttributionSource("unsplash");
+  };
+
+  const handlePexelsSelect = (imageUrl: string, attribution: any) => {
+    onChange(imageUrl);
+    setAttributionData(attribution);
+    setAttributionSource("pexels");
   };
 
   return (
@@ -86,13 +102,17 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             variant="destructive"
             size="icon"
             className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 text-white"
-            onClick={() => onChange("")}
+            onClick={() => {
+              onChange("");
+              setAttributionData(null);
+              setAttributionSource(null);
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
 
-          {/* Attribution for Unsplash images */}
-          {attributionData && (
+          {/* Attribution for stock images */}
+          {attributionData && attributionSource === "unsplash" && (
             <div className="text-xs text-gray-500 mt-1">
               Photo by{" "}
               <a
@@ -111,6 +131,29 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
                 className="underline hover:text-blue-600"
               >
                 Unsplash
+              </a>
+            </div>
+          )}
+
+          {attributionData && attributionSource === "pexels" && (
+            <div className="text-xs text-gray-500 mt-1">
+              Photo by{" "}
+              <a
+                href={`${attributionData.photographerUrl}?utm_source=your_app&utm_medium=referral`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600"
+              >
+                {attributionData.photographer}
+              </a>{" "}
+              on{" "}
+              <a
+                href="https://www.pexels.com/?utm_source=your_app&utm_medium=referral"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600"
+              >
+                Pexels
               </a>
             </div>
           )}
@@ -134,7 +177,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <Button
             variant="outline"
             onClick={triggerFileSelect}
@@ -159,6 +202,14 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             <Search className="h-4 w-4 mr-2" />
             Unsplash
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setPexelsDialogOpen(true)}
+            className="w-full"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Pexels
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -176,6 +227,14 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
         onOpenChange={setUnsplashDialogOpen}
         onSelectImage={handleUnsplashSelect}
       />
+
+      {/* Pexels Dialog - Temporarily disabled until fixing the SelectItem error 
+      <PexelsSearch
+        open={pexelsDialogOpen}
+        onOpenChange={setPexelsDialogOpen}
+        onSelectImage={handlePexelsSelect}
+      />
+      */}
     </div>
   );
 }
