@@ -829,8 +829,8 @@ export default function LandingPage() {
 
         {/* Template Dialog */}
         <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl">
-            <DialogHeader>
+          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl max-h-[80vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle className="dark:text-gray-100">
                 Choose a Template
               </DialogTitle>
@@ -839,50 +839,52 @@ export default function LandingPage() {
                 scratch.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
-              {landingTemplates.map((template) => {
-                const Icon = template.icon;
-                return (
-                  <Card
-                    key={template.id}
-                    className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
-                    onClick={() => handleCreateLandingPage(template.id)} // Pass the template ID
-                  >
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-5 w-5 dark:text-gray-300" />
-                        <CardTitle className="text-lg dark:text-gray-200">
-                          {template.title}
-                        </CardTitle>
-                      </div>
-                      <CardDescription className="dark:text-gray-400">
-                        {template.description}
-                      </CardDescription>
-                    </CardHeader>
-                  </Card>
-                );
-              })}
-              <Card
-                className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
-                onClick={() => router.push("/dashboard/landing/edit?id=new")}
-              >
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Plus className="h-5 w-5 dark:text-gray-300" />
-                    <CardTitle className="text-lg dark:text-gray-200">
-                      Blank Page
-                    </CardTitle>
-                  </div>
-                  <CardDescription className="dark:text-gray-400">
-                    Start from scratch with a blank landing page
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+            <div className="flex-1 overflow-y-auto py-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 px-1">
+                {landingTemplates.map((template) => {
+                  const Icon = template.icon;
+                  return (
+                    <Card
+                      key={template.id}
+                      className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
+                      onClick={() => handleCreateLandingPage(template.id)}
+                    >
+                      <CardHeader>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-5 w-5 dark:text-gray-300" />
+                          <CardTitle className="text-lg dark:text-gray-200">
+                            {template.title}
+                          </CardTitle>
+                        </div>
+                        <CardDescription className="dark:text-gray-400">
+                          {template.description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  );
+                })}
+                <Card
+                  className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
+                  onClick={() => router.push("/dashboard/landing/edit?id=new")}
+                >
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Plus className="h-5 w-5 dark:text-gray-300" />
+                      <CardTitle className="text-lg dark:text-gray-200">
+                        Blank Page
+                      </CardTitle>
+                    </div>
+                    <CardDescription className="dark:text-gray-400">
+                      Start from scratch with a blank landing page
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
             </div>
-            <DialogClose asChild>
+            <DialogClose asChild className="flex-shrink-0 mt-2">
               <Button
                 variant="ghost"
-                className="mt-4 w-full dark:text-gray-400 dark:hover:bg-gray-800"
+                className="w-full dark:text-gray-400 dark:hover:bg-gray-800"
               >
                 Close
               </Button>
