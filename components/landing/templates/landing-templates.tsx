@@ -9,6 +9,16 @@ import {
   Briefcase,
   GraduationCap,
   Heart,
+  Coffee,
+  Home,
+  Smartphone,
+  Video,
+  Mic2,
+  Activity,
+  Cloud,
+  Book,
+  Camera,
+  Clock,
 } from "lucide-react";
 
 export const landingTemplates = [
@@ -925,6 +935,687 @@ export const landingTemplates = [
         fontFamily: "Playfair Display",
         colors: {
           primary: "#6d28d9",
+          background: "#ffffff",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "restaurant-cafe",
+    title: "Restaurant/Cafe",
+    description: "Showcase your menu, gallery, and reservation options",
+    icon: Coffee,
+    iconColor: "text-lime-600",
+    template: {
+      title: "Restaurant/Cafe",
+      description: "A delicious experience awaits",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "Welcome to Our Cafe",
+            subheading: "Freshly brewed coffee and gourmet dishes",
+            image:
+              "https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=1200",
+            cta: { text: "Book a Table", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "content",
+          content: {
+            heading: "Our Menu",
+            body: "Explore our curated selection of dishes, from classic breakfasts to decadent desserts. Every plate is crafted with fresh, local ingredients.",
+            image:
+              "https://images.unsplash.com/photo-1543353071-087092ec3931?w=800",
+            alignment: "left",
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Come Visit Us",
+            companyName: "Your Cafe",
+            tagline: "Quality you can taste",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Menu", url: "#" },
+              { label: "Reservations", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "Instagram", url: "#", icon: "Instagram" },
+              { platform: "Facebook", url: "#", icon: "Facebook" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your Cafe.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "gourmet",
+        fontFamily: "Lora",
+        colors: {
+          primary: "#6ee7b7",
+          background: "#ffffff",
+          text: "#374151",
+        },
+      },
+    },
+  },
+  {
+    id: "real-estate",
+    title: "Real Estate Listing",
+    description: "Feature a property with rich details and contact form",
+    icon: Home,
+    iconColor: "text-emerald-600",
+    template: {
+      title: "Real Estate",
+      description: "Your dream home awaits",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "Luxury Home for Sale",
+            subheading: "Prime location with modern amenities",
+            image:
+              "https://images.unsplash.com/photo-1600573477886-cbc5af7a6710?w=1200",
+            cta: { text: "Schedule a Tour", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "content",
+          content: {
+            heading: "Property Highlights",
+            body: "Spacious living area, state-of-the-art kitchen, and a stunning backyard. Conveniently located near top schools and shopping centers.",
+            image:
+              "https://images.unsplash.com/photo-1594676110783-a1a9ca680f5c?w=800",
+            alignment: "right",
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Contact Our Agent",
+            companyName: "Your Realty",
+            tagline: "Where dreams meet homes",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Listings", url: "#" },
+              { label: "About Us", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "LinkedIn", url: "#", icon: "Linkedin" },
+              { platform: "Twitter", url: "#", icon: "Twitter" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your Realty.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "professional",
+        fontFamily: "Roboto",
+        colors: {
+          primary: "#10b981",
+          background: "#ffffff",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "mobile-app",
+    title: "Mobile App Showcase",
+    description: "Highlight features, screenshots, and download links",
+    icon: Smartphone,
+    iconColor: "text-purple-500",
+    template: {
+      title: "Mobile App",
+      description: "Show off your cutting-edge app",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "Introducing Our Mobile App",
+            subheading: "Seamless user experience at your fingertips",
+            image:
+              "https://images.unsplash.com/photo-1598370696960-22735655f528?w=1200",
+            cta: { text: "Download Now", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "features",
+          content: {
+            heading: "Key Features",
+            items: [
+              {
+                title: "User-Friendly Interface",
+                description: "Designed for simplicity and ease of use",
+                icon: "Smartphone",
+              },
+              {
+                title: "Real-Time Sync",
+                description: "Access data across all your devices",
+                icon: "RefreshCw",
+              },
+              {
+                title: "Offline Mode",
+                description:
+                  "Stay productive even without an internet connection",
+                icon: "WifiOff",
+              },
+            ],
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Get Started",
+            companyName: "Your App",
+            tagline: "Built for the future",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Features", url: "#" },
+              { label: "Pricing", url: "#" },
+              { label: "Support", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "Twitter", url: "#", icon: "Twitter" },
+              { platform: "Facebook", url: "#", icon: "Facebook" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your App.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "tech",
+        fontFamily: "Inter",
+        colors: {
+          primary: "#a78bfa",
+          background: "#f9fafb",
+          text: "#111827",
+        },
+      },
+    },
+  },
+  {
+    id: "webinar",
+    title: "Webinar Registration",
+    description: "Promote an upcoming webinar and capture sign-ups",
+    icon: Video,
+    iconColor: "text-yellow-600",
+    template: {
+      title: "Webinar",
+      description: "Join our exclusive online session",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "Webinar: Level Up Your Skills",
+            subheading: "Expert insights from industry leaders",
+            image:
+              "https://images.unsplash.com/photo-1484704849700-f0329c01c467?w=1200",
+            cta: { text: "Register Free", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "content",
+          content: {
+            heading: "What You'll Learn",
+            body: "In this webinar, we’ll cover advanced strategies, real-life case studies, and actionable steps you can apply immediately to see real results.",
+            image:
+              "https://images.unsplash.com/photo-1581092160633-70b84f7e01e4?w=800",
+            alignment: "left",
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Secure Your Spot",
+            companyName: "Your Webinar Series",
+            tagline: "Knowledge is power",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Schedule", url: "#" },
+              { label: "Speakers", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "LinkedIn", url: "#", icon: "Linkedin" },
+              { platform: "Twitter", url: "#", icon: "Twitter" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your Webinar.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "bright",
+        fontFamily: "Montserrat",
+        colors: {
+          primary: "#f59e0b",
+          background: "#ffffff",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "podcast",
+    title: "Podcast Page",
+    description: "Display latest episodes, player, and subscription links",
+    icon: Mic2,
+    iconColor: "text-teal-600",
+    template: {
+      title: "Podcast",
+      description: "Tune in to our latest episodes",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "Welcome to Our Podcast",
+            subheading: "Insights, stories, and inspiration",
+            image:
+              "https://images.unsplash.com/photo-1535958636472-aef9f3e09fce?w=1200",
+            cta: { text: "Listen Now", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "content",
+          content: {
+            heading: "Recent Episodes",
+            body: "Discover in-depth interviews and discussions with industry experts, thought leaders, and creative minds shaping the future.",
+            image:
+              "https://images.unsplash.com/photo-1525182008055-f088d8aa4448?w=800",
+            alignment: "right",
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Subscribe",
+            companyName: "Your Podcast",
+            tagline: "Hear it first, every week",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Episodes", url: "#" },
+              { label: "Host", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "Apple Podcast", url: "#", icon: "Music" },
+              { platform: "Spotify", url: "#", icon: "Spotify" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your Podcast.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "aqua",
+        fontFamily: "Nunito",
+        colors: {
+          primary: "#14b8a6",
+          background: "#ffffff",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "fitness-coach",
+    title: "Fitness/Wellness Coach",
+    description: "Offer services, testimonials, and booking options",
+    icon: Activity,
+    iconColor: "text-green-600",
+    template: {
+      title: "Fitness Coach",
+      description: "Transform your life with expert guidance",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "Achieve Your Fitness Goals",
+            subheading: "Personalized workouts and meal plans",
+            image:
+              "https://images.unsplash.com/photo-1584824486539-53bb4646bdbc?w=1200",
+            cta: { text: "Start Now", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "features",
+          content: {
+            heading: "Why Train With Me?",
+            items: [
+              {
+                title: "Tailored Programs",
+                description: "Individualized plans for every fitness level",
+                icon: "UserCheck",
+              },
+              {
+                title: "Expert Support",
+                description:
+                  "Guidance from certified trainers and nutritionists",
+                icon: "Heart",
+              },
+              {
+                title: "Flexible Scheduling",
+                description: "Book sessions that fit your routine",
+                icon: "Calendar",
+              },
+            ],
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Get in Shape",
+            companyName: "Your Fitness Coach",
+            tagline: "Wellness made simple",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Programs", url: "#" },
+              { label: "Testimonials", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "Instagram", url: "#", icon: "Instagram" },
+              { platform: "Facebook", url: "#", icon: "Facebook" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your Fitness.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "energetic",
+        fontFamily: "Open Sans",
+        colors: {
+          primary: "#10b981",
+          background: "#f9fafb",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "saas-product",
+    title: "SaaS Product Features",
+    description: "Detail features and benefits of your software service",
+    icon: Cloud,
+    iconColor: "text-sky-600",
+    template: {
+      title: "SaaS Product",
+      description: "Scale your business with our cloud solution",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "All-in-One SaaS Platform",
+            subheading: "Streamline your operations and accelerate growth",
+            image:
+              "https://images.unsplash.com/photo-1587139769225-8e33e0447019?w=1200",
+            cta: { text: "Start Free Trial", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "features",
+          content: {
+            heading: "Powerful Features",
+            items: [
+              {
+                title: "Dashboard Analytics",
+                description: "Real-time insights into your key metrics",
+                icon: "BarChart",
+              },
+              {
+                title: "Automation",
+                description: "Automate repetitive tasks and save time",
+                icon: "Settings",
+              },
+              {
+                title: "Team Collaboration",
+                description: "Work together seamlessly from anywhere",
+                icon: "Users",
+              },
+            ],
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Ready to Launch?",
+            companyName: "Your SaaS",
+            tagline: "Empowering success in the cloud",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Pricing", url: "#" },
+              { label: "Features", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "LinkedIn", url: "#", icon: "Linkedin" },
+              { platform: "Twitter", url: "#", icon: "Twitter" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your SaaS.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "cloudy",
+        fontFamily: "Inter",
+        colors: {
+          primary: "#0ea5e9",
+          background: "#ffffff",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "book-launch",
+    title: "Book Launch",
+    description: "Promote a new book with author info and reviews",
+    icon: Book,
+    iconColor: "text-red-600",
+    template: {
+      title: "Book Launch",
+      description: "Discover an exciting new release",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "[Your Book Title]",
+            subheading: "A journey of discovery and inspiration",
+            image:
+              "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=1200",
+            cta: { text: "Buy Now", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "content",
+          content: {
+            heading: "About the Author",
+            body: "Learn about the author's background, inspiration, and accolades. Discover what makes this book a must-read for enthusiasts and newcomers alike.",
+            image:
+              "https://images.unsplash.com/photo-1525182008055-f088d8aa4448?w=800",
+            alignment: "left",
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Get Your Copy",
+            companyName: "Your Publishing",
+            tagline: "Helping you write the next chapter",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Books", url: "#" },
+              { label: "Reviews", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "Twitter", url: "#", icon: "Twitter" },
+              { platform: "Instagram", url: "#", icon: "Instagram" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your Publishing.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "literary",
+        fontFamily: "Georgia",
+        colors: {
+          primary: "#dc2626",
+          background: "#ffffff",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "photography-portfolio",
+    title: "Photography Portfolio",
+    description: "A visually rich portfolio for photographers",
+    icon: Camera,
+    iconColor: "text-pink-700",
+    template: {
+      title: "Photography Portfolio",
+      description: "Capture moments that last a lifetime",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "[Your Name] Photography",
+            subheading: "Explore my world through the lens",
+            image:
+              "https://images.unsplash.com/photo-1506863530036-1e1c62e13696?w=1200",
+            cta: { text: "View Gallery", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "content",
+          content: {
+            heading: "About Me",
+            body: "I'm a professional photographer with an eye for detail and a passion for storytelling. Let's work together to capture life’s most precious moments.",
+            image:
+              "https://images.unsplash.com/photo-1516728778615-2d590ea1856f?w=800",
+            alignment: "right",
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Schedule a Shoot",
+            companyName: "[Your Name]",
+            tagline: "Capturing beauty in every frame",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Gallery", url: "#" },
+              { label: "Services", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "Instagram", url: "#", icon: "Instagram" },
+              { platform: "Behance", url: "#", icon: "Behance" },
+            ],
+            copyright: `© ${new Date().getFullYear()} [Your Name].`,
+          },
+        },
+      ],
+      styles: {
+        theme: "artistic",
+        fontFamily: "Raleway",
+        colors: {
+          primary: "#be185d",
+          background: "#ffffff",
+          text: "#1f2937",
+        },
+      },
+    },
+  },
+  {
+    id: "coming-soon",
+    title: "Startup Coming Soon",
+    description: "Announce a new venture and collect emails",
+    icon: Clock,
+    iconColor: "text-gray-700",
+    template: {
+      title: "Coming Soon",
+      description: "Stay tuned for our big launch",
+      sections: [
+        {
+          id: "1",
+          type: "hero",
+          content: {
+            heading: "Launching Soon",
+            subheading: "Sign up to get notified",
+            image:
+              "https://images.unsplash.com/photo-1619140886828-cd3a9f6e9bd7?w=1200",
+            cta: { text: "Notify Me", url: "#" },
+          },
+        },
+        {
+          id: "2",
+          type: "content",
+          content: {
+            heading: "Be the First to Know",
+            body: "We’re working on something amazing. Leave us your email and we’ll let you know once we’re ready to launch!",
+            image:
+              "https://images.unsplash.com/photo-1564866657311-e977d0a1d2d3?w=800",
+            alignment: "left",
+          },
+        },
+        {
+          id: "3",
+          type: "footer",
+          content: {
+            heading: "Stay Updated",
+            companyName: "Your Startup",
+            tagline: "Innovating the future",
+            links: [
+              { label: "Home", url: "#" },
+              { label: "Blog", url: "#" },
+              { label: "Jobs", url: "#" },
+              { label: "Contact", url: "#" },
+            ],
+            socialLinks: [
+              { platform: "Twitter", url: "#", icon: "Twitter" },
+              { platform: "LinkedIn", url: "#", icon: "Linkedin" },
+            ],
+            copyright: `© ${new Date().getFullYear()} Your Startup.`,
+          },
+        },
+      ],
+      styles: {
+        theme: "futuristic",
+        fontFamily: "Inter",
+        colors: {
+          primary: "#64748b",
           background: "#ffffff",
           text: "#1f2937",
         },

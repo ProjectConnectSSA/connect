@@ -999,7 +999,7 @@ export default function LandingPage() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 px-1">
                 {/* AI Generated Template - First position */}
                 <Card
-                  className="cursor-pointer transition-all hover:scale-105 relative overflow-hidden border-2 border-primary"
+                  className="cursor-pointer transition-all hover:scale-105 relative overflow-hidden border-2 border-primary shadow-lg"
                   onClick={() => setAIGeneratorDialogOpen(true)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-indigo-600 opacity-90" />
@@ -1018,7 +1018,7 @@ export default function LandingPage() {
 
                 {/* Blank Page - Second position */}
                 <Card
-                  className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
+                  className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700 shadow-lg"
                   onClick={() => router.push("/dashboard/landing/edit?id=new")}
                 >
                   <CardHeader>
@@ -1040,7 +1040,7 @@ export default function LandingPage() {
                   return (
                     <Card
                       key={template.id}
-                      className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
+                      className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700 shadow-lg"
                       onClick={() => handleCreateLandingPage(template.id)}
                     >
                       <CardHeader>
