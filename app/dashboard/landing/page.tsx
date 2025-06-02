@@ -588,10 +588,22 @@ export default function LandingPage() {
   const handleGenerateAITemplate = async () => {
     if (!aiPrompt.trim()) return;
 
-    setIsGenerating(true);
+    // Close both dialogs first, then show loading overlay
+    setAIGeneratorDialogOpen(false);
+    setTemplateDialogOpen(false); // Add this line to ensure templates dialog is closed too
 
+    // Short delay to allow dialog animation to complete
+    setTimeout(() => {
+      setIsGenerating(true);
+
+      // Move the API call inside the timeout to ensure overlay is visible
+      generateTemplate();
+    }, 300);
+  };
+
+  // Helper function to perform the actual API call
+  const generateTemplate = async () => {
     try {
-      // Call our API endpoint instead of directly calling LM Studio
       const response = await fetch("/api/ai/landing", {
         method: "POST",
         headers: {
@@ -605,13 +617,9 @@ export default function LandingPage() {
       }
 
       const landingPageData = await response.json();
-
-      // Process images - add placeholder Unsplash images for empty image fields
       landingPageData.sections = await addImagePlaceholders(
         landingPageData.sections
       );
-
-      // Redirect to editor with the generated template
       await createNewLandingPageFromAI(landingPageData);
     } catch (error) {
       console.error("Error generating AI template:", error);
@@ -1000,7 +1008,10 @@ export default function LandingPage() {
                 {/* AI Generated Template - First position */}
                 <Card
                   className="cursor-pointer transition-all hover:scale-105 relative overflow-hidden border-2 border-primary shadow-lg"
-                  onClick={() => setAIGeneratorDialogOpen(true)}
+                  onClick={() => {
+                    setTemplateDialogOpen(false); // Close the templates dialog first
+                    setAIGeneratorDialogOpen(true); // Then open the AI generator dialog
+                  }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-indigo-600 opacity-90" />
                   <CardHeader className="relative z-10">
