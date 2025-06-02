@@ -17,6 +17,7 @@ export const landingTemplates = [
     title: "Product Launch",
     description: "Perfect for launching your new product",
     icon: Rocket,
+    iconColor: "text-purple-600",
     template: {
       title: "Product Launch",
       description: "Launch your amazing product",
@@ -120,6 +121,7 @@ export const landingTemplates = [
     title: "Event Landing",
     description: "Promote your upcoming event",
     icon: Calendar,
+    iconColor: "text-blue-600",
     template: {
       title: "Event Landing",
       description: "Join our amazing event",
@@ -221,6 +223,7 @@ export const landingTemplates = [
     title: "Sales Page",
     description: "Convert visitors into customers",
     icon: ShoppingCart,
+    iconColor: "text-green-600",
     template: {
       title: "Sales Page",
       description: "Get our amazing offer",
@@ -322,6 +325,7 @@ export const landingTemplates = [
     title: "Blog/News",
     description: "Share your latest articles and news",
     icon: Newspaper,
+    iconColor: "text-cyan-600",
     template: {
       title: "Blog Landing Page",
       description: "Stay updated with our latest articles",
@@ -415,6 +419,7 @@ export const landingTemplates = [
     title: "Newsletter Signup",
     description: "Grow your email subscriber list",
     icon: Mail,
+    iconColor: "text-pink-600",
     template: {
       title: "Newsletter Signup",
       description: "Join our newsletter for exclusive content",
@@ -508,6 +513,7 @@ export const landingTemplates = [
     title: "Portfolio",
     description: "Showcase your work and projects",
     icon: Briefcase,
+    iconColor: "text-orange-600",
     template: {
       title: "Portfolio",
       description: "View my work and projects",
@@ -611,9 +617,10 @@ export const landingTemplates = [
   },
   {
     id: "course",
-    title: "Course/Educational",
+    title: "Course/ Educational",
     description: "Promote your online course or workshop",
     icon: GraduationCap,
+    iconColor: "text-amber-600",
     template: {
       title: "Online Course",
       description: "Master new skills with our comprehensive course",
@@ -714,9 +721,10 @@ export const landingTemplates = [
   },
   {
     id: "nonprofit",
-    title: "Nonprofit/Charity",
+    title: "Nonprofit/ Charity",
     description: "Raise awareness and support for your cause",
     icon: Gift,
+    iconColor: "text-green-700",
     template: {
       title: "Nonprofit Organization",
       description: "Join our mission to make a difference",
@@ -820,6 +828,7 @@ export const landingTemplates = [
     title: "Personal Brand",
     description: "Build your personal brand presence",
     icon: Heart,
+    iconColor: "text-indigo-600",
     template: {
       title: "Personal Brand",
       description: "Connect with my work and experiences",

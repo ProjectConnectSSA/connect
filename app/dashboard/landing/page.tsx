@@ -45,6 +45,7 @@ import {
   Tablet,
   Monitor,
   Sparkles, // Add this import
+  X, // Add this import for the close button
 } from "lucide-react";
 // Replace the DataTable import with the one from forms
 import { DataTable } from "@/components/forms/data-table";
@@ -879,7 +880,7 @@ export default function LandingPage() {
 
         {/* Share Dialog */}
         <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800">
+          <DialogContent className="bg-gradient-to-br from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent border dark:border-gray-800">
             <DialogHeader>
               <DialogTitle className="dark:text-gray-100">
                 Share Landing Page
@@ -982,8 +983,8 @@ export default function LandingPage() {
 
         {/* Template Dialog */}
         <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl max-h-[80vh] flex flex-col">
-            <DialogHeader className="flex-shrink-0">
+          <DialogContent className="bg-gradient-to-br from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent border dark:border-gray-800 max-w-3xl max-h-[80vh] flex flex-col">
+            <DialogHeader>
               <DialogTitle className="dark:text-gray-100">
                 Choose a Template
               </DialogTitle>
@@ -992,7 +993,9 @@ export default function LandingPage() {
                 scratch.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto py-4">
+
+            {/* Add pt-4, pr-4, and pl-4 */}
+            <div className="flex-1 overflow-y-auto pt-8 pr-4 pl-4 pb-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 px-1">
                 {/* AI Generated Template - First position */}
                 <Card
@@ -1002,40 +1005,18 @@ export default function LandingPage() {
                   <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-indigo-600 opacity-90" />
                   <CardHeader className="relative z-10">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-white" />
-                      <CardTitle className="text-lg text-white">
+                      <Sparkles className="h-5 w-5 text-white animate-pulse" />
+                      <CardTitle className="text-lg text-white animate-pulse">
                         Generate with AI
                       </CardTitle>
                     </div>
                     <CardDescription className="text-white/90">
-                      Create a custom landing page with AI assistance
+                      Create using our AI assistance
                     </CardDescription>
                   </CardHeader>
                 </Card>
 
-                {/* Existing template mapping */}
-                {landingTemplates.map((template) => {
-                  const Icon = template.icon;
-                  return (
-                    <Card
-                      key={template.id}
-                      className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
-                      onClick={() => handleCreateLandingPage(template.id)}
-                    >
-                      <CardHeader>
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-5 w-5 dark:text-gray-300" />
-                          <CardTitle className="text-lg dark:text-gray-200">
-                            {template.title}
-                          </CardTitle>
-                        </div>
-                        <CardDescription className="dark:text-gray-400">
-                          {template.description}
-                        </CardDescription>
-                      </CardHeader>
-                    </Card>
-                  );
-                })}
+                {/* Blank Page - Second position */}
                 <Card
                   className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
                   onClick={() => router.push("/dashboard/landing/edit?id=new")}
@@ -1052,6 +1033,30 @@ export default function LandingPage() {
                     </CardDescription>
                   </CardHeader>
                 </Card>
+
+                {/* Existing template mapping - Now comes after blank page */}
+                {landingTemplates.map((template) => {
+                  const Icon = template.icon;
+                  return (
+                    <Card
+                      key={template.id}
+                      className="cursor-pointer transition-all hover:scale-105 dark:bg-gray-800 dark:border-gray-700"
+                      onClick={() => handleCreateLandingPage(template.id)}
+                    >
+                      <CardHeader>
+                        <div className="flex items-center gap-2">
+                          <Icon className={template.iconColor} />
+                          <CardTitle className="text-lg dark:text-gray-200">
+                            {template.title}
+                          </CardTitle>
+                        </div>
+                        <CardDescription className="dark:text-gray-400">
+                          {template.description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
             <DialogClose asChild className="flex-shrink-0 mt-2">
@@ -1067,7 +1072,7 @@ export default function LandingPage() {
 
         {/* Preview Dialog */}
         <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-5xl h-[95vh] flex flex-col">
+          <DialogContent className="bg-gradient-to-br from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent border dark:border-gray-800 max-w-5xl h-[95vh] flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="dark:text-gray-100">
                 Landing Page Preview
@@ -1127,9 +1132,10 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Button Row - Added Open Landing Page button next to Close */}
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            {/* Button Row - Updated to center and make buttons smaller */}
+            <div className="mt-4 flex justify-center space-x-2">
               <Button
+                size="sm"
                 variant="outline"
                 className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                 onClick={() =>
@@ -1138,11 +1144,11 @@ export default function LandingPage() {
                 }
                 disabled={!previewContent}
               >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Open Landing Page
+                <ExternalLink className="h-4 w-4" />
               </Button>
 
               <Button
+                size="sm"
                 variant="outline"
                 className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                 onClick={() =>
@@ -1151,16 +1157,33 @@ export default function LandingPage() {
                 }
                 disabled={!previewContent}
               >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Page
+                <Pencil className="h-4 w-4" />
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                onClick={() => {
+                  if (previewContent) {
+                    setShareLink(
+                      `${window.location.origin}/landing/${previewContent.id}`
+                    );
+                    setShareDialogOpen(true);
+                  }
+                }}
+                disabled={!previewContent}
+              >
+                <Share2 className="h-4 w-4" />
               </Button>
 
               <DialogClose asChild>
                 <Button
+                  size="sm"
                   variant="ghost"
                   className="dark:text-gray-400 dark:hover:bg-gray-800"
                 >
-                  Close
+                  <X className="h-4 w-4" />
                 </Button>
               </DialogClose>
             </div>
@@ -1169,7 +1192,7 @@ export default function LandingPage() {
 
         {/* Domain Management Dialog */}
         <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogContent className="bg-gradient-to-br from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent border dark:border-gray-800 max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="dark:text-gray-100">
                 Manage Domain Settings
@@ -1280,7 +1303,7 @@ export default function LandingPage() {
           open={AIGeneratorDialogOpen}
           onOpenChange={setAIGeneratorDialogOpen}
         >
-          <DialogContent className="bg-white dark:bg-gray-900 border dark:border-gray-800 max-w-3xl">
+          <DialogContent className="bg-gradient-to-br from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent border dark:border-gray-800 max-w-3xl">
             <DialogHeader>
               <DialogTitle className="dark:text-gray-100">
                 Generate Landing Page with AI
