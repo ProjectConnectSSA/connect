@@ -12,7 +12,7 @@ const TEMPERATURE = 0.7;
 // Helper function to build the system prompt - keep existing implementation
 function buildPrompt(userPrompt: string): string {
   // Your existing prompt building function
-  return `Create a visually appealing landing page based on this description: "${userPrompt}"
+  return `Create a visually appealing landing page based on this description: "${userPrompt}"Add commentMore actions
 
 IMPORTANT: YOU MUST RESPOND WITH ONLY VALID JSON. DO NOT INCLUDE ANY TEXT BEFORE OR AFTER THE JSON.
 DO NOT ADD ANY EXPLANATIONS. DO NOT USE MARKDOWN CODE BLOCKS.
@@ -41,7 +41,55 @@ Your response MUST be a valid JSON object with exactly this structure:
         }
       }
     },
-    // Additional sections as needed
+    // Features section example
+    {
+      "id": "2", 
+      "type": "features",
+      "content": {
+        "heading": "Section heading",
+        "items": [
+          {
+            "title": "Feature name",
+            "description": "Feature description",
+            "icon": "Zap" // Use one of: Zap, Shield, Star, Users, Tool, etc.
+          }
+          // Add 2-4 more feature items
+        ]
+      }
+    },
+    // Content section example
+    {
+      "id": "3",
+      "type": "content",
+      "content": {
+        "heading": "Section heading",
+        "body": "Main content with paragraphs and bullet points if needed",
+        "image": "", // Leave empty
+        "alignment": "left" // or "right"
+      }
+    },
+    // Footer MUST be last
+    {
+      "id": "last",
+      "type": "footer",
+      "content": {
+        "heading": "Contact heading",
+        "companyName": "Company name based on the description",
+        "tagline": "Company slogan or tagline",
+        "links": [
+          {"label": "Home", "url": "#"},
+          {"label": "About", "url": "#"},
+          {"label": "Services", "url": "#"},
+          {"label": "Contact", "url": "#"}
+        ],
+        "socialLinks": [
+          {"platform": "Twitter", "url": "#", "icon": "Twitter"},
+          {"platform": "Facebook", "url": "#", "icon": "Facebook"},
+          {"platform": "Instagram", "url": "#", "icon": "Instagram"}
+        ],
+        "copyright": "© ${new Date().getFullYear()} Company Name. All rights reserved."
+      }
+    }
   ],
   "styles": {
     "theme": "modern", // Pick one: modern, minimal, bold, elegant, clean, professional
