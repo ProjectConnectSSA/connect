@@ -66,6 +66,7 @@ import {
 import { AILoadingOverlay } from "@/components/landing/ai-loading-overlay";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "lucide-react";
 
 // Utility function: format date.
 const formatDate = (dateString: string) => {
@@ -145,6 +146,10 @@ export default function LandingPage() {
   const [AIGeneratorDialogOpen, setAIGeneratorDialogOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Add this state variable near the top with other states
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [detailsContent, setDetailsContent] = useState<any>(null);
 
   useEffect(() => {
     fetchLandingPagesData();
@@ -301,6 +306,18 @@ export default function LandingPage() {
               <Share2 className="mr-2 h-4 w-4 text-gray-500" />
               Share
             </DropdownMenuItem>
+
+            {/* Add this new dropdown item */}
+            <DropdownMenuItem
+              onClick={() => {
+                setDetailsContent(item);
+                setDetailsDialogOpen(true);
+              }}
+            >
+              <FileText className="mr-2 h-4 w-4 text-gray-500" />
+              View Details
+            </DropdownMenuItem>
+
             <DropdownMenuItem
               onClick={() =>
                 router.push(`/dashboard/landing/edit?id=${item.id}`)
@@ -730,6 +747,33 @@ export default function LandingPage() {
       toast.error("Failed to create landing page");
     }
   }
+
+  // Helper function: format detail date with ordinal suffix
+  const formatDetailDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+
+    // Add ordinal suffix to day
+    const day = date.getDate();
+    const suffix = (day) => {
+      if (day > 3 && day < 21) return "th";
+      switch (day % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    };
+
+    // Format as "6th Feb, 2025"
+    return `${day}${suffix(day)} ${date.toLocaleString("en-US", {
+      month: "short",
+    })}, ${date.getFullYear()}`;
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
@@ -1364,6 +1408,256 @@ export default function LandingPage() {
                 )}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Landing Page Details Dialog */}
+        <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+          <DialogContent className="bg-gradient-to-br from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent border dark:border-gray-800 max-w-3xl max-h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="dark:text-gray-100">
+                Landing Page Details
+              </DialogTitle>
+              <DialogDescription className="dark:text-gray-400">
+                View detailed information about your landing page
+              </DialogDescription>
+            </DialogHeader>
+
+            {detailsContent && (
+              <div className="flex-1 overflow-y-auto mt-4 pr-2">
+                <div className="space-y-6">
+                  {/* Title Section */}
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                    <h3 className="text-xl font-semibold mb-2 dark:text-gray-200">
+                      {detailsContent.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {detailsContent.description || "No description provided"}
+                    </p>
+                  </div>
+
+                  {/* Status & Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 flex items-center space-x-3">
+                      <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                        <Eye className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Visits
+                        </p>
+                        <p className="font-medium dark:text-gray-200">
+                          {detailsContent.visits || 0}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 flex items-center space-x-3">
+                      <div
+                        className={`p-2 rounded ${
+                          detailsContent.isactive
+                            ? "bg-green-100 dark:bg-green-900/30"
+                            : "bg-gray-100 dark:bg-gray-700"
+                        }`}
+                      >
+                        <div
+                          className={`h-5 w-5 rounded-full ${
+                            detailsContent.isactive
+                              ? "bg-green-500"
+                              : "bg-gray-400"
+                          }`}
+                        ></div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Status
+                        </p>
+                        <p
+                          className={`font-medium ${
+                            detailsContent.isactive
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-gray-500 dark:text-gray-400"
+                          }`}
+                        >
+                          {detailsContent.isactive ? "Published" : "Draft"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 flex items-center space-x-3">
+                      <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                        <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Created
+                        </p>
+                        <p className="font-medium dark:text-gray-200">
+                          {formatDetailDate(detailsContent.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Updated Date */}
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                    <h3 className="text-sm uppercase font-medium text-gray-500 dark:text-gray-400 mb-2">
+                      Last Updated
+                    </h3>
+                    <p className="font-medium dark:text-gray-200">
+                      {formatDetailDate(detailsContent.updated_at)}
+                    </p>
+                  </div>
+
+                  {/* Domain Information */}
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                    <h3 className="text-sm uppercase font-medium text-gray-500 dark:text-gray-400 mb-3">
+                      Domain Information
+                    </h3>
+
+                    {detailsContent.domain ? (
+                      <div className="space-y-3">
+                        {detailsContent.domain.subdomain && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Subdomain:
+                            </span>
+                            <span className="font-medium dark:text-gray-200">
+                              {detailsContent.domain.subdomain}
+                            </span>
+                          </div>
+                        )}
+
+                        {detailsContent.domain.custom && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Custom Domain:
+                            </span>
+                            <span className="font-medium dark:text-gray-200">
+                              {detailsContent.domain.custom}
+                            </span>
+                          </div>
+                        )}
+
+                        {detailsContent.domain.status && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Status:
+                            </span>
+                            <Badge
+                              variant={
+                                detailsContent.domain.status === "verified"
+                                  ? "success"
+                                  : "secondary"
+                              }
+                            >
+                              {detailsContent.domain.status}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400 italic">
+                        No domain configuration
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sections */}
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                    <h3 className="text-sm uppercase font-medium text-gray-500 dark:text-gray-400 mb-3">
+                      Sections
+                    </h3>
+
+                    {detailsContent.sections &&
+                    detailsContent.sections.length > 0 ? (
+                      <ul className="space-y-2">
+                        {detailsContent.sections.map(
+                          (section: any, i: number) => (
+                            <li
+                              key={i}
+                              className="flex items-center p-2 bg-gray-50 dark:bg-gray-700 rounded"
+                            >
+                              <span className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-full mr-3 text-sm font-medium">
+                                {i + 1}
+                              </span>
+                              <div>
+                                <p className="font-medium dark:text-gray-200 capitalize">
+                                  {section.type}
+                                </p>
+                                {section.content && section.content.heading && (
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {section.content.heading}
+                                  </p>
+                                )}
+                              </div>
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400 italic">
+                        No sections available
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-between items-center">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDetailsDialogOpen(false);
+                  setPreviewContent(detailsContent);
+                  setPreviewDialogOpen(true);
+                }}
+                className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300"
+              >
+                <Eye className="h-4 w-4" />
+                Preview
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    window.open(`/landing/${detailsContent?.id}`, "_blank")
+                  }
+                  disabled={!detailsContent}
+                  className="dark:border-gray-700 dark:text-gray-300"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only sm:ml-2">
+                    View Live
+                  </span>
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    if (detailsContent)
+                      router.push(
+                        `/dashboard/landing/edit?id=${detailsContent.id}`
+                      );
+                  }}
+                  disabled={!detailsContent}
+                  className="dark:bg-blue-600 dark:hover:bg-blue-700"
+                >
+                  <Pencil className="h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only sm:ml-2">Edit</span>
+                </Button>
+
+                <DialogClose asChild>
+                  <Button
+                    variant="ghost"
+                    className="dark:text-gray-400 dark:hover:bg-gray-800"
+                  >
+                    Close
+                  </Button>
+                </DialogClose>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 
