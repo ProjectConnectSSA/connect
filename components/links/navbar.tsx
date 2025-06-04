@@ -1,26 +1,29 @@
 "use client";
 
 import React from "react";
-import { Share, Eye, Save, ArrowLeftToLine } from "lucide-react"; // Use lucide-react for icons
+import { Share, Eye, Save, ArrowLeftToLine } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface NavbarProps {
-  onSave: () => Promise<void>; // Function to call when save is clicked
+  onSave: () => Promise<void>;
   isSaving: boolean;
-  pageSlug?: string; // Optional: Slug for preview link
+  pageSlug?: string;
 }
 
 export default function Navbar({ onSave, isSaving, pageSlug }: NavbarProps) {
   const router = useRouter();
-  // Add props for save actions, etc. later
+
   return (
     <nav className="bg-white border-b shadow-sm sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Padding classes px-4 sm:px-6 lg:px-8 removed from this div */}
+      <div className="max-w-7xl mx-auto">
+        {" "}
+        {/* <--- MODIFIED LINE */}
         <div className="flex justify-between h-16">
-          <div className=" flex items-center font-bold text-xl text-blue-600">Link Editor</div>
+          <div className="flex items-center font-bold text-xl text-blue-600">Link Editor</div>
+
           <div className="flex items-center space-x-3">
-            {/* Add functionality later */}
             {pageSlug && (
               <Link
                 href={`/p/${pageSlug}`}

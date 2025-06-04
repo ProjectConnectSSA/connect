@@ -4,9 +4,10 @@ import Link from "next/link"; // Make sure Link is imported
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Link as LinkIcon, FileText, Mail, User, LogOut, BarChart, ChevronRight, LayoutTemplate, Contact, Atom } from "lucide-react";
+import { Link as LinkIcon, FileText, Mail, User, LogOut, BarChart, ChevronRight, LayoutTemplate, Contact, Sparkles } from "lucide-react";
 import { useState } from "react";
-
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 // ... (Keep the User interface and other imports)
 
 export function DashboardSidebar() {
@@ -22,7 +23,7 @@ export function DashboardSidebar() {
     { href: "/dashboard/contacts", label: "Contacts", icon: Contact },
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart },
     { href: "/dashboard/profile", label: "Profile", icon: User },
-    { href: "/dashboard/Generative-Ai", label: "AI (Beta)", icon: Atom },
+    { href: "/dashboard/Generative-Ai", label: "AI (Beta)", icon: Sparkles },
   ];
 
   const activeBgColor = "bg-white";
@@ -31,6 +32,15 @@ export function DashboardSidebar() {
   const inactiveIconColor = "text-indigo-300";
   const hoverBgColor = "hover:bg-indigo-600";
   const hoverTextColor = "hover:text-white";
+
+  const supabase = createClient();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <div className="flex h-screen">
@@ -108,18 +118,17 @@ export function DashboardSidebar() {
           {/* Logout Button Section */}
           <div className="mt-auto px-3 pb-4">
             <Button
+              onClick={handleLogout}
               variant="ghost"
               className={cn(
                 "w-full text-indigo-100 hover:text-red-400 hover:bg-red-400/10 transition-colors duration-150 ease-in-out",
                 isCollapsed ? "justify-center px-0 py-2" : "justify-start px-3 py-2"
               )}
               asChild>
-              <Link
-                href="/logout"
-                title={isCollapsed ? "Logout" : undefined}>
+              <span title={isCollapsed ? "Logout" : undefined}>
                 <LogOut className="h-5 w-5 flex-shrink-0" />
                 {!isCollapsed && <span className="ml-3 whitespace-nowrap">Logout</span>}
-              </Link>
+              </span>
             </Button>
           </div>
         </div>

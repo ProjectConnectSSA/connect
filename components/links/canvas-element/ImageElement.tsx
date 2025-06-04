@@ -140,21 +140,31 @@ export default function ImageElement({ element, styles, updateElement, deleteEle
       {/* Edit/Delete Controls */}
       <div className="absolute top-1.5 right-1.5 flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
         {/* Edit Button & Dialog */}
-        <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog.Root
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}>
           <Dialog.Trigger asChild>
-            <button className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1" aria-label="Edit Image">
+            <button
+              className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1"
+              aria-label="Edit Image">
               <Edit2 size={16} />
             </button>
           </Dialog.Trigger>
 
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 data-[state=open]:animate-overlayShow" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-lg transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow" onEscapeKeyDown={handleCancel} onPointerDownOutside={(e) => e.preventDefault()}>
+            <Dialog.Content
+              className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-lg transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow"
+              onEscapeKeyDown={handleCancel}
+              onPointerDownOutside={(e) => e.preventDefault()}>
               {/* Modal Header */}
               <div className="flex justify-between items-center mb-5 border-b pb-3">
                 <Dialog.Title className="text-lg font-medium text-gray-900">Edit Image</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400" aria-label="Close" onClick={handleCancel}>
+                  <button
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400"
+                    aria-label="Close"
+                    onClick={handleCancel}>
                     <X size={20} />
                   </button>
                 </Dialog.Close>
@@ -167,17 +177,38 @@ export default function ImageElement({ element, styles, updateElement, deleteEle
                   <label className="block text-sm font-medium text-gray-700 mb-2">Upload Image (Max {MAX_FILE_SIZE_MB}MB)</label>
                   {/* Image Preview within Modal */}
                   <div className="mb-3 w-full aspect-video bg-gray-100 flex items-center justify-center rounded overflow-hidden border border-gray-200 relative">
-                    {editedImageUrl ? <img src={editedImageUrl} alt={editedAltText || "Preview"} className="w-full h-full object-contain" /> : <ImageIcon size={48} className="text-gray-400" />}
+                    {editedImageUrl ? (
+                      <img
+                        src={editedImageUrl}
+                        alt={editedAltText || "Preview"}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <ImageIcon
+                        size={48}
+                        className="text-gray-400"
+                      />
+                    )}
                     {uploading && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <Loader2 size={32} className="text-white animate-spin" />
+                        <Loader2
+                          size={32}
+                          className="text-white animate-spin"
+                        />
                       </div>
                     )}
                   </div>
 
                   {/* Upload Button/Input */}
-                  <label htmlFor={`image-upload-${element.id}`} className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${uploading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
-                    <Upload size={16} className={`mr-2 ${uploading ? "animate-pulse" : ""}`} />
+                  <label
+                    htmlFor={`image-upload-${element.id}`}
+                    className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${
+                      uploading ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                    }`}>
+                    <Upload
+                      size={16}
+                      className={`mr-2 ${uploading ? "animate-pulse" : ""}`}
+                    />
                     {uploading ? "Uploading..." : "Choose Image"}
                   </label>
                   <input
@@ -191,7 +222,11 @@ export default function ImageElement({ element, styles, updateElement, deleteEle
                   {/* Upload Error Display */}
                   {uploadError && (
                     <p className="text-xs text-red-600 mt-2 flex items-center">
-                      <X size={14} className="mr-1 text-red-400" /> {uploadError}
+                      <X
+                        size={14}
+                        className="mr-1 text-red-400"
+                      />{" "}
+                      {uploadError}
                     </p>
                   )}
                 </div>
@@ -200,30 +235,70 @@ export default function ImageElement({ element, styles, updateElement, deleteEle
 
                 {/* --- Manual URL Input --- */}
                 <div>
-                  <label htmlFor={`image-url-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`image-url-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Enter Image URL
                   </label>
-                  <input id={`image-url-${element.id}`} type="url" value={editedImageUrl} onChange={(e) => setEditedImageUrl(e.target.value)} onKeyDown={handleKeyDown} placeholder="https://example.com/image.jpg" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" disabled={uploading} />
+                  <input
+                    id={`image-url-${element.id}`}
+                    type="url"
+                    value={editedImageUrl}
+                    onChange={(e) => setEditedImageUrl(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    disabled={uploading}
+                  />
                 </div>
 
                 {/* --- Alt Text Input --- */}
                 <div>
-                  <label htmlFor={`alt-text-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`alt-text-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Alt Text <span className="text-xs text-gray-500">(Recommended for accessibility)</span>
                   </label>
-                  <input id={`alt-text-${element.id}`} type="text" value={editedAltText} onChange={(e) => setEditedAltText(e.target.value)} onKeyDown={handleKeyDown} placeholder="Describe the image (e.g., 'Logo for ACME Corp')" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" disabled={uploading} />
+                  <input
+                    id={`alt-text-${element.id}`}
+                    type="text"
+                    value={editedAltText}
+                    onChange={(e) => setEditedAltText(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Describe the image (e.g., 'Logo for ACME Corp')"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    disabled={uploading}
+                  />
                 </div>
               </div>
 
               {/* Modal Footer */}
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Dialog.Close asChild>
-                  <button onClick={handleCancel} type="button" disabled={uploading} className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition disabled:opacity-50">
+                  <button
+                    onClick={handleCancel}
+                    type="button"
+                    disabled={uploading}
+                    className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition disabled:opacity-50">
                     Cancel
                   </button>
                 </Dialog.Close>
-                <button onClick={handleSave} type="button" disabled={uploading} className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                  {uploading ? <Loader2 size={16} className="animate-spin mr-1" /> : <Check size={16} className="mr-1" />}
+                <button
+                  onClick={handleSave}
+                  type="button"
+                  disabled={uploading}
+                  className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  {uploading ? (
+                    <Loader2
+                      size={16}
+                      className="animate-spin mr-1"
+                    />
+                  ) : (
+                    <Check
+                      size={16}
+                      className="mr-1"
+                    />
+                  )}
                   Save
                 </button>
               </div>
@@ -232,7 +307,10 @@ export default function ImageElement({ element, styles, updateElement, deleteEle
         </Dialog.Root>
 
         {/* Delete Button */}
-        <button onClick={handleDelete} className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1" aria-label="Delete Image">
+        <button
+          onClick={handleDelete}
+          className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-1"
+          aria-label="Delete Image">
           <Trash2 size={16} />
         </button>
       </div>
@@ -255,7 +333,10 @@ export default function ImageElement({ element, styles, updateElement, deleteEle
         ) : (
           // Placeholder when no image URL is provided
           <div className={`w-full aspect-[16/9] bg-gray-100 dark:bg-gray-800/50 flex flex-col items-center justify-center ${radiusClass} p-4`}>
-            <ImageIcon size={40} className="text-gray-400 dark:text-gray-500 mb-2" />
+            <ImageIcon
+              size={40}
+              className="text-gray-400 dark:text-gray-500 mb-2"
+            />
             <span className="text-gray-500 dark:text-gray-400 text-sm text-center">Image Required</span>
             <span className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-center">(Click edit icon)</span>
           </div>

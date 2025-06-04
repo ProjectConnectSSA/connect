@@ -1,16 +1,26 @@
 // File: src/app/api/leads/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
-import { getCurrentUser } from "@/app/actions";
+import { createClient } from "@/lib/supabase/server";
+
 import { Lead } from "@/app/types/LeadType";
 
 /**
  * GET /api/leads
  * Retrieves all leads for the authenticated tenant, most recent first.
  */
+const supabase = await createClient();
 export async function GET(req: NextRequest) {
   try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { data, error } = await supabase.from("leads").select("*").order("createdAt", { ascending: false });
 
     if (error) {

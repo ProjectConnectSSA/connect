@@ -118,15 +118,3 @@ export const NotificationSidebar: React.FC<NotificationSidebarProps> = ({ notifi
     </>
   );
 };
-
-// --- Integration in TopBar (components/dashboard/topbar.tsx) ---
-// 1. Update import: import { NotificationSidebar } from '@/components/dashboard/NotificationSidebar';
-// 2. Pass handlers:
-// <NotificationSidebar
-//   notifications={notifications}
-//   isOpen={isSidebarOpen}
-//   onClose={() => setIsSidebarOpen(false)}
-//   onMarkAllRead={handleMarkAllRead}
-//   onMarkRead={handleSingleMarkRead}
-//   onDelete={handleDeleteNotification}
-// />

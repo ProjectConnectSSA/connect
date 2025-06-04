@@ -26,7 +26,7 @@ const Navbar = () => {
             <NavLink href="#contact">Contact</NavLink>
 
             <div className="flex items-center gap-2 ml-4">
-              <Link href="/sign-in">
+              <Link href="/auth/login">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -34,7 +34,7 @@ const Navbar = () => {
                   Sign in
                 </motion.button>
               </Link>
-              <Link href="/sign-up">
+              <Link href="/auth/signup">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

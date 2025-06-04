@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Notification } from "@/app/types/notification";
 import { NotificationSidebar } from "./notificationbar";
 import {
@@ -248,6 +248,7 @@ export function TopBar() {
         borderColor, // Main TopBar border, from styles.ts via barrel file
         bgColor, // Main TopBar background, from styles.ts via barrel file
         "px-4 md:px-6",
+        // These classes ensure the TopBar is sticky at the top of the viewport
         "sticky top-0 z-30 w-full"
       )}>
       <PageTitle pathname={pathname} />

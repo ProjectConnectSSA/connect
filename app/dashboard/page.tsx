@@ -2,18 +2,9 @@ import DashboardSidebar from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar"; // Import the new TopBar
 import { WelcomeHeaderWidget } from "@/components/dashboard/widgets/WelcomeHeaderWidget";
 import { UsageStatsWidget } from "@/components/dashboard/widgets/UsageStatsWidget";
-import {
-  AnnouncementsWidget,
-  Announcement,
-} from "@/components/dashboard/widgets/AnnouncementsWidget";
-import {
-  TutorialsWidget,
-  Tutorial,
-} from "@/components/dashboard/widgets/TutorialsWidget";
-import {
-  RecentActivityWidget,
-  Campaign,
-} from "@/components/dashboard/widgets/RecentActivityWidget";
+import { AnnouncementsWidget, Announcement } from "@/components/dashboard/widgets/AnnouncementsWidget";
+import { TutorialsWidget, Tutorial } from "@/components/dashboard/widgets/TutorialsWidget";
+import { RecentActivityWidget, Campaign } from "@/components/dashboard/widgets/RecentActivityWidget";
 import { StatsOverviewWidget } from "@/components/dashboard/widgets/StatsOverviewWidget";
 import { QuickAccessWidget } from "@/components/dashboard/widgets/QuickAccessWidget";
 
@@ -121,7 +112,7 @@ export default function DashboardPage() {
 
             {/* Two Column Layout: Announcements & Tutorials */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <AnnouncementsWidget announcements={announcements} />
+              <AnnouncementsWidget />
               <TutorialsWidget tutorials={tutorials} />
             </div>
 

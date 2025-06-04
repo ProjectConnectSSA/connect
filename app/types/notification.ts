@@ -1,5 +1,5 @@
 export interface Notification {
-  /* ... (interface remains the same) ... */ id: number;
+  id: number;
   user_id: string;
   created_at: string;
   read_at: string | null;

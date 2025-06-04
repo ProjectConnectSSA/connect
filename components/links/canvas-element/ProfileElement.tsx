@@ -146,7 +146,8 @@ export default function ProfileElement({
 
   // --- Styling & Rendering ---
   // Use full border radius for avatar regardless of global setting? Or respect global? Let's respect it for consistency.
-  const avatarRadiusClass = styles.borderRadius === "full" ? "rounded-full" : styles.borderRadius === "none" ? "rounded-none" : `rounded-${styles.borderRadius}`;
+  const avatarRadiusClass =
+    styles.borderRadius === "full" ? "rounded-full" : styles.borderRadius === "none" ? "rounded-none" : `rounded-${styles.borderRadius}`;
   const avatarSize = "w-24 h-24"; // Consistent size
   const avatarPlaceholderSize = 48; // Icon size within placeholder
 
@@ -156,21 +157,31 @@ export default function ProfileElement({
       {/* Edit/Delete Controls - Positioned top-right of the container */}
       <div className="absolute top-1 right-1 flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
         {/* Edit Button & Dialog */}
-        <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog.Root
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}>
           <Dialog.Trigger asChild>
-            <button className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50" aria-label="Edit Profile">
+            <button
+              className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50"
+              aria-label="Edit Profile">
               <Edit2 size={16} />
             </button>
           </Dialog.Trigger>
 
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 data-[state=open]:animate-overlayShow" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-md transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow" onEscapeKeyDown={handleCancel} onPointerDownOutside={(e) => e.preventDefault()}>
+            <Dialog.Content
+              className="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-md transform -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl p-6 focus:outline-none data-[state=open]:animate-contentShow"
+              onEscapeKeyDown={handleCancel}
+              onPointerDownOutside={(e) => e.preventDefault()}>
               {/* Modal Header */}
               <div className="flex justify-between items-center mb-5 border-b pb-3">
                 <Dialog.Title className="text-lg font-medium text-gray-900">Edit Profile</Dialog.Title>
                 <Dialog.Close asChild>
-                  <button className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400" aria-label="Close" onClick={handleCancel}>
+                  <button
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400"
+                    aria-label="Close"
+                    onClick={handleCancel}>
                     <X size={20} />
                   </button>
                 </Dialog.Close>
@@ -182,31 +193,66 @@ export default function ProfileElement({
                 <div className="flex flex-col items-center">
                   <label className="block text-sm font-medium text-gray-700 mb-2 self-start">Profile Picture (Max {MAX_FILE_SIZE_MB}MB)</label>
                   {/* Avatar Preview within Modal */}
-                  <div className={`relative ${avatarSize} ${avatarRadiusClass} overflow-hidden border-2 border-gray-300 mb-3 bg-gray-100 flex items-center justify-center`}>
-                    {editedAvatarUrl ? <img src={editedAvatarUrl} alt="Avatar Preview" className="w-full h-full object-cover" /> : <User size={avatarPlaceholderSize} className="text-gray-400" />}
+                  <div
+                    className={`relative ${avatarSize} ${avatarRadiusClass} overflow-hidden border-2 border-gray-300 mb-3 bg-gray-100 flex items-center justify-center`}>
+                    {editedAvatarUrl ? (
+                      <img
+                        src={editedAvatarUrl}
+                        alt="Avatar Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User
+                        size={avatarPlaceholderSize}
+                        className="text-gray-400"
+                      />
+                    )}
                     {uploading && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <Loader2 size={32} className="text-white animate-spin" />
+                        <Loader2
+                          size={32}
+                          className="text-white animate-spin"
+                        />
                       </div>
                     )}
                   </div>
                   {/* Upload Button/Input */}
-                  <label htmlFor={`avatar-upload-${element.id}`} className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${uploading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
-                    <Upload size={16} className={`mr-2 ${uploading ? "animate-pulse" : ""}`} />
+                  <label
+                    htmlFor={`avatar-upload-${element.id}`}
+                    className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${
+                      uploading ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                    }`}>
+                    <Upload
+                      size={16}
+                      className={`mr-2 ${uploading ? "animate-pulse" : ""}`}
+                    />
                     {uploading ? "Uploading..." : "Choose Image"}
                   </label>
-                  <input id={`avatar-upload-${element.id}`} type="file" accept="image/png, image/jpeg, image/gif, image/webp" onChange={handleFileChange} disabled={uploading} className="hidden" />
+                  <input
+                    id={`avatar-upload-${element.id}`}
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif, image/webp"
+                    onChange={handleFileChange}
+                    disabled={uploading}
+                    className="hidden"
+                  />
                   {/* Upload Error Display */}
                   {uploadError && (
                     <p className="text-xs text-red-600 mt-2 flex items-center text-center">
-                      <X size={14} className="mr-1 text-red-400 flex-shrink-0" /> {uploadError}
+                      <X
+                        size={14}
+                        className="mr-1 text-red-400 flex-shrink-0"
+                      />{" "}
+                      {uploadError}
                     </p>
                   )}
                 </div>
 
                 {/* --- Name Input --- */}
                 <div>
-                  <label htmlFor={`profile-name-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`profile-name-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Name
                   </label>
                   <input
@@ -223,7 +269,9 @@ export default function ProfileElement({
 
                 {/* --- Bio Input --- */}
                 <div>
-                  <label htmlFor={`profile-bio-${element.id}`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor={`profile-bio-${element.id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1.5">
                     Bio (Optional)
                   </label>
                   <textarea
@@ -241,12 +289,30 @@ export default function ProfileElement({
               {/* Modal Footer */}
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Dialog.Close asChild>
-                  <button onClick={handleCancel} type="button" disabled={uploading} className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition disabled:opacity-50">
+                  <button
+                    onClick={handleCancel}
+                    type="button"
+                    disabled={uploading}
+                    className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400 transition disabled:opacity-50">
                     Cancel
                   </button>
                 </Dialog.Close>
-                <button onClick={handleSave} type="button" disabled={uploading} className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                  {uploading ? <Loader2 size={16} className="animate-spin mr-1" /> : <Check size={16} className="mr-1" />}
+                <button
+                  onClick={handleSave}
+                  type="button"
+                  disabled={uploading}
+                  className="px-4 py-2 rounded-md text-sm font-medium text-white flex items-center bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  {uploading ? (
+                    <Loader2
+                      size={16}
+                      className="animate-spin mr-1"
+                    />
+                  ) : (
+                    <Check
+                      size={16}
+                      className="mr-1"
+                    />
+                  )}
                   Save
                 </button>
               </div>
@@ -255,13 +321,18 @@ export default function ProfileElement({
         </Dialog.Root>
 
         {/* Delete Button */}
-        <button onClick={handleDelete} className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50" aria-label="Delete Profile">
+        <button
+          onClick={handleDelete}
+          className="p-1.5 bg-black/40 text-white rounded-md hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-black/50"
+          aria-label="Delete Profile">
           <Trash2 size={16} />
         </button>
       </div>
 
       {/* Profile Preview on Canvas */}
-      <div className={`relative ${avatarSize} ${avatarRadiusClass} overflow-hidden border-2 bg-gray-200 dark:bg-gray-700 mb-3 flex items-center justify-center`} style={{ borderColor: styles.buttonColor || styles.textColor }}>
+      <div
+        className={`relative ${avatarSize} ${avatarRadiusClass} overflow-hidden border-2 bg-gray-200 dark:bg-gray-700 mb-3 flex items-center justify-center`}
+        style={{ borderColor: styles.buttonColor || styles.textColor }}>
         {currentAvatarUrl ? (
           <img
             src={currentAvatarUrl}
@@ -272,16 +343,23 @@ export default function ProfileElement({
           />
         ) : (
           // Display icon within the bordered container if no image
-          <User size={avatarPlaceholderSize} className="text-gray-500 dark:text-gray-400" />
+          <User
+            size={avatarPlaceholderSize}
+            className="text-gray-500 dark:text-gray-400"
+          />
         )}
       </div>
       {/* Name */}
-      <h1 className="text-xl font-semibold break-words" style={{ color: styles.textColor }}>
+      <h1
+        className="text-xl font-semibold break-words"
+        style={{ color: styles.textColor }}>
         {currentName || DEFAULT_NAME}
       </h1>
       {/* Bio */}
       {(currentBio || !currentName) && ( // Show default bio only if name is also default/empty, or if bio exists
-        <p className="text-sm mt-1 max-w-md break-words" style={{ color: styles.textColor, opacity: 0.9 }}>
+        <p
+          className="text-sm mt-1 max-w-md break-words"
+          style={{ color: styles.textColor, opacity: 0.9 }}>
           {currentBio || DEFAULT_BIO}
         </p>
       )}

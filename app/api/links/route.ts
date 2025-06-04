@@ -1,6 +1,6 @@
 // app/api/links/route.ts (or wherever this code resides)
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server"; // Use SERVER client
+import { createClient } from "@/lib/supabase/server"; // Use SERVER client
 import { cookies } from "next/headers";
 
 // Assuming LinkFormData defines the shape of link data for create/update

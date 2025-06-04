@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
 interface TextEntry {
@@ -8,7 +8,7 @@ interface TextEntry {
 
 // GET: Fetch all text entries for the logged-in user
 export async function GET() {
-  const supabase = createServerClient({ cookies });
+  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -17,10 +17,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { data, error } = await supabase
-    .from("texts")
-    .select("*")
-    .eq("user_id", user.id);
+  const { data, error } = await supabase.from("texts").select("*").eq("user_id", user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -30,7 +27,7 @@ export async function GET() {
 
 // POST: Create a new text entry for the logged-in user
 export async function POST(req: NextRequest) {
-  const supabase = createServerClient({ cookies });
+  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
