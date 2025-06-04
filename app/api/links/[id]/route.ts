@@ -1,7 +1,7 @@
 // app/api/links/[id]/route.ts - For PUBLICLY fetching an ACTIVE link by ID
 import { NextRequest, NextResponse } from "next/server";
 // Use the standard Supabase client here, as no user session is needed
-import { createClient } from "@/utils/supabase/client"; // Or use the admin client if preferred for reads
+import { createClient } from "@/lib/supabase/client"; // Or use the admin client if preferred for reads
 
 // Initialize Supabase Client (ensure environment variables are set)
 // Using the ANON key is appropriate for public reads allowed by RLS

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/server";
 import { UUID } from "crypto";
 
 interface LandingPage {
@@ -35,7 +35,7 @@ interface Elements {
   type: string;
   required: boolean;
 }
-
+const supabase = createClient();
 // Function to fetch all landingPages
 export async function GET() {
   try {

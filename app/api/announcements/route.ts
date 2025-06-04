@@ -1,5 +1,5 @@
 // app/api/announcements/route.ts
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { Announcement } from "@/components/dashboard/widgets/AnnouncementsWidget"; // Import your type
 

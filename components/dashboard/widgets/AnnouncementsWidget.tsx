@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, ArrowUpRight, Clock, Loader2, AlertTriangle } from "lucide-react";
-import { createClient } from "@/utils/supabase/client"; // Adjust path if needed
+import { createClient } from "@/lib/supabase/client"; // Adjust path if needed
 
 export interface Announcement {
   id: number;

@@ -1,6 +1,6 @@
 // app/api/links/clone/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
 // Helper function to generate a unique slug for the clone

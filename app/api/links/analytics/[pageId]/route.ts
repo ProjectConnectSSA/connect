@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 
 // Assuming createClient() from "@/utils/supabase/client" can create a Supabase client
 // instance that can operate on the server-side for this demo.
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 export async function GET(request: Request, { params }: { params: { pageId: string } }) {
   const { pageId } = params;

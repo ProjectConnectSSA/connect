@@ -1,5 +1,5 @@
 // app/api/profile/route.ts
-import { createClient } from "@/utils/supabase/server"; // Ensure this is your server-side Supabase client
+import { createClient } from "@/lib/supabase/server"; // Ensure this is your server-side Supabase client
 import { NextResponse } from "next/server";
 
 // This interface should match the one in your ProfilePage.tsx
