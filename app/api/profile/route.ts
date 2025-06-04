@@ -65,7 +65,7 @@ export async function GET(request: Request) {
 
     if (profileTableError && profileTableError.code !== "PGRST116") {
       // PGRST116: single row not found (no profile yet)
-      console.error("API Profile - Profile Table Fetch Error:", profileTableError.message);
+
       // For other errors, throw to be caught by the general catch block
       return NextResponse.json({ error: "Failed to fetch profile details", details: profileTableError.message }, { status: 500 });
     }
@@ -106,7 +106,6 @@ export async function GET(request: Request) {
       },
     };
 
-    console.log("API Profile - Sending payload:", JSON.stringify(responsePayload, null, 2));
     return NextResponse.json(responsePayload);
   } catch (error: any) {
     console.error("API Profile - General Error:", error.message, error.stack);

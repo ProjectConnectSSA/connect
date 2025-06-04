@@ -7,8 +7,15 @@ export async function GET() {
   // Note: We call createClient() here inside the handler as cookies() from next/headers
   // can only be called from a Server Component, Route Handler, or Server Action.
   const supabase = createClient();
+  // Get the authenticated user
 
   try {
+    const {
+      data: { user },
+      error: authError,
+    } = await (await supabase).auth.getUser();
+    console.log("Authenticated user:", user);
+
     const { data, error } = await (await supabase)
       .from("announcements")
       .select("id, title, description, date, type")

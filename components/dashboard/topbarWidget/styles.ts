@@ -5,7 +5,7 @@
 export const textColor = "text-indigo-100 dark:text-gray-200";
 export const hoverTextColor = "hover:text-white dark:hover:text-white";
 export const iconColor = "text-indigo-200 dark:text-gray-400";
-export const bgColor = "bg-indigo-700 dark:bg-gray-950";
+export const bgColor = "bg-[#101010] dark:bg-gray-950";
 export const borderColor = "border-indigo-900 dark:border-gray-800";
 export const hoverBgColor = "hover:bg-indigo-600 dark:hover:bg-gray-800";
 export const separatorColor = "bg-indigo-500 dark:bg-gray-700";

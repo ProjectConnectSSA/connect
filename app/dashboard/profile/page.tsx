@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast, Toaster } from "sonner";
 import { User, CreditCard, Shield, Loader2 } from "lucide-react";
-
+import { ModeToggle } from "@/components/settings/mode-toggle"; // Ensure this path is correct
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 
@@ -370,6 +370,11 @@ export default function ProfilePage() {
                       ) : (
                         <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
                       )}
+                    </div>
+                    <div>
+                      <div className="flex flex-1 items-center justify-end space-x-4">
+                        <ModeToggle />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

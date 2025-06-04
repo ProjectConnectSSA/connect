@@ -14,8 +14,7 @@ interface LinkFormData {
 }
 
 // Function to fetch USER-SPECIFIC links
-export async function GET(request: NextRequest) {
-  const cookieStore = cookies();
+export async function GET() {
   const supabase = createClient();
 
   try {
