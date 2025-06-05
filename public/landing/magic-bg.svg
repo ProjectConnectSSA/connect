@@ -1,0 +1,8 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+    <circle cx="3" cy="3" r="1" fill="#c4b5fd" opacity="0.4" />
+    <path d="M15 15l-3 -3" stroke="#d8b4fe" stroke-width="0.5" opacity="0.3" />
+    <path d="M10 8l2 -2" stroke="#a5b4fc" stroke-width="0.5" opacity="0.3" />
+  </pattern>
+  <rect width="100%" height="100%" fill="url(#pattern)" />
+</svg>
