@@ -10,15 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
@@ -38,17 +29,45 @@ import {
   Copy,
   QrCode,
   ExternalLink,
-  Link2, // Add this import
+  Link2,
+  Loader2,
+  RefreshCcw,
+  Smartphone,
+  Tablet,
+  Monitor,
+  Sparkles, // Add this import
+  X, // Add this import for the close button
 } from "lucide-react";
-import { DataTable } from "@/components/shared/data-table";
+// Replace the DataTable import with the one from forms
+import { DataTable } from "@/components/forms/data-table";
 import { Badge } from "@/components/ui/badge";
 import { landingTemplates } from "@/components/landing/templates/landing-templates";
-import { QRCodeSVG } from "qrcode.react"; // You'll need to install this package if not already installed
+import { QRCodeSVG } from "qrcode.react";
 import { LandingPreview } from "@/components/landing/landing-preview";
 import { toast } from "sonner";
 import { DomainSettings } from "@/components/landing/domain-settings";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { AILoadingOverlay } from "@/components/landing/ai-loading-overlay";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "lucide-react";
+
+// Import the extracted dialog components
+import { ShareDialog } from "@/components/landing/dialogs/ShareDialog";
+import { TemplateDialog } from "@/components/landing/dialogs/TemplateDialog";
+import { PreviewDialog } from "@/components/landing/dialogs/PreviewDialog";
+import { DomainManagementDialog } from "@/components/landing/dialogs/DomainManagementDialog";
+import { LimitReachedDialog } from "@/components/landing/dialogs/LimitReachedDialog";
+import { DeleteConfirmationDialog } from "@/components/landing/dialogs/DeleteConfirmationDialog";
+import { AIGeneratorDialog } from "@/components/landing/dialogs/AIGeneratorDialog";
+import { LandingPageDetailsDialog } from "@/components/landing/dialogs/LandingPageDetailsDialog";
 
 // Utility function: format date.
 const formatDate = (dateString: string) => {
@@ -80,47 +99,65 @@ const filters = [
 export default function LandingPage() {
   const router = useRouter();
   const [LandingPages, setLandingPages] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
   const totalPagesAllowed = 10;
   const usedPages = LandingPages?.length ?? 0;
   const progressValue = (usedPages / totalPagesAllowed) * 100;
 
-  // Add these state variables for sharing
+  // States for sharing
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const qrCodeRef = useRef<HTMLDivElement>(null);
 
-  // Add this with your other state variables
+  // States for preview
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState<any>(null);
+  const [previewDeviceMode, setPreviewDeviceMode] = useState<
+    "mobile" | "tablet" | "desktop"
+  >("desktop");
 
-  // Add these state variables with your other state variables
+  // States for domain management
   const [domainDialogOpen, setDomainDialogOpen] = useState(false);
   const [selectedLandingPage, setSelectedLandingPage] = useState<any>(null);
 
-  // Add these state variables
+  // States for limit reached
   const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
 
-  // Add this to your state variables
+  // States for deleted pages
   const [recentlyDeletedPages, setRecentlyDeletedPages] = useState<any[]>([]);
 
-  // Add these state variables for delete confirmation dialog
+  // States for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [landingPageToDelete, setLandingPageToDelete] = useState<string | null>(
     null
   );
 
-  // Add these state variables for URL shortening
+  // States for URL shortening
   const [shortUrl, setShortUrl] = useState("");
   const [isShorteningUrl, setIsShorteningUrl] = useState(false);
   const [shortUrlError, setShortUrlError] = useState("");
+
+  // State for template dialog
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+
+  // State for AI generator dialog
+  const [AIGeneratorDialogOpen, setAIGeneratorDialogOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Add this state variable near the top with other states
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [detailsContent, setDetailsContent] = useState<any>(null);
 
   useEffect(() => {
     fetchLandingPagesData();
   }, []);
 
   async function fetchLandingPagesData() {
+    setIsLoading(true);
     try {
       // Get the current user first
       const { getCurrentUser } = await import("@/app/actions");
@@ -144,7 +181,7 @@ export default function LandingPage() {
 
       // Check if user has more than 10 landing pages
       if (data.length > totalPagesAllowed) {
-        // Sort by creation date (oldest first)
+        // Sort by creation date (oldest first for deletion purposes)
         const sortedPages = [...data].sort(
           (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -159,8 +196,13 @@ export default function LandingPage() {
         // Delete excess pages
         await deleteExcessLandingPages(pagesToDelete);
 
-        // Update state with only the kept pages
-        setLandingPages(pagesToKeep);
+        // Update state with only the kept pages (but sort newest first for display)
+        const pagesForDisplay = [...pagesToKeep].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setLandingPages(pagesForDisplay);
+
         // Store deleted pages in state
         setRecentlyDeletedPages(pagesToDelete);
         // Show more detailed toast
@@ -176,15 +218,21 @@ export default function LandingPage() {
           { duration: 5000 }
         );
       } else {
-        setLandingPages(data);
+        // Sort the landing pages by creation date (newest first)
+        const sortedData = [...data].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setLandingPages(sortedData);
       }
     } catch (error) {
       console.error("Error fetching landing pages:", error);
       setLandingPages([]);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  // Update these columns in your landing page component
   const columns = [
     {
       key: "title",
@@ -243,44 +291,68 @@ export default function LandingPage() {
       render: (item: any) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-gray-100 transition"
+            >
+              <MoreVertical className="h-4 w-4 text-gray-600" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent
+            align="end"
+            className="shadow-md rounded-lg bg-white"
+          >
             <DropdownMenuItem onClick={() => handleShareLandingPage(item)}>
-              <Share2 className="mr-2 h-4 w-4" />
+              <Share2 className="mr-2 h-4 w-4 text-gray-500" />
               Share
             </DropdownMenuItem>
 
-            {/* Add this new menu item */}
+            {/* Add this new dropdown item */}
             <DropdownMenuItem
-              onClick={() => window.open(`/landing/${item.id}`, "_blank")}
+              onClick={() => {
+                setDetailsContent(item);
+                setDetailsDialogOpen(true);
+              }}
             >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              View Landing Page
+              <FileText className="mr-2 h-4 w-4 text-gray-500" />
+              View Details
             </DropdownMenuItem>
 
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/dashboard/landing/edit?id=${item.id}`)
+              }
+            >
+              <Pencil className="mr-2 h-4 w-4 text-gray-500" />
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 setPreviewContent(item);
                 setPreviewDialogOpen(true);
               }}
             >
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="mr-2 h-4 w-4 text-gray-500" />
               Preview
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleManageDomain(item)}>
-              <Globe className="mr-2 h-4 w-4" />
-              Manage Domain
-            </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() =>
-                router.push(`/dashboard/landing/edit?id=${item.id}`)
-              }
+              onClick={() => window.open(`/landing/${item.id}`, "_blank")}
             >
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              <ExternalLink className="mr-2 h-4 w-4 text-gray-500" />
+              View Landing Page
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => duplicateLandingPage(item, false)}>
+              <Copy className="mr-2 h-4 w-4 text-gray-500" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => duplicateLandingPage(item, true)}>
+              <FileText className="mr-2 h-4 w-4 text-gray-500" />
+              Duplicate & Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleManageDomain(item)}>
+              <Globe className="mr-2 h-4 w-4 text-gray-500" />
+              Manage Domain
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleDeleteClick(item.id)}
@@ -294,73 +366,6 @@ export default function LandingPage() {
       ),
     },
   ];
-
-  // const columns = [
-  //   { key: "title", label: "Title" },
-  //   {
-  //     key: "created_at",
-  //     label: "Created",
-  //     render: (item: any) => formatDate(item.created_at),
-  //   },
-  //   {
-  //     key: "status",
-  //     label: "Status",
-  //     render: (item: any) => (
-  //       <Badge variant={item.isActive ? "success" : "secondary"}>
-  //         {item.isActive ? "Active" : "Inactive"}
-  //       </Badge>
-  //     ),
-  //   },
-  //   {
-  //     key: "actions",
-  //     label: "Actions",
-  //     render: (item: any) => (
-  //       <DropdownMenu>
-  //         <DropdownMenuTrigger asChild>
-  //           <Button
-  //             variant="ghost"
-  //             size="icon"
-  //             className="hover:bg-gray-100 transition"
-  //           >
-  //             <MoreVertical className="h-4 w-4 text-gray-600" />
-  //           </Button>
-  //         </DropdownMenuTrigger>
-  //         <DropdownMenuContent
-  //           align="end"
-  //           className="shadow-md rounded-lg bg-white"
-  //         >
-  //           {/* <DropdownMenuItem onClick={() => handleEditLandingPage(item)> */}
-  //           <DropdownMenuItem>
-  //             <Pencil className="mr-2 h-4 w-4 text-gray-500" />
-  //             Edit
-  //           </DropdownMenuItem>
-  //           {/* <DropdownMenuItem onClick={() => handleShareLandingPage(item)> */}
-  //           <DropdownMenuItem>
-  //             <Share2 className="mr-2 h-4 w-4 text-gray-500" />
-  //             Share
-  //           </DropdownMenuItem>
-  //           <DropdownMenuItem onClick={() => handleViewLandingPage(item)}>
-  //             <Eye className="mr-2 h-4 w-4 text-gray-500" />
-  //             View
-  //           </DropdownMenuItem>
-  //           <DropdownMenuItem
-  //             onClick={() => handleViewLandingPageSubmision(item)}
-  //           >
-  //             <FileText className="mr-2 h-4 w-4 text-gray-500" />
-  //             Submissions
-  //           </DropdownMenuItem>
-  //           <DropdownMenuItem
-  //             onClick={() => deleteLandingPage(item.id)}
-  //             className="text-red-500 hover:bg-red-100"
-  //           >
-  //             <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-  //             Delete
-  //           </DropdownMenuItem>
-  //         </DropdownMenuContent>
-  //       </DropdownMenu>
-  //     ),
-  //   },
-  // ];
 
   async function deleteLandingPage(id: string) {
     try {
@@ -446,23 +451,6 @@ export default function LandingPage() {
     }
   };
 
-  const handleUseTemplate = (template: any) => {
-    router.push("/dashboard/landing/edit");
-    console.log(template);
-  };
-
-  const handlePreviewLandingPage = async (landingPage: any) => {
-    try {
-      // For better UX, we could fetch the latest version
-      // but in this case we'll just use the data we already have
-      setPreviewContent(landingPage);
-      setPreviewDialogOpen(true);
-    } catch (error) {
-      console.error("Error loading landing page preview:", error);
-    }
-  };
-
-  // Add this function to handle domain management
   const handleManageDomain = async (landingPage: any) => {
     try {
       // Fetch the latest version of the landing page for domain management
@@ -480,7 +468,6 @@ export default function LandingPage() {
     }
   };
 
-  // Function to save domain settings
   const handleSaveDomainSettings = async (updatedContent: any) => {
     try {
       // Make sure we have a selected landing page
@@ -512,25 +499,22 @@ export default function LandingPage() {
     }
   };
 
-  // Replace the existing button click handlers with this function
-  const handleCreateLandingPage = () => {
+  const handleCreateLandingPage = (templateId?: string) => {
     if (usedPages >= totalPagesAllowed) {
       setLimitReachedDialogOpen(true);
       return;
     }
 
-    // If under the limit, proceed to the create page
-    router.push("/dashboard/landing/edit?id=new");
+    // If under the limit, proceed to the create page with template parameter
+    const templateParam = templateId ? `&template=${templateId}` : "";
+    router.push(`/dashboard/landing/edit?id=new${templateParam}`);
   };
 
-  // Add this inside your LandingPage component, before the return statement
-  // For example, add it near handleCreateLandingPage or other handlers
   const handleDeleteClick = (id: string) => {
     setLandingPageToDelete(id);
     setDeleteDialogOpen(true);
   };
 
-  // Add this function to shorten URLs
   const shortenUrl = async () => {
     setIsShorteningUrl(true);
     setShortUrlError("");
@@ -563,336 +547,464 @@ export default function LandingPage() {
     }
   };
 
+  // New handler function for duplicating landing pages
+  const duplicateLandingPage = async (
+    landingPage: any,
+    redirectToEdit: boolean = false
+  ) => {
+    // Check if user has reached their limit
+    if (usedPages >= totalPagesAllowed) {
+      setLimitReachedDialogOpen(true);
+      return;
+    }
+
+    try {
+      // Clone the landing page data and modify necessary fields
+      const duplicatedLandingPage = {
+        ...landingPage,
+        title: `${landingPage.title}_copy`,
+        id: undefined, // Remove ID so a new one is generated
+        created_at: new Date().toISOString(), // Set current date as creation date
+      };
+
+      // Create the new landing page
+      const response = await fetch("/api/landings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(duplicatedLandingPage),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to duplicate landing page");
+      }
+
+      const newLandingPage = await response.json();
+
+      // Instead of refetching all landing pages, just add the new one to the state
+      setLandingPages((prevPages) => {
+        // Add the new landing page and sort by created_at (newest first)
+        const updatedPages = [newLandingPage, ...prevPages];
+        return updatedPages.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+
+      // Show success message
+      toast.success("Landing page duplicated successfully");
+
+      // If redirectToEdit is true, navigate to the edit page for the new landing page
+      if (redirectToEdit) {
+        router.push(`/dashboard/landing/edit?id=${newLandingPage.id}`);
+      }
+    } catch (error) {
+      console.error("Error duplicating landing page:", error);
+      toast.error("Failed to duplicate landing page");
+    }
+  };
+
+  const handleGenerateAITemplate = async (promptFromDialog) => {
+    if (!promptFromDialog.trim()) return;
+
+    // Save the prompt from dialog to parent state
+    setAiPrompt(promptFromDialog);
+
+    // Close both dialogs first, then show loading overlay
+    setAIGeneratorDialogOpen(false);
+    setTemplateDialogOpen(false); // Add this line to ensure templates dialog is closed too
+
+    // Short delay to allow dialog animation to complete
+    setTimeout(() => {
+      setIsGenerating(true);
+
+      // Pass the prompt to generateTemplate
+      generateTemplate(promptFromDialog);
+    }, 300);
+  };
+
+  // Update generateTemplate to accept the prompt parameter
+  const generateTemplate = async (prompt) => {
+    try {
+      const response = await fetch("/api/ai/landing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const landingPageData = await response.json();
+      landingPageData.sections = await addImagePlaceholders(
+        landingPageData.sections
+      );
+      await createNewLandingPageFromAI(landingPageData);
+    } catch (error) {
+      console.error("Error generating AI template:", error);
+      toast.error("Failed to generate template. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Add helper functions
+  async function addImagePlaceholders(sections) {
+    // For each section with an image property that's empty, add a placeholder image
+    for (const section of sections) {
+      if (section.content && section.content.image === "") {
+        let query = "";
+
+        // Generate appropriate image search term based on section content
+        if (section.type === "hero") {
+          query =
+            section.content.heading?.split(" ").slice(0, 3).join(" ") ||
+            "business";
+        } else if (section.type === "content") {
+          query =
+            section.content.heading?.split(" ").slice(0, 2).join(" ") ||
+            "office";
+        }
+
+        try {
+          // Try Unsplash first
+          const unsplashResponse = await fetch(
+            `/api/unsplash/search?query=${encodeURIComponent(query)}&per_page=1`
+          );
+          if (unsplashResponse.ok) {
+            const unsplashData = await unsplashResponse.json();
+            if (unsplashData.results?.length > 0) {
+              section.content.image = unsplashData.results[0].urls.regular;
+              continue;
+            }
+          }
+
+          // Fall back to Pexels if Unsplash fails
+          const pexelsResponse = await fetch(
+            `/api/pexels/search?query=${encodeURIComponent(query)}&per_page=1`
+          );
+          if (pexelsResponse.ok) {
+            const pexelsData = await pexelsResponse.json();
+            if (pexelsData.photos?.length > 0) {
+              section.content.image = pexelsData.photos[0].src.large;
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching image:", error);
+        }
+      }
+    }
+
+    return sections;
+  }
+
+  async function createNewLandingPageFromAI(landingPageData) {
+    try {
+      // First, get the current user
+      const { getCurrentUser } = await import("@/app/actions");
+      const currentUser = await getCurrentUser();
+
+      if (!currentUser) {
+        toast.error("User authentication required");
+        router.push("/login");
+        return;
+      }
+
+      // Create a complete landing page data object
+      const completeData = {
+        user_id: currentUser.id,
+        title: landingPageData.title || "AI Generated Landing Page",
+        description:
+          landingPageData.description || "Created with AI assistance",
+        sections: landingPageData.sections || [],
+        styles: landingPageData.styles || {
+          theme: "modern",
+          fontFamily: "Inter",
+          colors: {
+            primary: "#7c3aed",
+            background: "#ffffff",
+            text: "#1f2937",
+          },
+        },
+        domain: {
+          subdomain: "",
+          custom: "",
+          status: "unverified",
+        },
+        isactive: false,
+      };
+
+      // Redirect to the editor with this data
+      // We'll use localStorage to temporarily store the data
+      localStorage.setItem(
+        "aiGeneratedLandingPage",
+        JSON.stringify(completeData)
+      );
+
+      // Close the dialog and redirect
+      setAIGeneratorDialogOpen(false);
+      router.push(`/dashboard/landing/edit?id=new&source=ai`);
+    } catch (error) {
+      console.error("Error creating landing page from AI:", error);
+      toast.error("Failed to create landing page");
+    }
+  }
+
+  // Helper function: format detail date with ordinal suffix
+  const formatDetailDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+
+    // Add ordinal suffix to day
+    const day = date.getDate();
+    const suffix = (day) => {
+      if (day > 3 && day < 21) return "th";
+      switch (day % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    };
+
+    // Format as "6th Feb, 2025"
+    return `${day}${suffix(day)} ${date.toLocaleString("en-US", {
+      month: "short",
+    })}, ${date.getFullYear()}`;
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
       <DashboardSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar />
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* Header section */}
+            <div className="flex items-center justify-between flex-shrink-0">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                   Landing Pages
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Create and manage your landing pages.
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Templates
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                      <DialogTitle>Choose a Template</DialogTitle>
-                      <DialogDescription>
-                        Start with a pre-built landing page template or create
-                        from scratch.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4 md:grid-cols-2 lg:grid-cols-3">
-                      {landingTemplates.map((template) => {
-                        const Icon = template.icon;
-                        return (
-                          <Card
-                            key={template.id}
-                            className="cursor-pointer transition-all hover:scale-105"
-                            onClick={handleCreateLandingPage}
-                          >
-                            <CardHeader>
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-5 w-5" />
-                                <CardTitle className="text-lg">
-                                  {template.title}
-                                </CardTitle>
-                              </div>
-                              <CardDescription>
-                                {template.description}
-                              </CardDescription>
-                            </CardHeader>
-                          </Card>
-                        );
-                      })}
-                      <Card
-                        className="cursor-pointer transition-all hover:scale-105"
-                        onClick={() =>
-                          router.push("/dashboard/landing/edit?id=new")
-                        }
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => fetchLandingPagesData()}
+                          variant="outline"
+                          className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-800"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCcw className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        align="center"
+                        className="bg-gray-800 text-white text-xs px-3 py-2"
                       >
-                        <CardHeader>
-                          <div className="flex items-center gap-2">
-                            <Plus className="h-5 w-5" />
-                            <CardTitle className="text-lg">
-                              Blank Page
-                            </CardTitle>
-                          </div>
-                          <CardDescription>
-                            Start from scratch with a blank landing page
-                          </CardDescription>
-                        </CardHeader>
+                        <p>Reload landing pages</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="inline-block">
+                          <Button
+                            onClick={() => setTemplateDialogOpen(true)}
+                            disabled={usedPages >= totalPagesAllowed}
+                            className={`bg-blue-600 hover:bg-blue-700 text-white shadow-md ${
+                              usedPages >= totalPagesAllowed
+                                ? "opacity-70 cursor-not-allowed"
+                                : ""
+                            }`}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      {usedPages >= totalPagesAllowed && (
+                        <TooltipContent
+                          side="top"
+                          align="center"
+                          className="bg-gray-800 text-white text-xs px-3 py-2 z-[9999]"
+                        >
+                          <p>You've reached your limit of 10 landing pages</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-2 w-36 h-12 flex flex-col justify-center cursor-help">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                            {usedPages}/{totalPagesAllowed}
+                          </span>
+                          {usedPages >= totalPagesAllowed && (
+                            <span className="text-xs bg-red-100 text-red-600 font-medium px-1.5 py-0.5 rounded-full">
+                              Limit
+                            </span>
+                          )}
+                        </div>
+                        <Progress
+                          value={progressValue}
+                          className={`w-full mt-1 h-2 bg-gray-200 dark:bg-gray-700 ${
+                            usedPages >= totalPagesAllowed
+                              ? "[&>div]:bg-red-500 dark:[&>div]:bg-red-600"
+                              : "[&>div]:bg-blue-600 dark:[&>div]:bg-blue-500"
+                          }`}
+                        />
                       </Card>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  onClick={handleCreateLandingPage}
-                  disabled={usedPages >= totalPagesAllowed}
-                  variant={
-                    usedPages >= totalPagesAllowed ? "outline" : "default"
-                  }
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {usedPages >= totalPagesAllowed
-                    ? "Page Limit Reached"
-                    : "Create New Landing Page"}
-                </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      align="center"
+                      className="bg-gray-800 text-white text-xs px-3 py-2 max-w-xs"
+                    >
+                      <p>
+                        You are using {usedPages} out of {totalPagesAllowed}{" "}
+                        available landing pages on your current plan.{" "}
+                        {usedPages >= totalPagesAllowed
+                          ? "You've reached your limit."
+                          : `You can create ${
+                              totalPagesAllowed - usedPages
+                            } more landing pages.`}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 
-            {/* Usage Card */}
-            <Card className="bg-gray-50 border-none shadow-sm rounded-lg p-4 max-w-sm">
-              <CardHeader>
-                <CardTitle className="text-gray-900 text-lg">Usage</CardTitle>
-                <CardDescription className="text-gray-600">
-                  {usedPages} of {totalPagesAllowed} landing pages used
-                  {usedPages === totalPagesAllowed && (
-                    <span className="text-amber-600 mt-1 text-sm block">
-                      You've reached your plan limit. Oldest pages are preserved
-                      if you exceed this limit.
-                    </span>
-                  )}
-                </CardDescription>
-                <Progress value={progressValue} className="mt-2 bg-gray-300" />
-              </CardHeader>
-            </Card>
-
-            {/* Landing Pages List */}
-            <Card className="bg-white border-none shadow-sm rounded-lg p-4">
-              <CardHeader>
-                <CardTitle className="text-gray-900 text-xl">
-                  Your Landing Pages
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable
-                  data={LandingPages || []}
-                  columns={columns}
-                  filters={filters}
-                  itemsPerPage={10}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Share Dialog */}
-            <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Share Landing Page</DialogTitle>
-                  <DialogDescription>
-                    Use the link below to share the landing page or generate its
-                    QR code.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex items-center space-x-2 mt-4">
-                  <input
-                    type="text"
-                    value={shortUrl || shareLink}
-                    readOnly
-                    className="flex-1 border border-gray-300 rounded px-3 py-2"
-                  />
-                  <Button onClick={handleCopy} variant="outline">
-                    <Copy
-                      className={copied ? "text-green-500" : "text-gray-500"}
-                    />
-                    <span className="sr-only">Copy link</span>
-                  </Button>
+            {/* Content Area: Loading or Landing Pages List */}
+            <div>
+              {isLoading ? (
+                // --- Loading Indicator ---
+                <div className="flex justify-center items-center h-64 pt-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">
+                    Loading landing pages...
+                  </span>
                 </div>
-                {shortUrlError && (
-                  <p className="text-sm text-red-500 mt-1">{shortUrlError}</p>
-                )}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    onClick={shortenUrl}
-                    variant="outline"
-                    disabled={isShorteningUrl || !!shortUrl}
-                    className="flex-1"
-                  >
-                    {isShorteningUrl ? (
-                      <>Shortening...</>
-                    ) : (
-                      <>
-                        <Link2 className="mr-2 h-4 w-4" />
-                        Shorten URL
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => setShowQRCode(!showQRCode)}
-                    variant="secondary"
-                    className="flex-1"
-                  >
-                    {showQRCode ? "Hide QR Code" : "Generate QR Code"}
-                    <QrCode className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-                {showQRCode && (
-                  <div className="mt-4 flex flex-col items-center">
-                    <div ref={qrCodeRef}>
-                      <QRCodeSVG
-                        value={shortUrl || shareLink}
-                        style={{ width: 128, height: 128 }}
-                      />
-                    </div>
-                    <Button
-                      onClick={downloadQRCode}
-                      variant="outline"
-                      className="mt-2"
-                    >
-                      Download QR Code
-                    </Button>
-                  </div>
-                )}
-                <DialogClose asChild>
-                  <Button variant="ghost" className="mt-4 w-full">
-                    Close
-                  </Button>
-                </DialogClose>
-              </DialogContent>
-            </Dialog>
-
-            {/* Preview Dialog */}
-            <Dialog
-              open={previewDialogOpen}
-              onOpenChange={setPreviewDialogOpen}
-            >
-              <DialogContent className="max-w-5xl h-[80vh]">
-                <DialogHeader>
-                  <DialogTitle>Landing Page Preview</DialogTitle>
-                  <DialogDescription>
-                    Preview how your landing page will appear to visitors
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex-1 overflow-auto mt-4 border rounded-md">
-                  {previewContent && (
-                    <LandingPreview content={previewContent} />
-                  )}
-                </div>
-                <DialogClose asChild>
-                  <Button variant="ghost" className="mt-4 w-full">
-                    Close
-                  </Button>
-                </DialogClose>
-              </DialogContent>
-            </Dialog>
-
-            {/* Domain Management Dialog */}
-            <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
-              <DialogContent className="max-w-3xl max-h-[70vh] overflow-hidden flex flex-col">
-                <DialogHeader className="flex-shrink-0">
-                  <DialogTitle>Manage Domain Settings</DialogTitle>
-                  <DialogDescription>
-                    Configure the domain settings for your landing page
-                  </DialogDescription>
-                </DialogHeader>
-                {selectedLandingPage && (
-                  <div className="mt-4 overflow-y-auto flex-grow">
-                    <DomainSettings
-                      content={selectedLandingPage}
-                      setContent={(updatedContent) => {
-                        // ONLY update the local state, don't save to database yet
-                        setSelectedLandingPage(updatedContent);
-                      }}
+              ) : (
+                // --- Landing Pages List ---
+                <Card className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg p-4 w-full">
+                  <div>
+                    {/* Using the forms DataTable component instead of the shared one */}
+                    <DataTable
+                      data={LandingPages || []}
+                      columns={columns}
+                      filters={filters}
+                      itemsPerPage={5}
                     />
                   </div>
-                )}
-                <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                  </DialogClose>
-                  <Button
-                    onClick={() =>
-                      handleSaveDomainSettings(selectedLandingPage)
-                    }
-                    disabled={!selectedLandingPage}
-                  >
-                    Save Changes
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Limit Reached Dialog */}
-            <Dialog
-              open={limitReachedDialogOpen}
-              onOpenChange={setLimitReachedDialogOpen}
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Landing Page Limit Reached</DialogTitle>
-                  <DialogDescription>
-                    You have used all 10 free landing pages available on your
-                    current plan.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <p>To create more landing pages, you can:</p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>Delete existing landing pages you no longer need</li>
-                    <li>
-                      Upgrade to a premium plan for unlimited landing pages
-                    </li>
-                  </ul>
-                </div>
-                <DialogClose asChild>
-                  <Button variant="ghost" className="mt-4 w-full flex-shrink-0">
-                    Close
-                  </Button>
-                </DialogClose>
-              </DialogContent>
-            </Dialog>
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Confirm Deletion</DialogTitle>
-                  <DialogDescription>
-                    Are you sure you want to delete this landing page? This
-                    action cannot be undone.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setDeleteDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() =>
-                      landingPageToDelete &&
-                      deleteLandingPage(landingPageToDelete)
-                    }
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </Card>
+              )}
+            </div>
           </div>
-        </div>
+        </main>
+
+        {/* Replace all dialog components with the imported ones */}
+        <ShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          shareLink={shareLink}
+        />
+
+        <TemplateDialog
+          open={templateDialogOpen}
+          onOpenChange={setTemplateDialogOpen}
+          onSelectTemplate={handleCreateLandingPage}
+          onOpenAIGenerator={() => {
+            setTemplateDialogOpen(false);
+            setAIGeneratorDialogOpen(true);
+          }}
+        />
+
+        <PreviewDialog
+          open={previewDialogOpen}
+          onOpenChange={setPreviewDialogOpen}
+          content={previewContent}
+          onEdit={(id) => {
+            setPreviewDialogOpen(false);
+            router.push(`/dashboard/landing/edit?id=${id}`);
+          }}
+          onShare={handleShareLandingPage}
+        />
+
+        <DomainManagementDialog
+          open={domainDialogOpen}
+          onOpenChange={setDomainDialogOpen}
+          landingPage={selectedLandingPage}
+          onSave={handleSaveDomainSettings}
+        />
+
+        <LimitReachedDialog
+          open={limitReachedDialogOpen}
+          onOpenChange={setLimitReachedDialogOpen}
+        />
+
+        <DeleteConfirmationDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onDelete={async () => {
+            if (landingPageToDelete) {
+              await deleteLandingPage(landingPageToDelete);
+              setLandingPageToDelete("");
+            }
+          }}
+        />
+
+        <AIGeneratorDialog
+          open={AIGeneratorDialogOpen}
+          onOpenChange={setAIGeneratorDialogOpen}
+          onGenerate={handleGenerateAITemplate}
+        />
+
+        <LandingPageDetailsDialog
+          open={detailsDialogOpen}
+          onOpenChange={setDetailsDialogOpen}
+          content={detailsContent}
+          onPreview={(content) => {
+            setDetailsDialogOpen(false);
+            setPreviewContent(content);
+            setPreviewDialogOpen(true);
+          }}
+          onEdit={(id) => {
+            router.push(`/dashboard/landing/edit?id=${id}`);
+          }}
+        />
+
+        <AILoadingOverlay isVisible={isGenerating} />
       </div>
     </div>
   );
 }
 
-// Add this function with your other functions
+// Helper function for deleting excess landing pages
 async function deleteExcessLandingPages(pagesToDelete: any[]) {
   try {
     // Delete each excess landing page one by one
@@ -911,3 +1023,55 @@ async function deleteExcessLandingPages(pagesToDelete: any[]) {
     return false;
   }
 }
+
+<style jsx global>{`
+  @keyframes magic-float {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateY(-30px) scale(0);
+      opacity: 0;
+    }
+  }
+
+  @keyframes gradient-x {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-magic-float {
+    animation: magic-float 2s ease-out forwards;
+  }
+
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 3s ease infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease forwards;
+  }
+`}</style>;

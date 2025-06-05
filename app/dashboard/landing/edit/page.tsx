@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { landingTemplates } from "@/components/landing/templates/landing-templates"; // Move this import up
 import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
@@ -21,7 +22,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Paintbrush, Globe, Save, Settings } from "lucide-react";
+import {
+  ArrowLeft,
+  Paintbrush,
+  Globe,
+  Save,
+  Settings,
+  Loader2,
+  Smartphone,
+  Tablet,
+  Monitor,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getCurrentUser } from "@/app/actions";
 
@@ -29,10 +40,16 @@ export default function EditLandingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pageId = searchParams.get("id") || "new";
+  const templateId = searchParams.get("template");
+
   const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [landingPages, setLandingPages] = useState([]);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [previewMode, setPreviewMode] = useState<
+    "mobile" | "tablet" | "desktop"
+  >("desktop");
+  const [isSaving, setIsSaving] = useState(false); // Add a new state for tracking save operation
 
   const [content, setContent] = useState({
     title: "Product Launch Landing Page",
@@ -92,30 +109,82 @@ export default function EditLandingPage() {
 
   // Fetch current user and landing page data on component mount
   useEffect(() => {
-    async function initialize() {
-      await fetchUser();
+    let mounted = true;
 
-      // If creating a new page, check the limit first
-      if (pageId === "new") {
-        const canCreate = await checkPageLimit();
-        if (!canCreate) {
-          toast.error("You have reached your limit of 10 free landing pages.");
-          router.push("/dashboard/landing");
-          return;
+    async function initialize() {
+      try {
+        const userId = await fetchUser();
+
+        // Only continue if component is still mounted
+        if (!mounted) return;
+
+        // Check if this is an AI-generated landing page from localStorage
+        const sourceParam = searchParams.get("source");
+        if (sourceParam === "ai" && pageId === "new") {
+          try {
+            const aiGeneratedData = localStorage.getItem(
+              "aiGeneratedLandingPage"
+            );
+            if (aiGeneratedData) {
+              const parsedData = JSON.parse(aiGeneratedData);
+              setContent(parsedData);
+              // Clear the localStorage after loading
+              localStorage.removeItem("aiGeneratedLandingPage");
+              setIsLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.error("Error loading AI-generated data:", err);
+          }
+        }
+
+        // If creating a new page, check the limit first
+        if (pageId === "new") {
+          const canCreate = await checkPageLimit();
+          if (!canCreate && mounted) {
+            toast.error(
+              "You have reached your limit of 10 free landing pages."
+            );
+            router.push("/dashboard/landing");
+            return;
+          }
+        }
+
+        // If editing an existing page, fetch its data
+        if (pageId !== "new") {
+          await fetchLandingPage(pageId);
+        }
+
+        // If creating a new page with a template
+        if (pageId === "new" && templateId) {
+          // Find the template in landingTemplates
+          const selectedTemplate = landingTemplates.find(
+            (t) => t.id === templateId
+          );
+          if (selectedTemplate) {
+            // Use the template data instead of default
+            setContent(selectedTemplate.template);
+          }
+        }
+      } catch (error) {
+        console.error("Initialization error:", error);
+        if (mounted) {
+          toast.error("Error loading page editor");
+        }
+      } finally {
+        // Only update loading state if still mounted
+        if (mounted) {
+          setIsLoading(false);
         }
       }
-
-      // If editing an existing page, fetch its data
-      if (pageId !== "new") {
-        fetchLandingPage(pageId);
-      }
-
-      // Fetch landing pages data for the user
-      fetchLandingPagesData();
     }
 
     initialize();
-  }, [pageId]);
+
+    return () => {
+      mounted = false; // Cleanup to prevent state updates after unmount
+    };
+  }, [pageId, templateId]);
 
   async function fetchUser() {
     try {
@@ -158,28 +227,11 @@ export default function EditLandingPage() {
     }
   }
 
-  async function fetchLandingPagesData() {
-    try {
-      // Get the current user first
-      const currentUser = await getCurrentUser();
-      if (!currentUser) {
-        console.error("No authenticated user found");
-        return;
-      }
-
-      // Fetch only this user's landing pages
-      const response = await fetch(`/api/landings?user_id=${currentUser.id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch landing pages");
-      }
-
-      const data = await response.json();
-      setLandingPages(data);
-    } catch (error) {
-      console.error("Error fetching landing pages:", error);
-      setLandingPages([]);
-    }
-  }
+  // // Update the fetchLandingPagesData function to only run when needed
+  // // async function fetchLandingPagesData() {
+  //   // Remove this function or only call it when actually needed
+  //   // It's unnecessary to fetch all landing pages when editing a single page
+  // //}
 
   // Add this function to check the page limit
   async function checkPageLimit() {
@@ -200,7 +252,7 @@ export default function EditLandingPage() {
 
   const handleSave = async () => {
     try {
-      setIsLoading(true);
+      setIsSaving(true); // Use this instead of isLoading for save operations
 
       // Get user ID, either from state or by fetching it
       let userIdentifier = userId;
@@ -252,9 +304,13 @@ export default function EditLandingPage() {
       const savedPage = await response.json();
       console.log("Save successful:", savedPage);
 
-      // If it was a new page, redirect to edit with the new ID
+      // If it was a new page, update the URL without full page reload
       if (pageId === "new") {
-        router.push(`/dashboard/landing/edit?id=${savedPage.id}`);
+        router.replace(`/dashboard/landing/edit?id=${savedPage.id}`, {
+          scroll: false,
+        });
+        // Update page ID in memory
+        // pageId = savedPage.id;
       }
 
       toast.success("Landing page saved successfully!");
@@ -262,88 +318,209 @@ export default function EditLandingPage() {
       console.error("Save error:", error);
       toast.error("Error saving landing page");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false); // Reset saving state instead of loading state
     }
   };
 
+  // --- Render Logic ---
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-full">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-lg">Loading Landing Page Builder...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-[calc(100vh-4rem)]">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSizePercentage={40} minSizePercentage={30}>
-          <Tabs defaultValue="editor">
-            <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="container flex h-14 items-center justify-between">
-                <TabsList>
-                  <TabsTrigger
-                    value="editor"
-                    className="flex items-center gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Editor
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="styles"
-                    className="flex items-center gap-2"
-                  >
-                    <Paintbrush className="h-4 w-4" />
-                    Styles
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="domain"
-                    className="flex items-center gap-2"
-                  >
-                    <Globe className="h-4 w-4" />
-                    Domain
-                  </TabsTrigger>
-                </TabsList>
-                <div className="flex items-center gap-2">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+      {/* Use h-screen instead of min-h-screen to ensure exact viewport height */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Main content container - must be flex-1 and overflow-hidden */}
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {/* Left panel - Editor */}
+          <ResizablePanel
+            defaultSizePercentage={40}
+            minSizePercentage={38}
+            maxSizePercentage={45}
+            className="flex flex-col"
+          >
+            <Tabs defaultValue="editor" className="flex flex-col h-full">
+              {/* Header stays fixed */}
+              <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+                <div className="container flex h-14 items-center">
+                  {/* Grid layout stays the same */}
+                  <div className="grid grid-cols-3 w-full items-center">
+                    <div className="flex justify-start">
+                      {/* Left content */}
+                    </div>
+                    <div className="flex justify-center">
+                      <TabsList>
+                        {/* TabsTriggers remain the same */}
+                        <TabsTrigger
+                          value="editor"
+                          className="flex items-center gap-2"
+                        >
+                          <Settings className="h-4 w-4" />
+                          Editor
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="styles"
+                          className="flex items-center gap-2"
+                        >
+                          <Paintbrush className="h-4 w-4" />
+                          Styles
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="domain"
+                          className="flex items-center gap-2"
+                        >
+                          <Globe className="h-4 w-4" />
+                          Domain
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      {/* Action buttons remain the same */}
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowExitDialog(true)}
+                        disabled={isSaving}
+                        className="bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="default"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="flex items-center justify-center gap-1"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" />
+                            <span>Save</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Each tab content gets its own scrollable area */}
+              <TabsContent
+                value="editor"
+                className="flex-1 overflow-hidden" // Use flex-1 instead of flex-grow
+              >
+                <div className="h-full overflow-y-auto">
+                  <LandingEditor content={content} setContent={setContent} />
+                </div>
+              </TabsContent>
+              <TabsContent
+                value="styles"
+                className="flex-1 overflow-hidden" // Use flex-1 instead of flex-grow
+              >
+                <div className="h-full overflow-y-auto">
+                  <LandingStyles content={content} setContent={setContent} />
+                </div>
+              </TabsContent>
+              <TabsContent
+                value="domain"
+                className="flex-1 overflow-hidden" // Use flex-1 instead of flex-grow
+              >
+                <div className="h-full overflow-y-auto">
+                  <DomainSettings content={content} setContent={setContent} />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </ResizablePanel>
+
+          <ResizableHandle />
+
+          {/* Right panel - Preview */}
+          <ResizablePanel
+            defaultSizePercentage={60}
+            minSizePercentage={50}
+            maxSizePercentage={70}
+            className="flex flex-col"
+          >
+            <div className="h-full flex flex-col">
+              {/* Preview control header stays fixed */}
+              <div className="flex justify-center border-b p-2 flex-shrink-0">
+                <div className="flex bg-gray-100 p-1 rounded-md">
                   <Button
-                    variant="outline"
-                    onClick={() => setShowExitDialog(true)}
+                    variant={previewMode === "mobile" ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => setPreviewMode("mobile")}
+                    className="h-8 w-8"
+                    aria-label="Mobile view"
                   >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
+                    <Smartphone className="h-4 w-4" />
                   </Button>
-                  <Button onClick={handleSave} disabled={isLoading}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {isLoading ? "Saving..." : "Save Page"}
+                  <Button
+                    variant={previewMode === "tablet" ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => setPreviewMode("tablet")}
+                    className="h-8 w-8"
+                    aria-label="Tablet view"
+                  >
+                    <Tablet className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={previewMode === "desktop" ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => setPreviewMode("desktop")}
+                    className="h-8 w-8"
+                    aria-label="Desktop view"
+                  >
+                    <Monitor className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            </div>
-            <TabsContent value="editor" className="h-[calc(100vh-8rem)]">
-              <LandingEditor content={content} setContent={setContent} />
-            </TabsContent>
-            <TabsContent value="styles" className="h-[calc(100vh-8rem)]">
-              <LandingStyles content={content} setContent={setContent} />
-            </TabsContent>
-            <TabsContent value="domain" className="h-[calc(100vh-8rem)]">
-              <DomainSettings content={content} setContent={setContent} />
-            </TabsContent>
-          </Tabs>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={60}>
-          <LandingPreview content={content} />
-        </ResizablePanel>
-      </ResizablePanelGroup>
 
-      {/* Add the exit confirmation dialog */}
+              {/* Preview content area gets its own scrollbar */}
+              <div className="flex-1 overflow-hidden flex justify-center">
+                <div
+                  className={`h-full transition-all duration-300 overflow-y-auto ${
+                    previewMode === "mobile"
+                      ? "w-[375px] border-x shadow-md"
+                      : previewMode === "tablet"
+                      ? "w-[768px] border-x shadow-md"
+                      : "w-full"
+                  }`}
+                >
+                  <LandingPreview content={content} />
+                </div>
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+
+      {/* Exit confirmation dialog */}
       <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Leave page?</DialogTitle>
+            <DialogTitle>Exit Editor</DialogTitle>
             <DialogDescription>
-              Are you sure you want to go back to the dashboard? Any unsaved
-              changes will be lost.
+              Are you sure you want to exit? Any unsaved changes will be lost.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 justify-end mt-4">
             <Button variant="outline" onClick={() => setShowExitDialog(false)}>
-              No, stay here
+              Cancel
             </Button>
-            <Button onClick={() => router.push("/dashboard/landing")}>
-              Yes, go back
+            <Button
+              variant="destructive"
+              onClick={() => router.push("/dashboard/landing")}
+            >
+              Exit Editor
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -206,13 +206,19 @@ export function LandingPreview({ content }: LandingPreviewProps) {
                     {section.content.heading}
                   </h2>
                   <div className="prose max-w-none">
-                    {section.content.body
-                      .split("\n")
-                      .map((paragraph: string, i: number) => (
-                        <p key={i} className="text-muted-foreground">
-                          {paragraph}
-                        </p>
-                      ))}
+                    {section.content.body ? (
+                      section.content.body
+                        .split("\n")
+                        .map((paragraph: string, i: number) => (
+                          <p key={i} className="text-muted-foreground">
+                            {paragraph}
+                          </p>
+                        ))
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Add your content here
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
