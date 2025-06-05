@@ -1353,61 +1353,194 @@ export default function LandingPage() {
           </DialogContent>
         </Dialog>
 
-        {/* AI Generator Dialog - New dialog for AI template generation */}
+        {/* AI Generator Dialog - Enhanced magical version */}
         <Dialog
           open={AIGeneratorDialogOpen}
           onOpenChange={setAIGeneratorDialogOpen}
         >
-          <DialogContent className="bg-gradient-to-br from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent border dark:border-gray-800 max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="dark:text-gray-100">
-                Generate Landing Page with AI
-              </DialogTitle>
-              <DialogDescription className="dark:text-gray-400">
-                Describe your ideal landing page and our AI will create it for
-                you
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-indigo-950/90 dark:via-violet-900/80 dark:to-fuchsia-900/70 border border-purple-200 dark:border-purple-800 shadow-xl overflow-hidden rounded-xl max-w-3xl">
+            {/* Magic sparkles background */}
+            <div className="absolute inset-0 bg-[url('/landing/magic-bg.svg')] bg-repeat opacity-20 dark:opacity-10"></div>
 
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="aiPrompt">Description</Label>
-                <Textarea
-                  id="aiPrompt"
-                  placeholder="Describe what you want in your landing page. For example: 'Create a landing page for a fitness app with features like workout tracking, nutrition planning, and community support. Use bold colors and include testimonials.'"
-                  className="min-h-[120px]"
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                />
-              </div>
+            {/* Animated gradient border */}
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-violet-400 via-fuchsia-300 to-blue-300 dark:from-violet-600 dark:via-fuchsia-500 dark:to-blue-500 opacity-50 dark:opacity-40 animate-pulse"
+              style={{ filter: "blur(50px)" }}
+            ></div>
+
+            {/* GIF decoration */}
+            <div className="absolute -right-8 top-6 w-36 h-36 md:w-48 md:h-48 opacity-90 pointer-events-none">
+              <img
+                src="/landing/Ninjacookiegachaanimation.gif"
+                alt="AI Magic Assistant"
+                className="w-full h-full object-contain"
+              />
             </div>
 
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setAIGeneratorDialogOpen(false)}
-                className="dark:border-gray-700 dark:text-gray-300"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleGenerateAITemplate}
-                disabled={!aiPrompt.trim() || isGenerating}
-                className="relative"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
+            <div className="relative z-10">
+              <DialogHeader className="pb-0">
+                <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 dark:from-violet-400 dark:via-purple-400 dark:to-indigo-400">
+                  ✨ Create Landing Page Magic
+                </DialogTitle>
+                <DialogDescription className="text-purple-700 dark:text-purple-300 text-base mt-1">
+                  Share your vision, and watch as AI transforms it into a
+                  stunning landing page
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-5">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="aiPrompt"
+                    className="text-sm font-medium text-purple-800 dark:text-purple-200 flex items-center gap-2"
+                  >
+                    <div className="relative">
+                      <Sparkles className="h-4 w-4 text-purple-500 animate-pulse" />
+                      <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-fuchsia-400 animate-ping"></span>
+                    </div>
+                    Tell me what to create
+                  </Label>
+
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-300 via-fuchsia-200 to-blue-300 dark:from-violet-600 dark:via-fuchsia-500 dark:to-blue-500 rounded-md -m-0.5 group-focus-within:opacity-100 opacity-70 transition-opacity"></div>
+                    <div
+                      id="sparkle-container"
+                      className="absolute inset-0 pointer-events-none"
+                    ></div>
+
+                    <Textarea
+                      id="aiPrompt"
+                      placeholder="Describe your dream landing page... (e.g. 'A modern SaaS landing page with pricing tiers, customer testimonials, and a sleek hero section with gradient background')"
+                      className="min-h-[150px] resize-none bg-white dark:bg-gray-900 border-0 relative text-purple-900 dark:text-purple-50 placeholder:text-purple-400 dark:placeholder:text-purple-500 transition-colors"
+                      value={aiPrompt}
+                      onChange={(e) => {
+                        setAiPrompt(e.target.value);
+                        // Create sparkle effect on typing
+                        const sparkleContainer =
+                          document.getElementById("sparkle-container");
+                        if (
+                          sparkleContainer &&
+                          e.target.value.length > aiPrompt.length
+                        ) {
+                          const sparkle = document.createElement("div");
+                          const size = Math.random() * 10 + 5;
+                          sparkle.className =
+                            "absolute rounded-full bg-gradient-to-r from-pink-300 to-purple-300 opacity-80 animate-magic-float";
+                          sparkle.style.width = `${size}px`;
+                          sparkle.style.height = `${size}px`;
+                          sparkle.style.filter = "blur(1px)";
+                          sparkle.style.left = `${Math.random() * 100}%`;
+                          sparkle.style.top = `${Math.random() * 100}%`;
+                          sparkleContainer.appendChild(sparkle);
+                          setTimeout(() => sparkle.remove(), 2000);
+                        }
+                      }}
+                      style={{
+                        backgroundImage:
+                          aiPrompt.length > 10
+                            ? "linear-gradient(to right, rgba(255,255,255,0.95), rgba(238,242,255,0.95))"
+                            : "",
+                        transition: "background-image 1s ease",
+                      }}
+                    />
+                  </div>
+
+                  {/* AI prompt suggestions */}
+                  {aiPrompt.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2 animate-fade-in">
+                      <span
+                        onClick={() =>
+                          setAiPrompt(
+                            aiPrompt +
+                              " Include customer testimonials and reviews."
+                          )
+                        }
+                        className="text-xs bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 border border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-300 rounded-full px-3 py-1 cursor-pointer hover:shadow-md transition-all"
+                      >
+                        + Add testimonials
+                      </span>
+                      <span
+                        onClick={() =>
+                          setAiPrompt(
+                            aiPrompt +
+                              " Feature a pricing section with multiple tiers."
+                          )
+                        }
+                        className="text-xs bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 border border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-300 rounded-full px-3 py-1 cursor-pointer hover:shadow-md transition-all"
+                      >
+                        + Add pricing
+                      </span>
+                      <span
+                        onClick={() =>
+                          setAiPrompt(
+                            aiPrompt +
+                              " Include a contact form for user inquiries."
+                          )
+                        }
+                        className="text-xs bg-gradient-to-r from-pink-100 to-blue-100 dark:from-pink-900 dark:to-blue-900 border border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-300 rounded-full px-3 py-1 cursor-pointer hover:shadow-md transition-all"
+                      >
+                        + Add contact form
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* AI usage tips */}
+                <div className="bg-white/60 dark:bg-gray-800/40 rounded-lg p-3 mt-4 border border-purple-100 dark:border-purple-800">
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    <span className="font-medium">✨ Magic Tips:</span> Be
+                    specific about colors, features, and the overall mood. The
+                    more details you provide, the more magical your landing page
+                    will be!
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setAIGeneratorDialogOpen(false)}
+                  className="border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                >
+                  Maybe Later
+                </Button>
+
+                {/* Magical generate button */}
+                <Button
+                  onClick={handleGenerateAITemplate}
+                  disabled={!aiPrompt.trim() || isGenerating}
+                  className="relative overflow-hidden group"
+                  style={{
+                    background: "linear-gradient(to right, #8b5cf6, #ec4899)",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  {/* Animated background effect */}
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 animate-gradient-x"></span>
+
+                  {/* Button content */}
+                  <span className="relative flex items-center">
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Crafting Magic...
+                      </>
+                    ) : (
+                      <>
+                        <span className="relative mr-2">
+                          <Sparkles className="h-4 w-4" />
+                          <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
+                        </span>
+                        Create Magic
+                      </>
+                    )}
+                  </span>
+
+                  {/* Hover effect */}
+                  <span className="absolute -inset-x-2 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform"></span>
+                </Button>
+              </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
 
@@ -1686,3 +1819,55 @@ async function deleteExcessLandingPages(pagesToDelete: any[]) {
     return false;
   }
 }
+
+<style jsx global>{`
+  @keyframes magic-float {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateY(-30px) scale(0);
+      opacity: 0;
+    }
+  }
+
+  @keyframes gradient-x {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-magic-float {
+    animation: magic-float 2s ease-out forwards;
+  }
+
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 3s ease infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease forwards;
+  }
+`}</style>;
