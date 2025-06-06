@@ -10,6 +10,7 @@ export interface ProfileApiResponse {
   avatarUrl: string | null;
   company: string | null; // Assumed to be from user_metadata
   planId: string | null;
+  currentPlan: string | null; // Assuming this is the current plan ID
   subscriptionStatus: string | null;
   currentPeriodEnd: string | null;
   usage: {
@@ -48,6 +49,7 @@ export async function GET(request: Request) {
         full_name,
         avatar_url,
         plan_id,
+        current_plan,
         subscription_status,
         current_period_end,
         links_usage, 
@@ -78,7 +80,7 @@ export async function GET(request: Request) {
       fullName: profileDataFromTable?.full_name || user.user_metadata?.full_name || null,
       avatarUrl: profileDataFromTable?.avatar_url || user.user_metadata?.avatar_url || null,
       company: user.user_metadata?.company || null, // Assuming company comes from user_metadata
-
+      currentPlan: profileDataFromTable?.current_plan || null, // Assuming this is the current plan ID,
       // Fields directly from the 'profiles' table
       planId: profileDataFromTable?.plan_id || null,
       subscriptionStatus: profileDataFromTable?.subscription_status || null,

@@ -1,8 +1,9 @@
-// app/dashboard/profile/page.tsx (or your chosen path)
+// app/dashboard/profile/page.tsx (Updated with subscription management)
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@supabase/supabase-js"; // For client-side auth updates
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,20 +13,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast, Toaster } from "sonner";
 import { User, CreditCard, Shield, Loader2 } from "lucide-react";
-import { ModeToggle } from "@/components/settings/mode-toggle"; // Ensure this path is correct
+import { ModeToggle } from "@/components/settings/mode-toggle";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
+import SubscriptionManagement from "@/components/subscription/subscription-management";
 
-// Initialize Supabase client for client-side operations (like password update)
+// Initialize Supabase client for client-side operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Supabase URL or Anon Key is missing in .env.local for client-side operations.");
-}
-const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+const supabase = createClient();
 
-// Re-define or import this interface if it's in a shared types file
+// Updated interface to include subscription fields
 export interface ProfileApiResponse {
   id: string;
   email: string | undefined;
@@ -33,8 +32,11 @@ export interface ProfileApiResponse {
   avatarUrl: string | null;
   company: string | null;
   planId: string | null;
+  currentPlan: string | null;
   subscriptionStatus: string | null;
   currentPeriodEnd: string | null;
+  stripeCustomerId: string | null;
+  subscriptionId: string | null;
   usage: {
     links: { current: number | null; limit: number | null };
     forms: { current: number | null; limit: number | null };
@@ -46,12 +48,14 @@ export interface ProfileApiResponse {
 // For editable fields in the form
 interface EditableProfileForm {
   fullName: string;
-  email: string; // Email is managed by auth, but displayed
+  email: string;
   avatarUrl: string;
   company: string;
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [profileData, setProfileData] = useState<ProfileApiResponse | null>(null);
   const [editableForm, setEditableForm] = useState<EditableProfileForm>({
     fullName: "",
@@ -68,6 +72,22 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // Handle success/cancel from Stripe checkout
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const canceled = searchParams.get("canceled");
+
+    if (success) {
+      toast.success("Subscription activated successfully!");
+      // Clean up URL
+      router.replace("/dashboard/profile");
+    } else if (canceled) {
+      toast.info("Subscription checkout was canceled.");
+      // Clean up URL
+      router.replace("/dashboard/profile");
+    }
+  }, [searchParams, router]);
+
   const fetchAndSetProfile = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -76,11 +96,10 @@ export default function ProfilePage() {
         const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
         if (response.status === 401) {
           toast.error("Authentication failed. Please log in again.");
-          // Optionally redirect to login: router.push('/login');
         } else {
           toast.error(errorData.error || `HTTP error! Status: ${response.status}`);
         }
-        return; // Stop further execution
+        return;
       }
       const data: ProfileApiResponse = await response.json();
       console.log("Fetched Profile Data:", data);
@@ -88,7 +107,7 @@ export default function ProfilePage() {
       setEditableForm({
         fullName: data.fullName || "",
         email: data.email || "",
-        avatarUrl: data.avatarUrl || "/placeholder-avatar.png", // Provide a fallback
+        avatarUrl: data.avatarUrl || "/placeholder-avatar.png",
         company: data.company || "",
       });
     } catch (error: any) {
@@ -116,11 +135,9 @@ export default function ProfilePage() {
     setIsSaving(true);
 
     try {
-      // 1. Update auth.users user_metadata (for email, name, avatar, company)
       const { error: authUpdateError } = await supabase.auth.updateUser({
         email: editableForm.email,
         data: {
-          // user_metadata
           full_name: editableForm.fullName,
           avatar_url: editableForm.avatarUrl,
           company: editableForm.company,
@@ -128,21 +145,9 @@ export default function ProfilePage() {
       });
       if (authUpdateError) throw authUpdateError;
 
-      // 2. Update public.profiles table (name, avatar_url are now primary)
-      // The API / trigger should handle keeping these in sync if auth changes.
-      // However, explicitly updating here ensures the client sees the change immediately
-      // if there's a slight delay in the trigger or if we want to be very explicit.
-      // For this setup, we rely on the fact that supabase.auth.updateUser
-      // will trigger the database trigger (if set up) to update the profiles table.
-      // Or, if not using an UPDATE trigger, you'd call a specific API endpoint to update the profiles table.
-      // For simplicity here, we assume the user_metadata update is the source of truth for these fields.
-
-      // We *could* also call a specific PUT /api/profile endpoint if we wanted to update profile table specifics.
-      // For now, the updateUser call is enough for the editable fields we have.
-
       setIsEditing(false);
       toast.success("Profile updated successfully!");
-      await fetchAndSetProfile(); // Re-fetch to ensure UI is up-to-date with any backend changes
+      await fetchAndSetProfile();
 
       const {
         data: { user: updatedUser },
@@ -353,7 +358,6 @@ export default function ProfilePage() {
                             variant="outline"
                             onClick={() => {
                               setIsEditing(false);
-                              // Revert form to last fetched state
                               if (profileData) {
                                 setEditableForm({
                                   fullName: profileData.fullName || "",
@@ -381,61 +385,51 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="billing">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Subscription Details</CardTitle>
-                    <CardDescription>View your current plan and billing status.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold">Current Plan:</h4>
-                        <Badge variant={profileData.planId ? "default" : "secondary"}>{profileData.planId || "N/A"}</Badge>
+                <div className="space-y-6">
+                  {/* Current Usage Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Current Usage</CardTitle>
+                      <CardDescription>Your current usage limits and subscription status.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">{profileData.usage.links.current ?? 0}</div>
+                          <div className="text-sm text-muted-foreground">
+                            / {profileData.usage.links.limit === -1 ? "∞" : profileData.usage.links.limit} Links
+                          </div>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">{profileData.usage.forms.current ?? 0}</div>
+                          <div className="text-sm text-muted-foreground">
+                            / {profileData.usage.forms.limit === -1 ? "∞" : profileData.usage.forms.limit} Forms
+                          </div>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-purple-600">{profileData.usage.emails.current ?? 0}</div>
+                          <div className="text-sm text-muted-foreground">
+                            / {profileData.usage.emails.limit === -1 ? "∞" : profileData.usage.emails.limit} Emails
+                          </div>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-orange-600">{profileData.usage.landingPages.current ?? 0}</div>
+                          <div className="text-sm text-muted-foreground">
+                            / {profileData.usage.landingPages.limit === -1 ? "∞" : profileData.usage.landingPages.limit} Pages
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold">Status:</h4>
-                        <Badge variant={profileData.subscriptionStatus === "active" ? "success" : "outline"}>
-                          {profileData.subscriptionStatus || "N/A"}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold">Renews/Ends:</h4>
-                        <span>{formatDate(profileData.currentPeriodEnd)}</span>
-                      </div>
-                    </div>
-                    {/* Display Usage Stats */}
-                    <div className="pt-4">
-                      <h4 className="font-medium text-md mb-2">Current Usage:</h4>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                        <span>Links:</span>
-                        <span className="text-right">
-                          {profileData.usage.links.current ?? 0} / {profileData.usage.links.limit ?? "∞"}
-                        </span>
-                        <span>Forms:</span>
-                        <span className="text-right">
-                          {profileData.usage.forms.current ?? 0} / {profileData.usage.forms.limit ?? "∞"}
-                        </span>
-                        <span>Emails:</span>
-                        <span className="text-right">
-                          {profileData.usage.emails.current ?? 0} / {profileData.usage.emails.limit ?? "∞"}
-                        </span>
-                        <span>Landing Pages:</span>
-                        <span className="text-right">
-                          {profileData.usage.landingPages.current ?? 0} / {profileData.usage.landingPages.limit ?? "∞"}
-                        </span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toast.info("Plan management coming soon via Stripe Portal!")}>
-                      Manage Subscription
-                    </Button>
-                    <p className="text-sm text-muted-foreground">
-                      Your subscription is managed through Stripe. Click above to access the customer portal.
-                    </p>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+
+                  {/* Subscription Management */}
+                  <SubscriptionManagement
+                    currentPlan={profileData.currentPlan}
+                    subscriptionStatus={profileData.subscriptionStatus}
+                    userId={profileData.id}
+                    onSubscriptionChange={fetchAndSetProfile}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="security">
