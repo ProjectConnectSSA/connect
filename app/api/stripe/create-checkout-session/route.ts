@@ -1,24 +1,23 @@
-// app/api/stripe/create-checkout-session/route.ts
+// app/api/stripe/create-checkout-session/route.ts (Corrected)
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/superAdminServer";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-05-28.basil",
+  apiVersion: "2025-05-28.basil", // Use a specific, stable API version
 });
 
 const supabase = supabaseAdmin;
 
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, userId, currentPlan } = await request.json();
+    const { priceId, userId } = await request.json(); // We don't need currentPlan here anymore
 
     if (!priceId || !userId) {
       return NextResponse.json({ error: "Price ID and User ID are required" }, { status: 400 });
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await (await supabase).from("profiles").select("*").eq("id", userId).single();
+    const { data: profile, error: profileError } = await (await supabase).from("profiles").select("stripe_customer_id").eq("id", userId).single();
 
     if (profileError) {
       console.error("Profile fetch error:", profileError);
@@ -27,7 +26,6 @@ export async function POST(request: NextRequest) {
 
     let customerId = profile.stripe_customer_id;
 
-    // Create Stripe customer if doesn't exist
     if (!customerId) {
       const { data: authUser, error: authError } = await (await supabase).auth.admin.getUserById(userId);
 
@@ -44,14 +42,13 @@ export async function POST(request: NextRequest) {
 
       customerId = customer.id;
 
-      // Update profile with Stripe customer ID
-      const { error: updateError } = await (await supabase)
-        .from("profiles")
-        .update({ stripe_customer_id: customerId, current_plan: currentPlan })
-        .eq("id", userId);
+      // IMPORTANT: Only update the customer ID here, not the plan!
+      const { error: updateError } = await (await supabase).from("profiles").update({ stripe_customer_id: customerId }).eq("id", userId);
 
       if (updateError) {
-        console.error("Failed to update customer ID:", updateError);
+        // This is a critical error, might be worth stopping the process
+        console.error("Failed to update profile with Stripe customer ID:", updateError);
+        return NextResponse.json({ error: "Failed to save customer reference" }, { status: 500 });
       }
     }
 
@@ -68,8 +65,10 @@ export async function POST(request: NextRequest) {
       ],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/profile?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/profile?canceled=true`,
+      // Crucial for the webhook to identify the user
       metadata: {
         user_id: userId,
+        price_id: priceId,
       },
     });
 

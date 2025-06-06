@@ -74,7 +74,7 @@ export async function middleware(request: NextRequest) {
   // Protect API routes (except public ones)
   if (pathname.startsWith("/api/")) {
     // Skip auth for public API routes if any
-    const publicApiRoutes = ["/api/public"]; // Add your public API routes here
+    const publicApiRoutes = ["/api/public", "/api/stripe/webhook"]; // Add your public API routes here
     const isPublicApi = publicApiRoutes.some((route) => pathname.startsWith(route));
 
     if (!isPublicApi) {
