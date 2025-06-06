@@ -305,7 +305,7 @@ export default function LandingPage() {
           >
             <DropdownMenuItem onClick={() => handleShareLandingPage(item)}>
               <Share2 className="mr-2 h-4 w-4 text-gray-500" />
-              Share 💖
+              Share
             </DropdownMenuItem>
 
             {/* Add this new dropdown item */}
