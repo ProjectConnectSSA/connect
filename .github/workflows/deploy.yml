@@ -10,31 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.PROD_SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H 69.62.84.91 >> ~/.ssh/known_hosts
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 69.62.84.91 >> ~/.ssh/known_hosts
 
-    - name: SSH and pull latest code with logging and error handling
-      run: |
-        ssh user2@69.62.84.91 << 'EOF'
-          LOG_FILE="/home/user2/tst/deploy.log"
-          echo "---- Deploy at \$(date) ----" >> \$LOG_FILE
+      - name: SSH and pull latest code with logging and error handling
+        run: |
+          ssh user2@69.62.84.91 << 'EOF'
+            LOG_FILE="/home/user2/tst/deploy.log"
+            echo "---- Deploy at \$(date) ----" >> \$LOG_FILE
 
-          cd /home/user2/tst || {
-            echo "Project directory not found" >> \$LOG_FILE
-            exit 1
-          }
+            cd /home/user2/tst || {
+              echo "Project directory not found" >> \$LOG_FILE
+              exit 1
+            }
 
-          git fetch origin >> \$LOG_FILE 2>&1
-          git checkout suresh-publish >> \$LOG_FILE 2>&1
+            git fetch origin >> \$LOG_FILE 2>&1
+            git checkout suresh-publish >> \$LOG_FILE 2>&1
 
-          if ! git pull origin suresh-publish >> \$LOG_FILE 2>&1; then
-            echo "❌ Git pull failed (maybe a merge conflict?)" >> \$LOG_FILE
-            exit 1
-          fi
+            # Use --ff-only if you want a fast-forward only approach (safer but may fail)
+            # Or use --rebase to rebase local changes on top of the remote changes
+            # Or use --no-rebase to merge remote changes with local changes
+            if ! git pull --no-rebase origin suresh-publish >> \$LOG_FILE 2>&1; then
+              echo "❌ Git pull failed (maybe a merge conflict?)" >> \$LOG_FILE
+              exit 1
+            fi
 
-          echo "✅ Deploy finished successfully" >> \$LOG_FILE
-        EOF
+            echo "✅ Deploy finished successfully" >> \$LOG_FILE
+          EOF
