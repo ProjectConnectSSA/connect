@@ -23,7 +23,7 @@ import {
   HardHat,
   DollarSign,
   Gamepad2,
-  Lotus,
+  Wind,
   Leaf,
   Film,
   Trophy,
@@ -3434,7 +3434,8 @@ export const landingTemplates = [
             items: [
               {
                 title: "$25",
-                description: "Provides clean water to a child for an entire year",
+                description:
+                  "Provides clean water to a child for an entire year",
                 icon: "Droplet",
               },
               {
@@ -3655,7 +3656,7 @@ export const landingTemplates = [
               {
                 title: "Wellness Spa",
                 description: "Rejuvenating treatments and facilities",
-                icon: "Lotus",
+                icon: "Wind",
               },
               {
                 title: "Infinity Pools",
@@ -4567,7 +4568,7 @@ export const landingTemplates = [
     title: "Spiritual Center",
     category: "Community", // Explicit category field
     description: "Find peace, community, and spiritual growth",
-    icon: Lotus,
+    icon: Wind,
     iconColor: "text-amber-400",
     image:
       "https://images.unsplash.com/photo-1489659639091-8b687bc4386e?w=800&auto=format&fit=crop",
