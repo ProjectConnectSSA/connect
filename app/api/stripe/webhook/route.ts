@@ -53,6 +53,10 @@ export async function POST(req: NextRequest) {
       .from("profiles")
       .update({
         current_plan: plan.id, // e.g., 'pro'
+        links_usage: plan.limits.links,
+        forms_usage: plan.limits.forms,
+        emails_usage: plan.limits.emails,
+        landing_pages_usage: plan.limits.landingPages,
       })
       .eq("id", userId);
 
