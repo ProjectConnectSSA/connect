@@ -1,347 +1,315 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect } from "react"; // Removed useState, useRef as they are no longer needed for local state/carousel
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ArrowRight } from "lucide-react"; // Changed icons for clarity
+import { toast } from "sonner"; // For potential feedback
+
+// --- Import Immer ---
+import { produce } from "immer"; // Make sure immer is installed
+
+// --- Import Types (Assuming they are in a central location) ---
+// If not, keep the inline definitions but centralizing is better
+import type { Form, Page, ElementType, Condition } from "@/app/types/form"; // Adjust path if needed
 
 interface ConditionBuilderProps {
   form: Form;
-  setForm: (form: Form) => void;
+  setForm: (updatedForm: Form) => void; // Or React.Dispatch<React.SetStateAction<Form>>
 }
 
-interface Condition {
-  id: string;
-  sourcePageId: string;
-  elementId: string;
-  operator: string;
-  value: string;
-  targetPageId: string;
-}
-
-interface Elements {
-  id: string;
-  title: string;
-  styles: {
-    backgroundColor?: string;
-    width?: string;
-    height?: string;
+// --- Helper to Update Form State using Immer ---
+const useUpdateForm = (form: Form, setForm: (updatedForm: Form) => void) => {
+  const updateForm = (updater: (draft: Form) => void) => {
+    try {
+      const nextState = produce(form, updater);
+      if (nextState !== form) {
+        // Only update if Immer produced a new state
+        setForm(nextState);
+      }
+    } catch (e) {
+      console.error("Failed to update form state:", e);
+      toast.error("An error occurred while updating conditions.");
+    }
   };
-  type: string;
-  required: boolean;
-}
-
-interface Pages {
-  id: string;
-  title: string;
-  elements: Elements[];
-  background?: string;
-}
-
-interface Form {
-  title: string;
-  description: string;
-  pages: Pages[];
-  conditions?: Condition[];
-  background?: string;
-  styles?: {
-    width?: string;
-    height?: string;
-    columns?: number;
-  };
-  isActive?: boolean;
-  isMultiPage?: boolean;
-}
+  return updateForm;
+};
 
 export function ConditionBuilder({ form, setForm }: ConditionBuilderProps) {
-  // Ensure conditions is initialized as an array - FIXED: use useState to track conditions
-  const [conditions, setConditions] = useState<Condition[]>(form.conditions || []);
+  // Use the Immer update helper
+  const updateForm = useUpdateForm(form, setForm);
+  const conditions = form.conditions || []; // Directly reference conditions from the form prop
 
-  // Reference to the inner carousel container
-  const carouselRef = useRef<HTMLDivElement>(null);
-  // Track if we can scroll left/right
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  // Update local state whenever form.conditions changes
-  useEffect(() => {
-    setConditions(form.conditions || []);
-  }, [form.conditions]);
-
-  // Returns the elements for a given page id
-  const getElementsForPage = (pageId: string): Elements[] => {
+  // Returns the elements eligible for conditions on a given page id
+  const getElementsForPage = (pageId: string): ElementType[] => {
     if (!pageId) return [];
-
     const page = form.pages.find((p) => p.id === pageId);
-    if (!page) {
-      console.warn(`Page with id ${pageId} not found`);
-      return [];
-    }
-
-    return page.elements || [];
+    if (!page) return [];
+    // Filter elements that can reasonably be used in conditions (e.g., inputs, selects, radios)
+    // Exclude purely display elements like 'image', 'heading', 'button' for conditions
+    return (page.elements || []).filter((el) =>
+      ["text", "select", "radio", "checkbox", "date", "number", "email", "phone", "rating", "yesno"].includes(el.type)
+    );
   };
 
   // Adds a new condition
   const addCondition = () => {
-    // Make sure we have at least one page
-    if (form.pages.length === 0) return;
+    // Ensure there are at least 2 pages to create meaningful navigation logic
+    if (form.pages.length < 2) {
+      toast.error("You need at least two pages to add conditional logic.");
+      return;
+    }
 
-    const firstPage = form.pages[0];
-    const firstElement = firstPage.elements && firstPage.elements.length > 0 ? firstPage.elements[0].id : "";
+    updateForm((draft) => {
+      const firstPage = draft.pages[0];
+      const eligibleElements = getElementsForPage(firstPage.id);
+      const firstElementId = eligibleElements.length > 0 ? eligibleElements[0].id : "";
+      // Default target page to the *next* page if possible
+      const defaultTargetPageId = draft.pages.length > 1 ? draft.pages[1].id : firstPage.id;
 
-    const newCondition: Condition = {
-      id: Date.now().toString(),
-      sourcePageId: firstPage.id,
-      elementId: firstElement,
-      operator: "equals",
-      value: "",
-      targetPageId: form.pages.length > 1 ? form.pages[1].id : firstPage.id,
-    };
-
-    const updatedConditions = [...conditions, newCondition];
-    setForm({ ...form, conditions: updatedConditions });
+      const newCondition: Condition = {
+        id: Date.now().toString(), // Consider uuid for better IDs
+        sourcePageId: firstPage.id,
+        elementId: firstElementId,
+        operator: "equals", // Default operator
+        value: "",
+        targetPageId: defaultTargetPageId,
+      };
+      // Initialize conditions array if it doesn't exist
+      if (!draft.conditions) {
+        draft.conditions = [];
+      }
+      draft.conditions.push(newCondition);
+    });
   };
 
   // Removes a condition by its id
   const removeCondition = (conditionId: string) => {
-    const updatedConditions = conditions.filter((cond) => cond.id !== conditionId);
-    setForm({ ...form, conditions: updatedConditions });
+    updateForm((draft) => {
+      draft.conditions = (draft.conditions || []).filter((cond) => cond.id !== conditionId);
+    });
   };
 
   // Updates a field for a given condition
-  const updateCondition = (conditionId: string, field: keyof Condition, value: string) => {
-    const updatedConditions = conditions.map((cond) => (cond.id === conditionId ? { ...cond, [field]: value } : cond));
-    setForm({ ...form, conditions: updatedConditions });
+  const updateConditionField = (conditionId: string, field: keyof Condition, value: string) => {
+    updateForm((draft) => {
+      const conditionIndex = (draft.conditions || []).findIndex((cond) => cond.id === conditionId);
+      if (conditionIndex !== -1) {
+        // Handle source page change specifically to reset element
+        if (field === "sourcePageId") {
+          const eligibleElements = getElementsForPage(value); // 'value' is the new pageId
+          const defaultElementId = eligibleElements.length > 0 ? eligibleElements[0].id : "";
+          draft.conditions![conditionIndex].sourcePageId = value;
+          draft.conditions![conditionIndex].elementId = defaultElementId; // Reset element
+        } else {
+          // Type assertion needed for dynamic key assignment
+          (draft.conditions![conditionIndex] as any)[field] = value;
+        }
+      }
+    });
   };
 
-  // Special update function for source page to also update element selection
-  const updateSourcePage = (conditionId: string, pageId: string) => {
-    const elementsForPage = getElementsForPage(pageId);
-    const defaultElementId = elementsForPage.length > 0 ? elementsForPage[0].id : "";
-
-    const updatedConditions = conditions.map((cond) =>
-      cond.id === conditionId ? { ...cond, sourcePageId: pageId, elementId: defaultElementId } : cond
-    );
-
-    setForm({ ...form, conditions: updatedConditions });
-  };
-
-  // Scroll functions for the carousel
-  const scrollNext = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: 320, behavior: "smooth" });
-    }
-  };
-
-  const scrollPrev = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -320, behavior: "smooth" });
-    }
-  };
-
-  // Check scroll possibility
-  const checkScrollable = () => {
-    if (carouselRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5); // Small buffer for rounding errors
-    }
-  };
-
-  // Add scroll event listener
-  useEffect(() => {
-    const carousel = carouselRef.current;
-    if (carousel) {
-      carousel.addEventListener("scroll", checkScrollable);
-      // Check on initial render
-      checkScrollable();
-
-      return () => {
-        carousel.removeEventListener("scroll", checkScrollable);
-      };
-    }
-  }, [conditions.length]); // Re-run when conditions change
-
-  // Check scroll possibility after render/resize
-  useEffect(() => {
-    checkScrollable();
-    window.addEventListener("resize", checkScrollable);
-    return () => window.removeEventListener("resize", checkScrollable);
-  }, [conditions.length]);
-
-  // Debug - log what we have in conditions
-  useEffect(() => {
-    console.log("Current conditions:", conditions);
-    console.log("Form conditions:", form.conditions);
-  }, [conditions, form.conditions]);
-
+  // --- Render Logic ---
   return (
-    <div className="w-full flex flex-col">
-      {/* Fixed header with add button - this stays in place */}
-      <div className="w-full flex items-center justify-between mb-4 sticky top-0 bg-background z-10">
+    <div className="w-full flex flex-col space-y-6 p-1">
+      {" "}
+      {/* Added padding and vertical space */}
+      {/* Fixed Header */}
+      <div className="flex items-center justify-between pb-4 border-b">
         <div>
-          <h2 className="text-lg font-semibold">Form Logic</h2>
-          <p className="text-sm text-muted-foreground">Set up conditional navigation between pages</p>
+          <h2 className="text-xl font-semibold">Form Logic</h2>
+          <p className="text-sm text-muted-foreground">Define rules to navigate users between pages based on their answers.</p>
         </div>
         <Button
-          variant="outline"
           onClick={addCondition}
-          disabled={form.pages.length === 0}
-          className="h-10 w-10 flex-shrink-0 rounded-full">
-          <Plus className="h-5 w-5" />
+          disabled={form.pages.length < 2} // Disable if less than 2 pages
+          title={form.pages.length < 2 ? "Add more pages to enable logic" : "Add New Condition"}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Rule
         </Button>
       </div>
-
-      {/* If there are no conditions */}
+      {/* Conditions List or Placeholder */}
       {conditions.length === 0 ? (
-        <div className="text-sm text-muted-foreground">No conditions added yet.</div>
-      ) : (
-        <div className="w-full relative">
-          {/* Carousel container with overflow control */}
-          <div
-            ref={carouselRef}
-            className="w-full overflow-x-auto pb-4 scrollbar-hide"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-            {/* Inner container with spacing */}
-            <div className="flex space-x-4 w-max">
-              {conditions.map((cond, index) => (
-                <Card
-                  key={cond.id}
-                  className="w-80 flex-shrink-0">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Condition {index + 1}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {/* Source Page selection */}
-                    <div className="flex flex-col space-y-1">
-                      <Label className="text-xs">Source Page</Label>
-                      <Select
-                        value={cond.sourcePageId}
-                        onValueChange={(val) => updateSourcePage(cond.id, val)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select source page" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {form.pages.map((p, i) => (
-                            <SelectItem
-                              key={p.id}
-                              value={p.id}>
-                              Page {i + 1}: {p.title || "Untitled Page"}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* If Field selection */}
-                    <div className="flex flex-col space-y-1">
-                      <Label className="text-xs">If Field</Label>
-                      <Select
-                        value={cond.elementId}
-                        onValueChange={(val) => updateCondition(cond.id, "elementId", val)}
-                        disabled={!cond.sourcePageId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={!cond.sourcePageId ? "Select source page first" : "Select field"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cond.sourcePageId &&
-                            getElementsForPage(cond.sourcePageId).map((element) => (
-                              <SelectItem
-                                key={element.id}
-                                value={element.id}>
-                                {element.title || "Untitled Element"}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Operator selection */}
-                    <div className="flex flex-col space-y-1">
-                      <Label className="text-xs">Operator</Label>
-                      <Select
-                        value={cond.operator}
-                        onValueChange={(val) => updateCondition(cond.id, "operator", val)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select operator" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="equals">Equals</SelectItem>
-                          <SelectItem value="not_equals">Does not equal</SelectItem>
-                          <SelectItem value="contains">Contains</SelectItem>
-                          <SelectItem value="greater_than">Greater than</SelectItem>
-                          <SelectItem value="less_than">Less than</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Value input */}
-                    <div className="flex flex-col space-y-1">
-                      <Label className="text-xs">Value</Label>
-                      <Input
-                        value={cond.value}
-                        onChange={(e) => updateCondition(cond.id, "value", e.target.value)}
-                        placeholder="Enter value"
-                      />
-                    </div>
-
-                    {/* Target Page selection */}
-                    <div className="flex flex-col space-y-1">
-                      <Label className="text-xs">Go to Page</Label>
-                      <Select
-                        value={cond.targetPageId}
-                        onValueChange={(val) => updateCondition(cond.id, "targetPageId", val)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select page" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {form.pages.map((p, i) => (
-                            <SelectItem
-                              key={p.id}
-                              value={p.id}>
-                              Page {i + 1}: {p.title || "Untitled Page"}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                  <div className="p-2">
-                    <Button
-                      variant="ghost"
-                      onClick={() => removeCondition(cond.id)}
-                      className="w-full text-red-500 flex items-center justify-center">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Remove
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Navigation buttons - shown only when scrolling is possible */}
-          {conditions.length > 0 && (
-            <div className="flex justify-center space-x-4 mt-4">
-              <Button
-                onClick={scrollPrev}
-                variant="ghost"
-                disabled={!canScrollLeft}
-                className={!canScrollLeft ? "opacity-50" : ""}>
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              <Button
-                onClick={scrollNext}
-                variant="ghost"
-                disabled={!canScrollRight}
-                className={!canScrollRight ? "opacity-50" : ""}>
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
+        <div className="text-center py-10 text-gray-500 border border-dashed rounded-lg">
+          <p>No conditional logic added yet.</p>
+          {form.pages.length >= 2 ? (
+            <Button
+              variant="link"
+              onClick={addCondition}
+              className="mt-2">
+              Add your first rule
+            </Button>
+          ) : (
+            <p className="text-xs mt-2">(Add at least two pages to the form to create logic rules)</p>
           )}
+        </div>
+      ) : (
+        // --- Vertical List of Conditions ---
+        <div className="space-y-4">
+          {conditions.map((cond, index) => (
+            <Card
+              key={cond.id}
+              className="bg-gray-50/50 border shadow-sm">
+              {" "}
+              {/* Subtle background */}
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Rule {index + 1}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeCondition(cond.id)}
+                    className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                    title="Remove this rule">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* IF Part */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0 p-3 border rounded bg-white">
+                  <Label className="text-sm font-semibold w-10 flex-shrink-0">IF</Label>
+                  {/* Source Page */}
+                  <div className="flex-1 min-w-[150px]">
+                    <Select
+                      value={cond.sourcePageId}
+                      onValueChange={(val) => updateConditionField(cond.id, "sourcePageId", val)}>
+                      <SelectTrigger className="text-xs h-9">
+                        <SelectValue placeholder="Select source page" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {form.pages.map((p, i) => (
+                          <SelectItem
+                            key={p.id}
+                            value={p.id}
+                            className="text-xs">
+                            Page {i + 1}: {p.title || "Untitled"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* Element */}
+                  <div className="flex-1 min-w-[150px]">
+                    <Select
+                      value={cond.elementId}
+                      onValueChange={(val) => updateConditionField(cond.id, "elementId", val)}
+                      disabled={!cond.sourcePageId || getElementsForPage(cond.sourcePageId).length === 0}>
+                      <SelectTrigger className="text-xs h-9">
+                        <SelectValue
+                          placeholder={
+                            !cond.sourcePageId
+                              ? "Select page first"
+                              : getElementsForPage(cond.sourcePageId).length === 0
+                              ? "No eligible fields"
+                              : "Select field"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cond.sourcePageId &&
+                          getElementsForPage(cond.sourcePageId).map((element) => (
+                            <SelectItem
+                              key={element.id}
+                              value={element.id}
+                              className="text-xs">
+                              {element.title || "Untitled"} ({element.type})
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* Operator */}
+                  <div className="flex-1 min-w-[120px]">
+                    <Select
+                      value={cond.operator}
+                      onValueChange={(val) => updateConditionField(cond.id, "operator", val)}
+                      disabled={!cond.elementId} // Disable if no element selected
+                    >
+                      <SelectTrigger className="text-xs h-9">
+                        <SelectValue placeholder="Operator" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Consider filtering operators based on element type later */}
+                        <SelectItem
+                          value="equals"
+                          className="text-xs">
+                          Equals
+                        </SelectItem>
+                        <SelectItem
+                          value="not_equals"
+                          className="text-xs">
+                          Does not equal
+                        </SelectItem>
+                        <SelectItem
+                          value="contains"
+                          className="text-xs">
+                          Contains
+                        </SelectItem>
+                        <SelectItem
+                          value="greater_than"
+                          className="text-xs">
+                          Greater than
+                        </SelectItem>
+                        <SelectItem
+                          value="less_than"
+                          className="text-xs">
+                          Less than
+                        </SelectItem>
+                        <SelectItem
+                          value="is_empty"
+                          className="text-xs">
+                          Is Empty
+                        </SelectItem>
+                        <SelectItem
+                          value="is_not_empty"
+                          className="text-xs">
+                          Is Not Empty
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* Value */}
+                  <div className="flex-1 min-w-[120px]">
+                    <Input
+                      value={cond.value}
+                      onChange={(e) => updateConditionField(cond.id, "value", e.target.value)}
+                      placeholder="Value"
+                      className="text-xs h-9"
+                      disabled={!cond.elementId} // Disable if no element selected
+                    />
+                  </div>
+                </div>
+
+                {/* THEN Part */}
+                <div className="flex items-center space-x-2 p-3 border rounded bg-white">
+                  <Label className="text-sm font-semibold w-16 flex-shrink-0">THEN GO TO</Label>
+                  <div className="flex-1">
+                    <Select
+                      value={cond.targetPageId}
+                      onValueChange={(val) => updateConditionField(cond.id, "targetPageId", val)}>
+                      <SelectTrigger className="text-xs h-9">
+                        <SelectValue placeholder="Select target page" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {form.pages.map((p, i) => (
+                          <SelectItem
+                            key={p.id}
+                            value={p.id}
+                            className="text-xs">
+                            Page {i + 1}: {p.title || "Untitled"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+              {/* Remove button was moved to the top right of the card */}
+            </Card>
+          ))}
         </div>
       )}
     </div>

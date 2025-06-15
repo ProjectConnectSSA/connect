@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Globe, AlertTriangle, CheckCircle2, Copy, ArrowRight } from "lucide-react";
+import {
+  Globe,
+  AlertTriangle,
+  CheckCircle2,
+  Copy,
+  ArrowRight,
+} from "lucide-react";
 
 interface DomainSettingsProps {
   content: any;
@@ -24,13 +30,27 @@ interface DomainSettingsProps {
 export function DomainSettings({ content, setContent }: DomainSettingsProps) {
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // Initialize domain if it doesn't exist
+  useEffect(() => {
+    if (!content.domain) {
+      setContent({
+        ...content,
+        domain: {
+          subdomain: "",
+          custom: "",
+          status: "unverified",
+        },
+      });
+    }
+  }, [content, setContent]);
+
   const handleSubdomainChange = (value: string) => {
     setContent({
       ...content,
       domain: {
         ...content.domain,
-        subdomain: value
-      }
+        subdomain: value,
+      },
     });
   };
 
@@ -39,8 +59,8 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
       ...content,
       domain: {
         ...content.domain,
-        custom: value
-      }
+        custom: value,
+      },
     });
   };
 
@@ -53,8 +73,8 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
         ...content,
         domain: {
           ...content.domain,
-          status: "verified"
-        }
+          status: "verified",
+        },
       });
       toast.success("Domain verified successfully!");
     }, 2000);
@@ -63,6 +83,13 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard!");
+  };
+
+  // Add null check before rendering
+  const domain = content.domain || {
+    subdomain: "",
+    custom: "",
+    status: "unverified",
   };
 
   return (
@@ -85,7 +112,7 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2">
               <Input
-                value={content.domain.subdomain}
+                value={domain.subdomain}
                 onChange={(e) => handleSubdomainChange(e.target.value)}
                 placeholder="your-page"
               />
@@ -94,7 +121,7 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
             <p className="text-sm text-muted-foreground">
               Your page will be available at{" "}
               <code className="text-primary">
-                {content.domain.subdomain}.yourdomain.com
+                {domain.subdomain}.yourdomain.com
               </code>
             </p>
           </CardContent>
@@ -110,9 +137,9 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
                 </CardDescription>
               </div>
               <Badge
-                variant={content.domain.status === "verified" ? "success" : "secondary"}
+                variant={domain.status === "verified" ? "success" : "secondary"}
               >
-                {content.domain.status === "verified" ? "Verified" : "Unverified"}
+                {domain.status === "verified" ? "Verified" : "Unverified"}
               </Badge>
             </div>
           </CardHeader>
@@ -121,38 +148,42 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
               <Label>Domain Name</Label>
               <div className="flex gap-2">
                 <Input
-                  value={content.domain.custom}
+                  value={domain.custom}
                   onChange={(e) => handleCustomDomainChange(e.target.value)}
                   placeholder="www.yourdomain.com"
                 />
                 <Button
                   onClick={handleVerifyDomain}
-                  disabled={!content.domain.custom || isVerifying}
+                  disabled={!domain.custom || isVerifying}
                 >
                   {isVerifying ? "Verifying..." : "Verify"}
                 </Button>
               </div>
             </div>
 
-            {content.domain.custom && content.domain.status !== "verified" && (
+            {domain.custom && domain.status !== "verified" && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Domain Verification Required</AlertTitle>
                 <AlertDescription>
                   <div className="mt-2 space-y-4">
                     <p>Add the following DNS records to verify your domain:</p>
-                    
+
                     <div className="space-y-2">
                       <div className="flex items-center justify-between rounded-lg border p-2">
                         <div>
                           <p className="font-mono text-sm">Type: CNAME</p>
                           <p className="font-mono text-sm">Name: www</p>
-                          <p className="font-mono text-sm">Value: cname.yourdomain.com</p>
+                          <p className="font-mono text-sm">
+                            Value: cname.yourdomain.com
+                          </p>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => copyToClipboard("cname.yourdomain.com")}
+                          onClick={() =>
+                            copyToClipboard("cname.yourdomain.com")
+                          }
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -162,7 +193,9 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
                         <div>
                           <p className="font-mono text-sm">Type: TXT</p>
                           <p className="font-mono text-sm">Name: @</p>
-                          <p className="font-mono text-sm">Value: verify=abc123</p>
+                          <p className="font-mono text-sm">
+                            Value: verify=abc123
+                          </p>
                         </div>
                         <Button
                           variant="ghost"
@@ -182,7 +215,7 @@ export function DomainSettings({ content, setContent }: DomainSettingsProps) {
               </Alert>
             )}
 
-            {content.domain.status === "verified" && (
+            {domain.status === "verified" && (
               <Alert>
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
                 <AlertTitle>Domain Verified</AlertTitle>

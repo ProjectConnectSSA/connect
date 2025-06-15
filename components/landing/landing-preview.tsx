@@ -22,6 +22,24 @@ export function LandingPreview({ content }: LandingPreviewProps) {
     }
   };
 
+  // Add this helper function to format URLs properly
+  const formatUrl = (url: string): string => {
+    // Return empty string for undefined/null URLs
+    if (!url) return "";
+
+    // If URL is just "#", return it as is
+    if (url === "#") return url;
+
+    // If URL already starts with http:// or https://, return as is
+    if (/^https?:\/\//i.test(url)) return url;
+
+    // If URL is a relative path starting with /, return as is
+    if (url.startsWith("/")) return url;
+
+    // Otherwise, add https:// prefix for external URLs
+    return `https://${url}`;
+  };
+
   const getThemeStyles = () => {
     const { styles } = content;
     const baseStyles = {
@@ -102,13 +120,35 @@ export function LandingPreview({ content }: LandingPreviewProps) {
                     className="w-full max-w-4xl rounded-lg shadow-lg"
                   />
                 )}
-                <Button
-                  size="lg"
-                  className="mt-8"
-                  style={{ backgroundColor: content.styles.colors.primary }}
-                >
-                  {section.content.cta.text}
-                </Button>
+                {section.content.cta &&
+                  (section.content.cta.url &&
+                  section.content.cta.url !== "#" ? (
+                    <a
+                      href={formatUrl(section.content.cta.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button
+                        size="lg"
+                        className="mt-8"
+                        style={{
+                          backgroundColor: content.styles.colors.primary,
+                        }}
+                      >
+                        {section.content.cta.text}
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button
+                      size="lg"
+                      className="mt-8"
+                      style={{
+                        backgroundColor: content.styles.colors.primary,
+                      }}
+                    >
+                      {section.content.cta.text}
+                    </Button>
+                  ))}
               </div>
             )}
 
@@ -125,7 +165,9 @@ export function LandingPreview({ content }: LandingPreviewProps) {
                         <div className="flex justify-center">
                           <div
                             className="p-3 rounded-full"
-                            style={{ backgroundColor: content.styles.colors.primary }}
+                            style={{
+                              backgroundColor: content.styles.colors.primary,
+                            }}
                           >
                             <Icon className="h-6 w-6 text-white" />
                           </div>
@@ -144,10 +186,14 @@ export function LandingPreview({ content }: LandingPreviewProps) {
             )}
 
             {section.type === "content" && (
-              <div className={cn(
-                "grid gap-8",
-                section.content.alignment === "right" ? "md:grid-cols-[1fr,auto]" : "md:grid-cols-[auto,1fr]"
-              )}>
+              <div
+                className={cn(
+                  "grid gap-8",
+                  section.content.alignment === "right"
+                    ? "md:grid-cols-[1fr,auto]"
+                    : "md:grid-cols-[auto,1fr]"
+                )}
+              >
                 {section.content.image && (
                   <img
                     src={section.content.image}
@@ -156,16 +202,80 @@ export function LandingPreview({ content }: LandingPreviewProps) {
                   />
                 )}
                 <div className="space-y-4 flex flex-col justify-center">
-                  <h2 className="text-3xl font-bold">{section.content.heading}</h2>
+                  <h2 className="text-3xl font-bold">
+                    {section.content.heading}
+                  </h2>
                   <div className="prose max-w-none">
-                    {section.content.body.split("\n").map((paragraph: string, i: number) => (
-                      <p key={i} className="text-muted-foreground">
-                        {paragraph}
+                    {section.content.body ? (
+                      section.content.body
+                        .split("\n")
+                        .map((paragraph: string, i: number) => (
+                          <p key={i} className="text-muted-foreground">
+                            {paragraph}
+                          </p>
+                        ))
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Add your content here
                       </p>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
+            )}
+
+            {section.type === "footer" && (
+              <footer className="border-t pt-12 pb-6 mt-12">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold">
+                      {section.content.heading}
+                    </h3>
+                    <p className="text-sm">{section.content.tagline}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold">Quick Links</h3>
+                    <ul className="space-y-2">
+                      {section.content.links?.map((link: any, i: number) => (
+                        <li key={i}>
+                          <a
+                            href={formatUrl(link.url)}
+                            className="text-sm hover:underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {link.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold">Connect</h3>
+                    <div className="flex space-x-4">
+                      {section.content.socialLinks?.map(
+                        (link: any, i: number) => (
+                          <a
+                            key={i}
+                            href={formatUrl(link.url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary"
+                          >
+                            {link.platform}
+                          </a>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-sm text-center border-t mt-8 pt-6">
+                  {section.content.copyright}
+                </div>
+              </footer>
             )}
           </div>
         ))}
