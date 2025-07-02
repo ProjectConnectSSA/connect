@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { UUID } from "crypto";
-import { getCurrentUser } from "@/app/actions";
+
 interface Form {
   title: string;
   description: string;
@@ -45,13 +45,22 @@ interface Condition {
   value: string;
   targetPageId: string;
 }
-
+const supabase = createClient();
 // Function to fetch all forms
 export async function GET() {
   try {
+    const {
+      data: { user },
+      error: authError,
+    } = await (await supabase).auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized: User not authenticated." }, { status: 401 });
+    }
+    const userId = user.id;
     console.log("API GET formal forms");
-    const currentUser = await getCurrentUser();
-    const { data, error } = await supabase.from("forms").select("*").eq("user_id", currentUser.id);
+
+    const { data, error } = await (await supabase).from("forms").select("*").eq("user_id", user.id);
     console.log("API GET formal forms", data);
     if (error) throw new Error(error.message);
     return NextResponse.json(data, { status: 200 });
@@ -66,7 +75,9 @@ export async function POST(req: NextRequest) {
     const form: Form = await req.json();
     console.log("API CREATE formal form", form.isMultiPage);
 
-    const { data, error } = await supabase
+    const { data, error } = await (
+      await supabase
+    )
       .from("forms")
       .insert([
         {
@@ -95,7 +106,7 @@ export async function PUT(req: NextRequest) {
     const { id, ...form }: { id: string } & Form = await req.json();
     console.log("API UPDATE formal form", id, "data", form);
 
-    const { data, error } = await supabase.from("forms").update(form).eq("id", id).select().single(); // Ensures only one record is fetched
+    const { data, error } = await (await supabase).from("forms").update(form).eq("id", id).select().single(); // Ensures only one record is fetched
 
     if (error) throw new Error(error.message);
 
@@ -110,7 +121,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { id }: { id: string } = await req.json();
     console.log("API DELETE formal form", id);
-    const { data, error } = await supabase.from("forms").delete().eq("id", id).single();
+    const { data, error } = await (await supabase).from("forms").delete().eq("id", id).single();
     if (error) throw new Error(error.message);
     return NextResponse.json({ message: "Form deleted successfully", data }, { status: 200 });
   } catch (error: any) {
