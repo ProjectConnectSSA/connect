@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 // Shared helper to get supabase and user
 async function getSupabaseAndUser() {
-  const supabase = createClient();
+  const supabase = createClient(cookies());
   const {
     data: { session },
     error,

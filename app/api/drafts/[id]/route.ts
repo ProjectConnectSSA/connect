@@ -3,11 +3,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type { EmailDraft } from "@/app/types/database";
 import { createClient } from "@/lib/supabase/server";
-
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("email_drafts").select("*").eq("id", id).single();
+import { cookies } from "next/headers";
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = createClient(cookies());
+  const { data, error } = await (await supabase).from("email_drafts").select("*").eq("id", id).single();
 
   if (error) {
     console.error("GET /api/drafts/[id] error:", error);
@@ -16,13 +16,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   return NextResponse.json(data, { status: 200 });
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const { title, template } = body as EmailDraft;
-    const supabase = await createClient();
-    const { data, error } = await supabase.from("email_drafts").update({ title, template, updated_at: new Date() }).eq("id", id);
+    const supabase = createClient(cookies());
+    const { data, error } = await (await supabase).from("email_drafts").update({ title, template, updated_at: new Date() }).eq("id", id);
 
     if (error) {
       console.error("PUT /api/drafts/[id] error:", error);
@@ -35,10 +35,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
-  const supabase = await createClient();
-  const { error } = await supabase.from("email_drafts").delete().eq("id", id);
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = createClient(cookies());
+  const { error } = await (await supabase).from("email_drafts").delete().eq("id", id);
 
   if (error) {
     console.error("DELETE /api/drafts/[id] error:", error);

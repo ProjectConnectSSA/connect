@@ -1,7 +1,7 @@
 // FormService.js
-let formToEdit = null;
+let formToEdit: null = null;
 
-export const setFormToEdit = (form) => {
+export const setFormToEdit = (form: null) => {
   formToEdit = form;
 };
 

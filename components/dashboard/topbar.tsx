@@ -13,7 +13,6 @@ import {
   NotificationWidget,
   HelpWidget,
   UserWidget,
-  bgColor, // Main TopBar background
   borderColor, // Main TopBar border
   separatorColor, // Separator between Help and User
 } from "./topbarWidget"; // Import from barrel file
@@ -246,11 +245,11 @@ export function TopBar() {
         "flex h-16 items-center",
         "border-b",
         borderColor, // Main TopBar border, from styles.ts via barrel file
-        bgColor, // Main TopBar background, from styles.ts via barrel file
         "px-4 md:px-6",
         // These classes ensure the TopBar is sticky at the top of the viewport
         "sticky top-0 z-30 w-full"
-      )}>
+      )}
+      style={{ backgroundColor: '#2563eb' }}>
       <PageTitle pathname={pathname} />
 
       <div className="ml-auto flex items-center gap-1 md:gap-2">

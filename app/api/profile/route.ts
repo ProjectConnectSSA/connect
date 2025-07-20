@@ -1,7 +1,7 @@
 // app/api/profile/route.ts
 import { createClient } from "@/lib/supabase/server"; // Ensure this is your server-side Supabase client
 import { NextResponse } from "next/server";
-
+import { cookies } from "next/headers";
 // This interface should match the one in your ProfilePage.tsx
 export interface ProfileApiResponse {
   id: string;
@@ -22,7 +22,7 @@ export interface ProfileApiResponse {
 }
 
 export async function GET(request: Request) {
-  const supabase = createClient(); // Initialize client inside the handler
+  const supabase = createClient(cookies()); // Initialize client inside the handler
 
   try {
     // 1. Get the currently authenticated user

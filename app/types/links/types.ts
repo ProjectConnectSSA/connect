@@ -59,4 +59,8 @@ export interface StyleProps {
   buttonStyle: "filled" | "outline"; // Appearance style for buttons/links
   borderRadius: "none" | "sm" | "md" | "lg" | "full"; // Border radius for buttons/cards
   fontFamily: string; // Font family for the page text
+  // Glassmorphism properties
+  backdropBlur?: string; // Backdrop blur effect (e.g., 'blur(10px)')
+  border?: string; // Border style for glassmorphism
+  boxShadow?: string; // Box shadow for glowing effects
 }

@@ -3,9 +3,9 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { getCurrentUser } from "@/app/actions";
+
 import { Loader2, Upload, Link } from "lucide-react";
 
 interface ImageUploadProps {
@@ -45,25 +45,21 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
     try {
       const supabase = createClient();
 
-      // Get current user
-      const { getCurrentUser } = await import("@/app/actions");
-      const currentUser = await getCurrentUser();
-
-      if (!currentUser || !currentUser.id) {
+      // Get current user from Supabase
+      const { createClientComponentClient } = await import("@supabase/auth-helpers-nextjs");
+      const supabaseAuth = createClientComponentClient();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseAuth.auth.getUser();
+      if (!user || !user.id) {
         throw new Error("User not authenticated");
       }
-
-      const userId = currentUser.id;
+      const userId = user.id;
 
       // Clean up old image if replacing
-      if (
-        value &&
-        value.includes("landing-assets") &&
-        value.includes("storage")
-      ) {
-        const pathMatch = value.match(
-          /\/storage\/v1\/object\/public\/landing-assets\/(.+)$/
-        );
+      if (value && value.includes("landing-assets") && value.includes("storage")) {
+        const pathMatch = value.match(/\/storage\/v1\/object\/public\/landing-assets\/(.+)$/);
         if (pathMatch && pathMatch.length >= 2) {
           const oldFilePath = pathMatch[1];
           console.log(`Removing old image: ${oldFilePath}`);
@@ -73,20 +69,16 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
 
       // Generate unique filename
       const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2, 15)}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
       // Create user-specific path
       const filePath = `landing-images/user_${userId}/${fileName}`;
 
       // Upload file
-      const { data, error } = await supabase.storage
-        .from("landing-assets")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const { data, error } = await supabase.storage.from("landing-assets").upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
       if (error) throw error;
 
@@ -127,8 +119,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-md p-4 transition cursor-pointer flex flex-col items-center justify-center gap-1 ${
           isDragging ? "border-primary bg-primary/5" : "hover:border-primary/50"
-        }`}
-      >
+        }`}>
         {value ? (
           <>
             <img
@@ -136,9 +127,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               alt="Uploaded image"
               className="max-h-[150px] object-contain rounded-md"
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              Click to change image or drop a new image
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Click to change image or drop a new image</p>
           </>
         ) : (
           <div className="py-4 text-center">
@@ -147,12 +136,8 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             ) : (
               <>
                 <Upload className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium mb-1">
-                  Drag and drop or click to upload
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  JPG, PNG or GIF up to 2MB
-                </p>
+                <p className="text-sm font-medium mb-1">Drag and drop or click to upload</p>
+                <p className="text-xs text-muted-foreground">JPG, PNG or GIF up to 2MB</p>
               </>
             )}
           </div>
@@ -161,7 +146,9 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
 
       <div className="flex justify-between items-center">
         {showUrlField ? (
-          <form className="flex w-full gap-2" onSubmit={handleUrlSubmit}>
+          <form
+            className="flex w-full gap-2"
+            onSubmit={handleUrlSubmit}>
             <Input
               type="url"
               placeholder="Enter image URL"
@@ -169,15 +156,16 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
               onChange={(e) => setUrlInput(e.target.value)}
               className="flex-1"
             />
-            <Button type="submit" size="sm">
+            <Button
+              type="submit"
+              size="sm">
               Add
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setShowUrlField(false)}
-            >
+              onClick={() => setShowUrlField(false)}>
               Cancel
             </Button>
           </form>
@@ -187,8 +175,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
             variant="outline"
             size="sm"
             className="flex items-center gap-2"
-            onClick={() => setShowUrlField(true)}
-          >
+            onClick={() => setShowUrlField(true)}>
             <Link className="h-4 w-4" />
             Use image URL
           </Button>

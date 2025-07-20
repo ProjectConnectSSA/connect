@@ -1,12 +1,13 @@
 // app/api/announcements/route.ts
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { Announcement } from "@/components/dashboard/widgets/AnnouncementsWidget"; // Import your type
 
 export async function GET() {
   // Note: We call createClient() here inside the handler as cookies() from next/headers
   // can only be called from a Server Component, Route Handler, or Server Action.
-  const supabase = createClient();
+  const supabase = createClient(cookies());
   // Get the authenticated user
 
   try {

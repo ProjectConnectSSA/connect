@@ -2,16 +2,17 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
+import { cookies } from "next/headers";
 import { Lead } from "@/app/types/LeadType";
 
 /**
  * GET /api/leads
  * Retrieves all leads for the authenticated tenant, most recent first.
  */
-const supabase = await createClient();
+
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createClient(cookies());
     const {
       data: { user },
       error: authError,
@@ -40,6 +41,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createClient(cookies());
     const body = await req.json();
     const {
       email,
@@ -80,6 +82,8 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const supabase = await createClient(cookies());
+
     const body = await req.json();
     const { id, campaignTag }: { id: string; campaignTag: string | null } = body;
     if (!id) {

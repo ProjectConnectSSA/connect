@@ -34,7 +34,7 @@ async function generateUniqueSlug(supabaseClient: any, originalSlug: string, use
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies();
-  const supabase = createClient(); // Assuming createClient returns a Promise<SupabaseClient>
+  const supabase = createClient(cookies()); // Assuming createClient returns a Promise<SupabaseClient>
 
   try {
     const {

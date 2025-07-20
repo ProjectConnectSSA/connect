@@ -2,8 +2,59 @@
 
 import { cn } from "@/lib/utils";
 import { Twitter, Facebook, Linkedin } from "lucide-react";
-import type { EmailContent } from "@/types/email";
+// Update the import path if the types/email file is located elsewhere, for example:
 
+// Or create the file at src/types/email.ts or src/types/email.d.ts with the EmailContent type definition.
+interface EmailContent {
+  styles: {
+    backgroundColor: string;
+    textColor: string;
+    fontFamily: string;
+    containerWidth: number;
+    headerBackground: string;
+    footerBackground: string;
+    borderRadius: number;
+    buttonColor: string;
+    buttonSize: "small" | "medium" | "large";
+    buttonStyle: "rounded" | "square" | "pill";
+    spacing: "compact" | "default" | "spacious";
+  };
+  content: {
+    header: {
+      logo: string;
+    };
+    sections: Array<
+      | {
+          type: "hero";
+          image?: string;
+          title: string;
+          subtitle: string;
+          buttonText: string;
+          buttonUrl: string;
+        }
+      | {
+          type: "text";
+          content: string;
+        }
+      | {
+          type: "columns";
+          columns: Array<{
+            image: string;
+            title: string;
+            content: string;
+          }>;
+        }
+    >;
+    footer: {
+      socialLinks: Array<{
+        platform: "twitter" | "facebook" | "linkedin";
+        url: string;
+      }>;
+      companyAddress: string;
+      unsubscribeUrl: string;
+    };
+  };
+}
 interface EmailPreviewProps {
   content: EmailContent;
 }
@@ -16,19 +67,19 @@ export function EmailPreview({ content }: EmailPreviewProps) {
     const sizeStyles = {
       small: "px-3 py-1.5 text-sm",
       medium: "px-4 py-2",
-      large: "px-6 py-3 text-lg"
+      large: "px-6 py-3 text-lg",
     };
     const variantStyles = {
       rounded: "rounded-md",
       square: "",
-      pill: "rounded-full"
+      pill: "rounded-full",
     };
 
     return cn(
       baseStyles,
       sizeStyles[styles.buttonSize as keyof typeof sizeStyles],
       variantStyles[styles.buttonStyle as keyof typeof variantStyles],
-      "transition-colors",
+      "transition-colors"
     );
   };
 
@@ -44,20 +95,20 @@ export function EmailPreview({ content }: EmailPreviewProps) {
   };
 
   return (
-    <div 
+    <div
       className="h-full overflow-y-auto"
-      style={{ 
+      style={{
         backgroundColor: styles.backgroundColor,
         color: styles.textColor,
-        fontFamily: styles.fontFamily
-      }}
-    >
-      <div className={cn("mx-auto", getSectionSpacing())} style={{ maxWidth: `${styles.containerWidth}px` }}>
+        fontFamily: styles.fontFamily,
+      }}>
+      <div
+        className={cn("mx-auto", getSectionSpacing())}
+        style={{ maxWidth: `${styles.containerWidth}px` }}>
         {/* Header */}
-        <div 
+        <div
           className="p-6 text-center"
-          style={{ backgroundColor: styles.headerBackground }}
-        >
+          style={{ backgroundColor: styles.headerBackground }}>
           <img
             src={content.content.header.logo}
             alt="Logo"
@@ -67,39 +118,35 @@ export function EmailPreview({ content }: EmailPreviewProps) {
 
         {/* Content Sections */}
         {content.content.sections.map((section, index) => (
-          <div 
+          <div
             key={index}
-            className={cn(
-              "p-6 bg-white",
-              `rounded-[${styles.borderRadius}rem]`
-            )}
-          >
+            className={cn("p-6 bg-white", `rounded-[${styles.borderRadius}rem]`)}>
             {section.type === "hero" && (
               <div className="space-y-4 text-center">
                 {section.image && (
                   <img
                     src={section.image}
                     alt={section.title}
-                    className={cn(
-                      "w-full object-cover",
-                      `rounded-[${styles.borderRadius}rem]`
-                    )}
+                    className={cn("w-full object-cover", `rounded-[${styles.borderRadius}rem]`)}
                   />
                 )}
-                <h1 className="text-3xl font-bold" style={{ color: styles.textColor }}>
+                <h1
+                  className="text-3xl font-bold"
+                  style={{ color: styles.textColor }}>
                   {section.title}
                 </h1>
-                <p className="text-lg" style={{ color: `${styles.textColor}99` }}>
+                <p
+                  className="text-lg"
+                  style={{ color: `${styles.textColor}99` }}>
                   {section.subtitle}
                 </p>
                 <a
                   href={section.buttonUrl}
                   className={getButtonStyles()}
-                  style={{ 
+                  style={{
                     backgroundColor: styles.buttonColor,
-                    color: "#ffffff"
-                  }}
-                >
+                    color: "#ffffff",
+                  }}>
                   {section.buttonText}
                 </a>
               </div>
@@ -108,11 +155,10 @@ export function EmailPreview({ content }: EmailPreviewProps) {
             {section.type === "text" && (
               <div className="prose max-w-none">
                 {section.content?.split("\n").map((paragraph, i) => (
-                  <p 
-                    key={i} 
+                  <p
+                    key={i}
                     className="mb-4"
-                    style={{ color: styles.textColor }}
-                  >
+                    style={{ color: styles.textColor }}>
                     {paragraph}
                   </p>
                 ))}
@@ -122,24 +168,20 @@ export function EmailPreview({ content }: EmailPreviewProps) {
             {section.type === "columns" && (
               <div className="grid md:grid-cols-2 gap-6">
                 {section.columns?.map((column, colIndex) => (
-                  <div key={colIndex} className="space-y-4">
+                  <div
+                    key={colIndex}
+                    className="space-y-4">
                     <img
                       src={column.image}
                       alt={column.title}
-                      className={cn(
-                        "w-full object-cover",
-                        `rounded-[${styles.borderRadius}rem]`
-                      )}
+                      className={cn("w-full object-cover", `rounded-[${styles.borderRadius}rem]`)}
                     />
-                    <h3 
+                    <h3
                       className="text-xl font-semibold"
-                      style={{ color: styles.textColor }}
-                    >
+                      style={{ color: styles.textColor }}>
                       {column.title}
                     </h3>
-                    <p style={{ color: `${styles.textColor}99` }}>
-                      {column.content}
-                    </p>
+                    <p style={{ color: `${styles.textColor}99` }}>{column.content}</p>
                   </div>
                 ))}
               </div>
@@ -148,21 +190,19 @@ export function EmailPreview({ content }: EmailPreviewProps) {
         ))}
 
         {/* Footer */}
-        <div 
+        <div
           className="p-6 text-center space-y-4"
-          style={{ 
+          style={{
             backgroundColor: styles.footerBackground,
-            color: `${styles.textColor}99`
-          }}
-        >
+            color: `${styles.textColor}99`,
+          }}>
           <div className="flex justify-center space-x-4">
             {content.content.footer.socialLinks.map((link, index) => (
               <a
                 key={index}
                 href={link.url}
                 className="text-muted-foreground hover:text-foreground transition-colors"
-                style={{ color: `${styles.textColor}99` }}
-              >
+                style={{ color: `${styles.textColor}99` }}>
                 {link.platform === "twitter" && <Twitter className="h-5 w-5" />}
                 {link.platform === "facebook" && <Facebook className="h-5 w-5" />}
                 {link.platform === "linkedin" && <Linkedin className="h-5 w-5" />}
@@ -171,14 +211,13 @@ export function EmailPreview({ content }: EmailPreviewProps) {
           </div>
           <p>{content.content.footer.companyAddress}</p>
           <p>
-            <a 
+            <a
               href={content.content.footer.unsubscribeUrl}
               className="underline hover:no-underline"
-              style={{ color: `${styles.textColor}99` }}
-            >
+              style={{ color: `${styles.textColor}99` }}>
               Unsubscribe
-            </a>
-            {" "}from our emails
+            </a>{" "}
+            from our emails
           </p>
         </div>
       </div>

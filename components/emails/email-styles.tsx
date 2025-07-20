@@ -1,21 +1,10 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ColorPicker } from "@/components/emails/color-picker";
 import { Slider } from "@/components/ui/slider";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 
@@ -25,7 +14,7 @@ interface EmailStylesProps {
 }
 
 export function EmailStyles({ content, setContent }: EmailStylesProps) {
-  const updateStyle = (key: string, value: string | number) => {
+  const updateStyle = (key: string, value: string | number | boolean) => {
     setContent({
       ...content,
       styles: {
@@ -40,12 +29,13 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
       <div className="space-y-6">
         <div>
           <h2 className="text-lg font-semibold">Email Appearance</h2>
-          <p className="text-sm text-muted-foreground">
-            Customize how your email looks
-          </p>
+          <p className="text-sm text-muted-foreground">Customize how your email looks</p>
         </div>
 
-        <Accordion type="single" collapsible className="w-full space-y-4">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full space-y-4">
           {/* Theme & Layout */}
           <AccordionItem value="theme">
             <AccordionTrigger>Theme & Layout</AccordionTrigger>
@@ -54,8 +44,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Theme</Label>
                 <Select
                   value={content.styles.theme}
-                  onValueChange={(value) => updateStyle("theme", value)}
-                >
+                  onValueChange={(value) => updateStyle("theme", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -78,9 +67,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                     min={400}
                     max={800}
                     step={10}
-                    onValueChange={([value]) =>
-                      updateStyle("containerWidth", value.toString())
-                    }
+                    onValueChange={([value]) => updateStyle("containerWidth", value.toString())}
                   />
                 </div>
               </div>
@@ -89,8 +76,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Content Spacing</Label>
                 <Select
                   value={content.styles.spacing}
-                  onValueChange={(value) => updateStyle("spacing", value)}
-                >
+                  onValueChange={(value) => updateStyle("spacing", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -112,8 +98,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Font Family</Label>
                 <Select
                   value={content.styles.fontFamily}
-                  onValueChange={(value) => updateStyle("fontFamily", value)}
-                >
+                  onValueChange={(value) => updateStyle("fontFamily", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -132,8 +117,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Heading Size Scale</Label>
                 <Select
                   value={content.styles.headingScale}
-                  onValueChange={(value) => updateStyle("headingScale", value)}
-                >
+                  onValueChange={(value) => updateStyle("headingScale", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -149,8 +133,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Line Height</Label>
                 <Select
                   value={content.styles.lineHeight}
-                  onValueChange={(value) => updateStyle("lineHeight", value)}
-                >
+                  onValueChange={(value) => updateStyle("lineHeight", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -218,8 +201,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Button Style</Label>
                 <Select
                   value={content.styles.buttonStyle}
-                  onValueChange={(value) => updateStyle("buttonStyle", value)}
-                >
+                  onValueChange={(value) => updateStyle("buttonStyle", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -238,8 +220,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Button Size</Label>
                 <Select
                   value={content.styles.buttonSize}
-                  onValueChange={(value) => updateStyle("buttonSize", value)}
-                >
+                  onValueChange={(value) => updateStyle("buttonSize", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -272,9 +253,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                     defaultValue={[parseFloat(content.styles.borderRadius)]}
                     max={2}
                     step={0.125}
-                    onValueChange={([value]) =>
-                      updateStyle("borderRadius", value.toString())
-                    }
+                    onValueChange={([value]) => updateStyle("borderRadius", value.toString())}
                   />
                 </div>
               </div>
@@ -283,8 +262,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Divider Style</Label>
                 <Select
                   value={content.styles.dividerStyle}
-                  onValueChange={(value) => updateStyle("dividerStyle", value)}
-                >
+                  onValueChange={(value) => updateStyle("dividerStyle", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -314,9 +292,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                     min={1}
                     max={5}
                     step={1}
-                    onValueChange={([value]) =>
-                      updateStyle("dividerWidth", value.toString())
-                    }
+                    onValueChange={([value]) => updateStyle("dividerWidth", value.toString())}
                   />
                 </div>
               </div>
@@ -334,9 +310,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                     defaultValue={[parseFloat(content.styles.imageBorderRadius || "0.5")]}
                     max={2}
                     step={0.125}
-                    onValueChange={([value]) =>
-                      updateStyle("imageBorderRadius", value.toString())
-                    }
+                    onValueChange={([value]) => updateStyle("imageBorderRadius", value.toString())}
                   />
                 </div>
               </div>
@@ -345,8 +319,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
                 <Label>Image Shadow</Label>
                 <Select
                   value={content.styles.imageShadow}
-                  onValueChange={(value) => updateStyle("imageShadow", value)}
-                >
+                  onValueChange={(value) => updateStyle("imageShadow", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -362,9 +335,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={content.styles.imageHoverEffect}
-                  onCheckedChange={(checked) =>
-                    updateStyle("imageHoverEffect", checked)
-                  }
+                  onCheckedChange={(checked) => updateStyle("imageHoverEffect", checked)}
                 />
                 <Label>Enable Hover Effects</Label>
               </div>
@@ -387,9 +358,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={content.styles.darkMode}
-                  onCheckedChange={(checked) =>
-                    updateStyle("darkMode", checked)
-                  }
+                  onCheckedChange={(checked) => updateStyle("darkMode", checked)}
                 />
                 <Label>Enable Dark Mode Support</Label>
               </div>
@@ -397,9 +366,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={content.styles.responsiveImages}
-                  onCheckedChange={(checked) =>
-                    updateStyle("responsiveImages", checked)
-                  }
+                  onCheckedChange={(checked) => updateStyle("responsiveImages", checked)}
                 />
                 <Label>Responsive Images</Label>
               </div>
@@ -407,9 +374,7 @@ export function EmailStyles({ content, setContent }: EmailStylesProps) {
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={content.styles.retinaSupportEnabled}
-                  onCheckedChange={(checked) =>
-                    updateStyle("retinaSupportEnabled", checked)
-                  }
+                  onCheckedChange={(checked) => updateStyle("retinaSupportEnabled", checked)}
                 />
                 <Label>Retina Support</Label>
               </div>

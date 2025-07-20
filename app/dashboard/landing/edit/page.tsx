@@ -1,31 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LandingEditor } from "@/components/landing/landing-editor";
 import { LandingStyles } from "@/components/landing/landing-styles";
 import { LandingPreview } from "@/components/landing/landing-preview";
 import { DomainSettings } from "@/components/landing/domain-settings";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, Paintbrush, Globe, Save, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { getCurrentUser } from "@/app/actions";
+// --- Import Supabase Client ---
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-export default function EditLandingPage() {
+function EditLandingPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pageId = searchParams.get("id") || "new";
@@ -44,8 +34,7 @@ export default function EditLandingPage() {
         content: {
           heading: "Launch Your Product",
           subheading: "The easiest way to showcase your product",
-          image:
-            "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200",
+          image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200",
           cta: { text: "Get Started", url: "#" },
         },
       },
@@ -119,12 +108,16 @@ export default function EditLandingPage() {
 
   async function fetchUser() {
     try {
-      const currentUser = await getCurrentUser();
-      console.log("Current user:", currentUser); // Debug logging
+      const supabase = createClientComponentClient();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      console.log("Current user:", user); // Debug logging
 
-      if (currentUser && currentUser.id) {
-        setUserId(currentUser.id);
-        return currentUser.id;
+      if (user && user.id) {
+        setUserId(user.id);
+        return user.id;
       } else {
         console.error("No user found or missing user ID");
         toast.error("User not authenticated");
@@ -161,14 +154,17 @@ export default function EditLandingPage() {
   async function fetchLandingPagesData() {
     try {
       // Get the current user first
-      const currentUser = await getCurrentUser();
-      if (!currentUser) {
+      const supabase = createClientComponentClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
         console.error("No authenticated user found");
         return;
       }
 
       // Fetch only this user's landing pages
-      const response = await fetch(`/api/landings?user_id=${currentUser.id}`);
+      const response = await fetch(`/api/landings?user_id=${user.id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch landing pages");
       }
@@ -184,10 +180,13 @@ export default function EditLandingPage() {
   // Add this function to check the page limit
   async function checkPageLimit() {
     try {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) return false;
+      const supabase = createClientComponentClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
 
-      const response = await fetch(`/api/landings?user_id=${currentUser.id}`);
+      const response = await fetch(`/api/landings?user_id=${user.id}`);
       if (!response.ok) return false;
 
       const data = await response.json();
@@ -228,10 +227,7 @@ export default function EditLandingPage() {
 
       const url = `/api/landings`;
       const method = pageId === "new" ? "POST" : "PUT";
-      const body =
-        pageId === "new"
-          ? JSON.stringify(landingPageData)
-          : JSON.stringify({ id: pageId, ...landingPageData });
+      const body = pageId === "new" ? JSON.stringify(landingPageData) : JSON.stringify({ id: pageId, ...landingPageData });
 
       console.log("Saving landing page with method:", method);
 
@@ -244,9 +240,7 @@ export default function EditLandingPage() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("API error response:", errorData);
-        throw new Error(
-          `Failed to save landing page: ${JSON.stringify(errorData)}`
-        );
+        throw new Error(`Failed to save landing page: ${JSON.stringify(errorData)}`);
       }
 
       const savedPage = await response.json();
@@ -269,29 +263,28 @@ export default function EditLandingPage() {
   return (
     <div className="h-[calc(100vh-4rem)]">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSizePercentage={40} minSizePercentage={30}>
+        <ResizablePanel
+          defaultSizePercentage={40}
+          minSizePercentage={30}>
           <Tabs defaultValue="editor">
             <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container flex h-14 items-center justify-between">
                 <TabsList>
                   <TabsTrigger
                     value="editor"
-                    className="flex items-center gap-2"
-                  >
+                    className="flex items-center gap-2">
                     <Settings className="h-4 w-4" />
                     Editor
                   </TabsTrigger>
                   <TabsTrigger
                     value="styles"
-                    className="flex items-center gap-2"
-                  >
+                    className="flex items-center gap-2">
                     <Paintbrush className="h-4 w-4" />
                     Styles
                   </TabsTrigger>
                   <TabsTrigger
                     value="domain"
-                    className="flex items-center gap-2"
-                  >
+                    className="flex items-center gap-2">
                     <Globe className="h-4 w-4" />
                     Domain
                   </TabsTrigger>
@@ -299,55 +292,78 @@ export default function EditLandingPage() {
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => setShowExitDialog(true)}
-                  >
+                    onClick={() => setShowExitDialog(true)}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
-                  <Button onClick={handleSave} disabled={isLoading}>
+                  <Button
+                    onClick={handleSave}
+                    disabled={isLoading}>
                     <Save className="mr-2 h-4 w-4" />
                     {isLoading ? "Saving..." : "Save Page"}
                   </Button>
                 </div>
               </div>
             </div>
-            <TabsContent value="editor" className="h-[calc(100vh-8rem)]">
-              <LandingEditor content={content} setContent={setContent} />
+            <TabsContent
+              value="editor"
+              className="h-[calc(100vh-8rem)]">
+              <LandingEditor
+                content={content}
+                setContent={setContent}
+              />
             </TabsContent>
-            <TabsContent value="styles" className="h-[calc(100vh-8rem)]">
-              <LandingStyles content={content} setContent={setContent} />
+            <TabsContent
+              value="styles"
+              className="h-[calc(100vh-8rem)]">
+              <LandingStyles
+                content={content}
+                setContent={setContent}
+              />
             </TabsContent>
-            <TabsContent value="domain" className="h-[calc(100vh-8rem)]">
-              <DomainSettings content={content} setContent={setContent} />
+            <TabsContent
+              value="domain"
+              className="h-[calc(100vh-8rem)]">
+              <DomainSettings
+                content={content}
+                setContent={setContent}
+              />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize={60}>
+        <ResizablePanel defaultSizePercentage={60}>
           <LandingPreview content={content} />
         </ResizablePanel>
       </ResizablePanelGroup>
 
       {/* Add the exit confirmation dialog */}
-      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+      <Dialog
+        open={showExitDialog}
+        onOpenChange={setShowExitDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Leave page?</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to go back to the dashboard? Any unsaved
-              changes will be lost.
-            </DialogDescription>
+            <DialogDescription>Are you sure you want to go back to the dashboard? Any unsaved changes will be lost.</DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 justify-end mt-4">
-            <Button variant="outline" onClick={() => setShowExitDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowExitDialog(false)}>
               No, stay here
             </Button>
-            <Button onClick={() => router.push("/dashboard/landing")}>
-              Yes, go back
-            </Button>
+            <Button onClick={() => router.push("/dashboard/landing")}>Yes, go back</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function EditLandingPage() {
+  return (
+    <Suspense>
+      <EditLandingPageInner />
+    </Suspense>
   );
 }

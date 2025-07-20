@@ -2,12 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Stripe from "stripe";
-
+import { cookies } from "next/headers";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
-
-const supabase = createClient();
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +14,10 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
+
+    // Create Supabase client within the request scope
+    const cookieStore = cookies();
+    const supabase = createClient(cookieStore);
 
     // Get user profile with Stripe customer ID
     const { data: profile, error: profileError } = await (await supabase).from("profiles").select("stripe_customer_id").eq("id", userId).single();

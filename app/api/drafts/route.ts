@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type { EmailDraft } from "@/app/types/database";
 import { createClient } from "@/lib/supabase/server";
-
+import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const user_id = searchParams.get("user_id");
@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "User ID is required" }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("email_drafts").select("*").eq("user_id", user_id);
+  const supabase = createClient(cookies());
+  const { data, error } = await (await supabase).from("email_drafts").select("*").eq("user_id", user_id);
 
   if (error) {
     console.error("GET /api/drafts error:", error);
@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const supabase = await createClient();
-    const { data, error } = await supabase.from("email_drafts").insert([{ user_id, title, template }]);
+    const supabase = createClient(cookies());
+    const { data, error } = await (await supabase).from("email_drafts").insert([{ user_id, title, template }]);
 
     if (error) {
       console.error("Supabase insert error:", error);

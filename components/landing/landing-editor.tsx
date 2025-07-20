@@ -5,30 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ImageUpload } from "@/components/emails/image-upload";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import {
-  Plus,
-  Trash2,
-  GripVertical,
-  Layout,
-  Type,
-  Grid,
-  Image,
-} from "lucide-react";
+import { Plus, Trash2, GripVertical, Layout, Type, Grid, Image } from "lucide-react";
 
 interface LandingEditorProps {
   content: any;
@@ -105,9 +86,7 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
   };
 
   const removeSection = (index: number) => {
-    const newSections = content.sections.filter(
-      (_: any, i: number) => i !== index
-    );
+    const newSections = content.sections.filter((_: any, i: number) => i !== index);
     setContent({
       ...content,
       sections: newSections,
@@ -132,29 +111,26 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
       <Accordion
         type="single"
         collapsible
-        value={selectedSection}
+        value={selectedSection ?? undefined}
         onValueChange={setSelectedSection}
-        className="space-y-6"
-      >
-        <AccordionItem value="page-settings" className="border rounded-lg">
+        className="space-y-6">
+        <AccordionItem
+          value="page-settings"
+          className="border rounded-lg">
           <AccordionTrigger className="px-4">Page Settings</AccordionTrigger>
           <AccordionContent className="space-y-4 p-4">
             <div className="space-y-2">
               <Label>Page Title</Label>
               <Input
                 value={content.title}
-                onChange={(e) =>
-                  setContent({ ...content, title: e.target.value })
-                }
+                onChange={(e) => setContent({ ...content, title: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
                 value={content.description}
-                onChange={(e) =>
-                  setContent({ ...content, description: e.target.value })
-                }
+                onChange={(e) => setContent({ ...content, description: e.target.value })}
               />
             </div>
           </AccordionContent>
@@ -167,32 +143,28 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => addSection("hero")}
-              >
+                onClick={() => addSection("hero")}>
                 <Layout className="mr-2 h-4 w-4" />
                 Add Hero
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => addSection("features")}
-              >
+                onClick={() => addSection("features")}>
                 <Grid className="mr-2 h-4 w-4" />
                 Add Features
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => addSection("content")}
-              >
+                onClick={() => addSection("content")}>
                 <Type className="mr-2 h-4 w-4" />
                 Add Content
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => addSection("footer")}
-              >
+                onClick={() => addSection("footer")}>
                 <Layout className="mr-2 h-4 w-4" />
                 Add Footer
               </Button>
@@ -202,22 +174,24 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="sections">
               {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef}>
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}>
                   {content.sections.map((section: any, index: number) => (
                     <Draggable
                       key={section.id}
                       draggableId={section.id}
-                      index={index}
-                    >
+                      index={index}>
                       {(provided) => (
                         <AccordionItem
                           value={`section-${index}`}
                           className="border rounded-lg mb-2"
                           ref={provided.innerRef}
-                          {...provided.draggableProps}
-                        >
+                          {...provided.draggableProps}>
                           <div className="flex items-center">
-                            <div {...provided.dragHandleProps} className="px-2">
+                            <div
+                              {...provided.dragHandleProps}
+                              className="px-2">
                               <GripVertical className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <AccordionTrigger className="flex-1 px-4">
@@ -250,8 +224,7 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                               variant="ghost"
                               size="icon"
                               onClick={() => removeSection(index)}
-                              className="mr-2"
-                            >
+                              className="mr-2">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -354,117 +327,94 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                   />
                                 </div>
                                 <div className="space-y-4">
-                                  {section.content.items.map(
-                                    (item: any, itemIndex: number) => (
-                                      <div
-                                        key={itemIndex}
-                                        className="space-y-4 border-t pt-4"
-                                      >
-                                        <div className="flex items-center justify-between">
-                                          <h4 className="font-medium">
-                                            Feature {itemIndex + 1}
-                                          </h4>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => {
-                                              const newItems =
-                                                section.content.items.filter(
-                                                  (_: any, i: number) =>
-                                                    i !== itemIndex
-                                                );
-                                              updateSection(index, {
-                                                content: {
-                                                  ...section.content,
-                                                  items: newItems,
-                                                },
-                                              });
-                                            }}
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </div>
-                                        <div className="space-y-2">
-                                          <Label>Title</Label>
-                                          <Input
-                                            value={item.title}
-                                            onChange={(e) => {
-                                              const newItems = [
-                                                ...section.content.items,
-                                              ];
-                                              newItems[itemIndex] = {
-                                                ...item,
-                                                title: e.target.value,
-                                              };
-                                              updateSection(index, {
-                                                content: {
-                                                  ...section.content,
-                                                  items: newItems,
-                                                },
-                                              });
-                                            }}
-                                          />
-                                        </div>
-                                        <div className="space-y-2">
-                                          <Label>Description</Label>
-                                          <Textarea
-                                            value={item.description}
-                                            onChange={(e) => {
-                                              const newItems = [
-                                                ...section.content.items,
-                                              ];
-                                              newItems[itemIndex] = {
-                                                ...item,
-                                                description: e.target.value,
-                                              };
-                                              updateSection(index, {
-                                                content: {
-                                                  ...section.content,
-                                                  items: newItems,
-                                                },
-                                              });
-                                            }}
-                                          />
-                                        </div>
-                                        <div className="space-y-2">
-                                          <Label>Icon</Label>
-                                          <Select
-                                            value={item.icon}
-                                            onValueChange={(value) => {
-                                              const newItems = [
-                                                ...section.content.items,
-                                              ];
-                                              newItems[itemIndex] = {
-                                                ...item,
-                                                icon: value,
-                                              };
-                                              updateSection(index, {
-                                                content: {
-                                                  ...section.content,
-                                                  items: newItems,
-                                                },
-                                              });
-                                            }}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="Zap">
-                                                Lightning
-                                              </SelectItem>
-                                              <SelectItem value="Shield">
-                                                Shield
-                                              </SelectItem>
-                                              <SelectItem value="Star">
-                                                Star
-                                              </SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
+                                  {section.content.items.map((item: any, itemIndex: number) => (
+                                    <div
+                                      key={itemIndex}
+                                      className="space-y-4 border-t pt-4">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="font-medium">Feature {itemIndex + 1}</h4>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            const newItems = section.content.items.filter((_: any, i: number) => i !== itemIndex);
+                                            updateSection(index, {
+                                              content: {
+                                                ...section.content,
+                                                items: newItems,
+                                              },
+                                            });
+                                          }}>
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
                                       </div>
-                                    )
-                                  )}
+                                      <div className="space-y-2">
+                                        <Label>Title</Label>
+                                        <Input
+                                          value={item.title}
+                                          onChange={(e) => {
+                                            const newItems = [...section.content.items];
+                                            newItems[itemIndex] = {
+                                              ...item,
+                                              title: e.target.value,
+                                            };
+                                            updateSection(index, {
+                                              content: {
+                                                ...section.content,
+                                                items: newItems,
+                                              },
+                                            });
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label>Description</Label>
+                                        <Textarea
+                                          value={item.description}
+                                          onChange={(e) => {
+                                            const newItems = [...section.content.items];
+                                            newItems[itemIndex] = {
+                                              ...item,
+                                              description: e.target.value,
+                                            };
+                                            updateSection(index, {
+                                              content: {
+                                                ...section.content,
+                                                items: newItems,
+                                              },
+                                            });
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label>Icon</Label>
+                                        <Select
+                                          value={item.icon}
+                                          onValueChange={(value) => {
+                                            const newItems = [...section.content.items];
+                                            newItems[itemIndex] = {
+                                              ...item,
+                                              icon: value,
+                                            };
+                                            updateSection(index, {
+                                              content: {
+                                                ...section.content,
+                                                items: newItems,
+                                              },
+                                            });
+                                          }}>
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="Zap">Lightning</SelectItem>
+                                            <SelectItem value="Shield">Shield</SelectItem>
+                                            <SelectItem value="Star">Star</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  ))}
                                   <Button
                                     variant="outline"
                                     onClick={() => {
@@ -482,8 +432,7 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                           items: newItems,
                                         },
                                       });
-                                    }}
-                                  >
+                                    }}>
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add Feature
                                   </Button>
@@ -547,16 +496,13 @@ export function LandingEditor({ content, setContent }: LandingEditorProps) {
                                           alignment: value,
                                         },
                                       })
-                                    }
-                                  >
+                                    }>
                                     <SelectTrigger>
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="left">Left</SelectItem>
-                                      <SelectItem value="right">
-                                        Right
-                                      </SelectItem>
+                                      <SelectItem value="right">Right</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>

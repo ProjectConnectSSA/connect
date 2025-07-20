@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { UUID } from "crypto";
-
+import { cookies } from "next/headers";
 interface LandingPage {
   title: string;
   description: string;
@@ -28,18 +27,18 @@ interface LandingPage {
   };
   isactive?: boolean;
 }
-const supabase = createClient();
+
 // Function to fetch all landingPages
-export async function GET() {
 
 // Function to fetch all landing pages (filtered by user_id for security)
 export async function GET(req: NextRequest) {
   try {
+    const supabase = createClient(cookies());
     // Get user_id from query params or auth token
     const url = new URL(req.url);
     const userId = url.searchParams.get("user_id");
 
-    let query = supabase.from("landing_pages").select("*");
+    let query = (await supabase).from("landing_pages").select("*");
 
     // If user_id provided, filter by it
     if (userId) {
@@ -58,6 +57,7 @@ export async function GET(req: NextRequest) {
 // Function to create a new landing page
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createClient(cookies());
     const landingPage: LandingPage = await req.json();
     console.log("Received landing page data:", landingPage);
 
@@ -77,7 +77,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (
+      await supabase
+    )
       .from("landing_pages")
       .insert([
         {
@@ -108,17 +110,16 @@ export async function POST(req: NextRequest) {
 // Function to update a landing page
 export async function PUT(req: NextRequest) {
   try {
-    const { id, ...landingPage }: { id: string } & LandingPage =
-      await req.json();
+    const supabase = createClient(cookies());
+    const { id, ...landingPage }: { id: string } & LandingPage = await req.json();
 
     if (!id) {
-      return NextResponse.json(
-        { error: "Landing page ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Landing page ID is required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (
+      await supabase
+    )
       .from("landing_pages")
       .update({
         title: landingPage.title,
@@ -143,28 +144,18 @@ export async function PUT(req: NextRequest) {
 // Function to delete a landing page
 export async function DELETE(req: NextRequest) {
   try {
+    const supabase = createClient(cookies());
     const { id }: { id: string } = await req.json();
 
     if (!id) {
-      return NextResponse.json(
-        { error: "Landing page ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Landing page ID is required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from("landing_pages")
-      .delete()
-      .eq("id", id)
-      .select()
-      .single();
+    const { data, error } = await (await supabase).from("landing_pages").delete().eq("id", id).select().single();
 
     if (error) throw new Error(error.message);
 
-    return NextResponse.json(
-      { message: "Landing page deleted successfully", data },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Landing page deleted successfully", data }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

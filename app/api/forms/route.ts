@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { UUID } from "crypto";
-
+import { cookies } from "next/headers";
 interface Form {
   title: string;
   description: string;
@@ -45,10 +45,11 @@ interface Condition {
   value: string;
   targetPageId: string;
 }
-const supabase = createClient();
+
 // Function to fetch all forms
 export async function GET() {
   try {
+    const supabase = createClient(cookies());
     const {
       data: { user },
       error: authError,
@@ -72,6 +73,7 @@ export async function GET() {
 // Function to create a new form
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createClient(cookies());
     const form: Form = await req.json();
     console.log("API CREATE formal form", form.isMultiPage);
 
@@ -103,6 +105,7 @@ export async function POST(req: NextRequest) {
 // Function to update a form
 export async function PUT(req: NextRequest) {
   try {
+    const supabase = createClient(cookies());
     const { id, ...form }: { id: string } & Form = await req.json();
     console.log("API UPDATE formal form", id, "data", form);
 
@@ -119,6 +122,7 @@ export async function PUT(req: NextRequest) {
 // Function to delete a form
 export async function DELETE(req: NextRequest) {
   try {
+    const supabase = createClient(cookies());
     const { id }: { id: string } = await req.json();
     console.log("API DELETE formal form", id);
     const { data, error } = await (await supabase).from("forms").delete().eq("id", id).single();

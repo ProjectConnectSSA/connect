@@ -1,7 +1,7 @@
 // app/dashboard/profile/page.tsx (Updated with subscription management)
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,10 +17,6 @@ import { ModeToggle } from "@/components/settings/mode-toggle";
 import DashboardSidebar from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 import SubscriptionManagement from "@/components/subscription/subscription-management";
-
-// Initialize Supabase client for client-side operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const supabase = createClient();
 
@@ -53,7 +49,7 @@ interface EditableProfileForm {
   company: string;
 }
 
-export default function ProfilePage() {
+function ProfilePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [profileData, setProfileData] = useState<ProfileApiResponse | null>(null);
@@ -489,5 +485,13 @@ export default function ProfilePage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense>
+      <ProfilePageInner />
+    </Suspense>
   );
 }

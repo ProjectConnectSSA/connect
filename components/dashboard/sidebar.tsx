@@ -160,13 +160,13 @@ export function DashboardSidebar() {
 
   return (
     <div className="flex h-screen">
-      {/* --- 3. Sidebar Container with Dynamic Background --- */}
+      {/* --- 3. Sidebar Container with Fixed Background --- */}
       <div
         className={cn(
           "fixed left-0 h-full border-r border-black/20 transition-all duration-500 ease-in-out z-20 overflow-hidden",
-          isCollapsed ? "w-[72px]" : "w-[250px]",
-          `bg-gradient-to-br ${activeBgColor}` // The dynamic gradient is applied here!
-        )}>
+          isCollapsed ? "w-[72px]" : "w-[250px]"
+        )}
+        style={{ backgroundColor: '#2563eb' }}>
         {/* Semi-transparent overlay like in the demo */}
         <div className="absolute inset-0 bg-black/20 z-0" />
 

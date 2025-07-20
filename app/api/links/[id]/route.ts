@@ -2,22 +2,20 @@
 import { NextRequest, NextResponse } from "next/server";
 // Use the standard Supabase client here, as no user session is needed
 import { createClient } from "@/lib/supabase/client"; // Or use the admin client if preferred for reads
-
+import { cookies } from "next/headers";
 // Initialize Supabase Client (ensure environment variables are set)
 // Using the ANON key is appropriate for public reads allowed by RLS
 
-const supabase = createClient();
-
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const linkId = params.id;
-
+    const { id: linkId } = await params;
     if (!linkId) {
       return NextResponse.json({ error: "Link ID parameter is missing." }, { status: 400 });
     }
 
     console.log("API PUBLIC GET link by ID request:", linkId);
 
+    const supabase = createClient();
     // Fetch the specific link ONLY IF ACTIVE
     // RLS provides the primary security, but adding active = true here is good practice.
     const { data, error: fetchError } = await supabase

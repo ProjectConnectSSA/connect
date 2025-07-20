@@ -1,5 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
-import { getCurrentUser } from "@/app/actions";
+import { createClient } from "@/lib/supabase/server";
+
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export interface LandingPageData {
   id?: string;
@@ -31,14 +32,18 @@ export interface LandingPageData {
 
 export async function createLandingPage(landingPageData: LandingPageData) {
   try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
+    const supabase = createClientComponentClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (!user) {
       throw new Error("User not authenticated");
     }
 
     const payload = {
       ...landingPageData,
-      user_id: currentUser.id,
+      user_id: user.id,
     };
 
     const response = await fetch("/api/landings", {
@@ -58,10 +63,7 @@ export async function createLandingPage(landingPageData: LandingPageData) {
   }
 }
 
-export async function updateLandingPage(
-  id: string,
-  landingPageData: LandingPageData
-) {
+export async function updateLandingPage(id: string, landingPageData: LandingPageData) {
   try {
     const response = await fetch("/api/landings", {
       method: "PUT",
@@ -153,4 +155,7 @@ function extractImagesFromContent(landingPage: LandingPageData): string[] {
   });
 
   return imageUrls;
+}
+function cleanupImages(imageUrls: string[]) {
+  throw new Error("Function not implemented.");
 }

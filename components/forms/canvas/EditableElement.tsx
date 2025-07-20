@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Trash2, GripVertical, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabaseClient"; // Assuming this path is correct
+import { createClient } from "@/lib/supabase/client"; // Assuming this path is correct
 import { toast } from "sonner";
 
 // --- Import types from the central definition ---
@@ -36,7 +36,7 @@ export const EditableElement = ({
 }: EditableElementProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-
+  const supabase = createClient();
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

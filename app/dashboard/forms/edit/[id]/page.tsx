@@ -13,7 +13,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import type { Form, Page, ElementType, Condition } from "@/app/types/form"; // Adjust path if necessary
 
 // --- Import Actions ---
-import { getCurrentUser } from "@/app/actions"; // Assuming path is correct
+
+// --- Import Supabase Client ---
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 // --- Import UI Components ---
 import { FormEditor } from "@/components/forms/form-editor";
@@ -69,11 +71,15 @@ export default function EditFormPage({ params }: { params: Promise<{ id: string 
 
     async function loadInitialData() {
       try {
-        // Fetch user ID first
-        const currentUser = await getCurrentUser();
+        // Fetch user ID from Supabase
+        const supabase = createClientComponentClient();
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
         if (isMounted) {
-          if (currentUser) {
-            setUserId(currentUser.id);
+          if (user) {
+            setUserId(user.id);
           } else {
             console.error("No authenticated user found.");
             toast.error("Authentication error. Cannot load or save form.");

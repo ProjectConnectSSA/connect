@@ -1,7 +1,9 @@
 // src/app/api/generate-bio/route.ts
 // Using Next.js App Router convention
 
+import { BioElement } from "@/app/types/links/types";
 import { NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
 // No longer need BioElement types or uuid for this simple chat
 
 // --- Configuration ---

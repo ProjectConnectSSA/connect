@@ -21,9 +21,12 @@
     "@supabase/supabase-js": "^2.49.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^11.12.0",
     "immer": "^10.1.1",
+    "input-otp": "^1.4.2",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.453.0",
@@ -32,8 +35,10 @@
     "papaparse": "^5.5.2",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
+    "react-day-picker": "^9.8.0",
     "react-dom": "18.3.1",
     "react-email-editor": "^1.7.11",
+    "react-hook-form": "^7.60.0",
     "react-intersection-observer": "^9.13.1",
     "react-resizable-panels": "^0.0.63",
     "react-router-dom": "^7.0.1",
@@ -45,7 +50,8 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-animatecss": "^1.0.7",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@types/node": "^20",

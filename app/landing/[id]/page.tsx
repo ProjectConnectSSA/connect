@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { LandingPreview } from "@/components/landing/landing-preview";
 import { Loader2 } from "lucide-react";
 import { getLandingPage } from "@/services/landingPageService";
-import Head from "next/head";
 
 const incrementVisitCount = async (landingPageId: string) => {
   try {
@@ -68,9 +67,7 @@ export default function PublicLandingPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-        <span className="block mt-4 text-sm text-gray-500">
-          Launchly by Shrey · Suresh · Akash
-        </span>
+        <span className="block mt-4 text-sm text-gray-500">Launchly by Shrey · Suresh · Akash</span>
       </div>
     );
   }

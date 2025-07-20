@@ -15,7 +15,7 @@ interface LinkFormData {
 
 // Function to fetch USER-SPECIFIC links
 export async function GET() {
-  const supabase = createClient();
+  const supabase = createClient(cookies());
 
   try {
     const {
@@ -53,7 +53,7 @@ export async function GET() {
 // Function to create a new link FOR THE AUTHENTICATED USER
 export async function POST(req: NextRequest) {
   const cookieStore = cookies();
-  const supabase = createClient();
+  const supabase = createClient(cookies());
 
   try {
     const {
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
 // Function to update a link OWNED BY THE AUTHENTICATED USER
 export async function PUT(req: NextRequest) {
   const cookieStore = cookies();
-  const supabase = createClient();
+  const supabase = createClient(cookies());
 
   try {
     const {
@@ -177,7 +177,7 @@ export async function PUT(req: NextRequest) {
 // Function to delete a link OWNED BY THE AUTHENTICATED USER
 export async function DELETE(req: NextRequest) {
   const cookieStore = cookies();
-  const supabase = createClient();
+  const supabase = createClient(cookies());
 
   try {
     const {

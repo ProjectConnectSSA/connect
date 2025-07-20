@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-
+import { cookies } from "next/headers";
 export async function getUser() {
-  const supabase = await createClient();
+  const supabase = await createClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();

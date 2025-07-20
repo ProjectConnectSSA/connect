@@ -11,12 +11,7 @@ const builders = [
     steps: [
       {
         id: "logo",
-        icon: (
-          <Image
-            className="w-6 h-6"
-            alt="Logo"
-          />
-        ),
+        icon: <Image className="w-6 h-6" />,
         label: "Add your logo and profile",
         color: "bg-blue-500",
       },
@@ -46,12 +41,7 @@ const builders = [
     steps: [
       {
         id: "image",
-        icon: (
-          <Images
-            className="w-6 h-6"
-            alt="Logo"
-          />
-        ),
+        icon: <Images className="w-6 h-6" />,
         label: "Add cover image",
         color: "bg-orange-500",
       },
@@ -93,12 +83,7 @@ const builders = [
       },
       {
         id: "design",
-        icon: (
-          <Image
-            className="w-6 h-6"
-            alt="Logo"
-          />
-        ),
+        icon: <Image className="w-6 h-6" />,
         label: "Customize design",
         color: "bg-fuchsia-500",
       },

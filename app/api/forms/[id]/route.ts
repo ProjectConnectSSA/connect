@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
-
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params; // Extract the dynamic ID from the URL
+    const { id } = await params; // Extract the dynamic ID from the URL
 
     console.log("API GET form by ID", id);
 
-    const { data, error } = await supabase.from("forms").select("*").eq("id", id).single();
+    const supabase = createClient(cookies());
+    const { data, error } = await (await supabase).from("forms").select("*").eq("id", id).single();
 
     if (error) throw new Error(error.message);
 
