@@ -57,9 +57,9 @@ const HeroSection = () => {
               scale: [0.5, 1, 0.5],
             }}
             transition={{
-              duration: Math.random() * 3 + 2,
+              duration: 7,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              times: [0, 0.21, 0.35, 0.42, 0.5, 0.64, 0.78, 0.92, 0.96, 0.98, 1, 1],
             }}
           />
         ))}
@@ -71,6 +71,118 @@ const HeroSection = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen">
+          {/* Left side - Hero content */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-8">
+            {/* Logo and badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-6">
+              <div className="flex items-center gap-3">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full border border-indigo-500/30">
+                  <span className="text-indigo-300 text-sm font-medium flex items-center gap-2">
+                    <Rocket className="w-4 h-4" />
+                    Ready for Launch
+                  </span>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Main heading */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-6">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
+                Launch Your
+                <br />
+                <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">Digital Empire</span>
+                <br />
+                <span className="text-4xl md:text-5xl lg:text-6xl text-gray-300">to the Stars</span>
+              </h1>
+
+              <p className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-2xl">
+                Four powerful engines in one mission control center. Launch bio pages, forms, landing pages, and email campaigns that reach beyond the
+                stratosphere.
+              </p>
+            </motion.div>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col sm:flex-row gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(99, 102, 241, 0.4)" }}
+                whileTap={{ scale: 0.95 }}
+                className="group relative px-8 py-4 rounded-full font-semibold text-lg overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-500"
+                  initial={{ x: "-100%" }}
+                  whileHover={{ x: "0%" }}
+                  transition={{ duration: 0.3 }}
+                />
+                <span className="relative inline-flex items-center gap-2">
+                  <Rocket className="w-5 h-5" />
+                  Start Launch Sequence
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="group px-8 py-4 rounded-full font-semibold text-lg border-2 border-indigo-400 text-indigo-400 hover:bg-indigo-400/10 transition-all">
+                <span className="inline-flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  View Mission Demo
+                </span>
+              </motion.button>
+            </motion.div>
+
+            {/* Feature launch buttons */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="grid grid-cols-2 gap-4 pt-8">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: feature.delay }}
+                  whileHover={{ scale: 1.02 }}
+                  className="group p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-indigo-400/50 transition-all cursor-pointer">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div
+                      className={`w-8 h-8 ${feature.color} text-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-white font-semibold">{feature.title}</h3>
+                  </div>
+
+                  <p className="text-gray-400 text-sm mb-3">{feature.description}</p>
+
+                  <div className="text-indigo-400 text-xs font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <Rocket className="w-3 h-3" />
+                    {feature.launchText}
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
           {/* Left side - Hero content */}
 
           {/* Right side - AI-Powered Service Demonstrations */}
@@ -92,9 +204,9 @@ const HeroSection = () => {
                     rotate: [0, 1, -1, 0],
                   }}
                   transition={{
-                    duration: 3,
+                    duration: 7,
                     repeat: Infinity,
-                    ease: "easeInOut",
+                    times: [0, 0.42, 0.48, 0.53, 0.57, 0.61, 0.71, 0.82, 0.85, 0.89, 1, 1],
                   }}
                   className="relative">
                   {/* Main Rocket Container */}
@@ -108,10 +220,10 @@ const HeroSection = () => {
                         opacity: [0.7, 1, 0.7],
                       }}
                       transition={{
-                        duration: 2,
+                        duration: 7,
                         repeat: Infinity,
-                      }}
-                      className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center">
+                        times: [0, 0.82, 0.85, 0.89, 0.92, 0.95, 0.97, 1, 1, 1, 1, 1],
+                      }}>
                       <Brain className="w-4 h-4 text-white" />
                     </motion.div>
 
@@ -173,9 +285,9 @@ const HeroSection = () => {
                             width: ["0ch", "35ch", "35ch", "0ch"],
                           }}
                           transition={{
-                            duration: 15,
+                            duration: 7,
                             repeat: Infinity,
-                            times: [0, 0.15, 0.25, 0.35],
+                            times: [0, 0.21, 0.35, 0.42],
                             ease: "easeInOut",
                           }}
                           className="inline-block overflow-hidden whitespace-nowrap border-r-2 border-indigo-500">
@@ -198,9 +310,9 @@ const HeroSection = () => {
                             width: ["0ch", "0ch", "32ch", "32ch", "0ch"],
                           }}
                           transition={{
-                            duration: 15,
+                            duration: 7,
                             repeat: Infinity,
-                            times: [0, 0.5, 0.65, 0.75, 0.85],
+                            times: [0, 0.57, 0.71, 0.82, 0.89],
                             ease: "easeInOut",
                           }}
                           className="inline-block overflow-hidden whitespace-nowrap border-r-2 border-indigo-500">
@@ -223,9 +335,9 @@ const HeroSection = () => {
                             width: ["0ch", "0ch", "38ch", "38ch"],
                           }}
                           transition={{
-                            duration: 15,
+                            duration: 7,
                             repeat: Infinity,
-                            times: [0, 0.85, 1, 1],
+                            times: [0, 0.92, 1, 1],
                             ease: "easeInOut",
                           }}
                           className="inline-block overflow-hidden whitespace-nowrap border-r-2 border-indigo-500">
